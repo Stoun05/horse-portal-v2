@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
 import Breadcrumb from "../../components/Breadcrumb";
@@ -9,12 +12,14 @@ import InbreedingBarChart from "../../components/analytics/InbreedingBarChart";
 import ChampionStats from "../../components/analytics/ChampionStats";
 
 export default function SeljermePage() {
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar />
+      <Sidebar open={open} setOpen={setOpen} />
 
       <div className="flex-1">
-        <Topbar />
+        <Topbar setOpen={setOpen} />
 
         <main className="p-8">
           <h1 className="text-4xl font-bold text-[#0b2f24] mb-8">
