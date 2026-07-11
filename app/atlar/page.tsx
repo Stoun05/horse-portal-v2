@@ -17,33 +17,12 @@ import {
 import Breadcrumb from "../../components/Breadcrumb";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
-
-type Horse = {
-  id: string;
-  name: string;
-  breed: string;
-  sex: "Aýgyr" | "Baýtal";
-  color: "Doru" | "Al" | "Gar";
-  year: number;
-  code: string;
-  image: string;
-  champion: boolean;
-};
-
-type HorseForm = Omit<Horse, "id">;
-
-const STORAGE_KEY = "horse-portal-v2-horses";
-
-const initialHorses: Horse[] = [
-  { id: "1", name: "Galkynyş", breed: "Ahal-teke", sex: "Aýgyr", color: "Doru", year: 2018, code: "AT-2018-045", image: "/horses/galkynys.png", champion: true },
-  { id: "2", name: "Serdar", breed: "Ahal-teke", sex: "Aýgyr", color: "Doru", year: 2010, code: "AT-2010-031", image: "/horses/serdar.png", champion: false },
-  { id: "3", name: "Mähri", breed: "Ahal-teke", sex: "Baýtal", color: "Al", year: 2011, code: "AT-2011-021", image: "/horses/mahri.png", champion: false },
-  { id: "4", name: "Garassyz", breed: "Ahal-teke", sex: "Aýgyr", color: "Doru", year: 2019, code: "AT-2019-012", image: "/horses/garassyz.png", champion: true },
-  { id: "5", name: "Gözel", breed: "Ahal-teke", sex: "Baýtal", color: "Doru", year: 2020, code: "AT-2020-014", image: "/horses/gozel.png", champion: false },
-  { id: "6", name: "Batyr", breed: "Ahal-teke", sex: "Aýgyr", color: "Al", year: 2021, code: "AT-2021-017", image: "/horses/batyr.png", champion: true },
-  { id: "7", name: "Günnur", breed: "Ahal-teke", sex: "Baýtal", color: "Doru", year: 2022, code: "AT-2022-016", image: "/horses/gunnur.png", champion: false },
-  { id: "8", name: "Pyrtykal", breed: "Ýomut", sex: "Aýgyr", color: "Gar", year: 2017, code: "AT-2017-019", image: "/horses/Galkan.png", champion: false },
-];
+import {
+  HORSE_STORAGE_KEY,
+  initialHorses,
+  type Horse,
+  type HorseForm,
+} from "../../lib/horses";
 
 const emptyForm: HorseForm = {
   name: "",
@@ -71,7 +50,7 @@ export default function AtlarPage() {
 
   useEffect(() => {
     try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
+      const saved = window.localStorage.getItem(HORSE_STORAGE_KEY);
       if (saved) setHorses(JSON.parse(saved) as Horse[]);
     } catch {
       // Nädogry lokal maglumat bolsa başlangyç sanaw ulanylýar.
@@ -81,7 +60,7 @@ export default function AtlarPage() {
   }, []);
 
   useEffect(() => {
-    if (hydrated) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(horses));
+    if (hydrated) window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(horses));
   }, [horses, hydrated]);
 
   const visibleHorses = useMemo(() => {
