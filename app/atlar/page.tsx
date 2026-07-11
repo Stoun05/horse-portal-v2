@@ -20,6 +20,7 @@ import Topbar from "../../components/Topbar";
 import {
   HORSE_STORAGE_KEY,
   initialHorses,
+  mergeHorseDefaults,
   type Horse,
   type HorseForm,
 } from "../../lib/horses";
@@ -51,7 +52,7 @@ export default function AtlarPage() {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(HORSE_STORAGE_KEY);
-      if (saved) setHorses(JSON.parse(saved) as Horse[]);
+      if (saved) setHorses(mergeHorseDefaults(JSON.parse(saved) as Horse[]));
     } catch {
       // Nädogry lokal maglumat bolsa başlangyç sanaw ulanylýar.
     } finally {
