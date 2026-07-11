@@ -23,6 +23,7 @@ import Topbar from "../../../components/Topbar";
 import {
   HORSE_STORAGE_KEY,
   initialHorses,
+  mergeHorseDefaults,
   type Horse,
 } from "../../../lib/horses";
 
@@ -34,7 +35,9 @@ export default function AtProfilePage() {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(HORSE_STORAGE_KEY);
-      const horses = saved ? (JSON.parse(saved) as Horse[]) : initialHorses;
+      const horses = saved
+        ? mergeHorseDefaults(JSON.parse(saved) as Horse[])
+        : initialHorses;
       setHorse(horses.find((item) => item.id === params.id) ?? null);
     } catch {
       setHorse(initialHorses.find((item) => item.id === params.id) ?? null);
