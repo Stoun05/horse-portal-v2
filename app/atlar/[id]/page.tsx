@@ -89,12 +89,8 @@ function HorseProfile({ horse }: { horse: Horse }) {
 
       <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
         <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr]">
-          <div className="relative min-h-[360px] overflow-hidden bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a] xl:min-h-[520px]">
-            {horse.image ? (
-              <Image src={horse.image} alt={horse.name} fill priority sizes="(max-width: 1280px) 100vw, 420px" className="object-cover" />
-            ) : (
-              <div className="flex min-h-[520px] items-center justify-center text-[12rem] font-black text-white/15">{horse.name.slice(0, 1)}</div>
-            )}
+          <div className="relative min-h-[360px] bg-slate-200 xl:min-h-[520px]">
+            <Image src={horse.image} alt={horse.name} fill priority sizes="(max-width: 1280px) 100vw, 420px" className="object-cover" />
             {horse.champion && (
               <span className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-bold text-amber-950 shadow-lg">
                 <Trophy size={18} /> Çempion at
@@ -115,10 +111,9 @@ function HorseProfile({ horse }: { horse: Horse }) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <InfoCard icon={<CalendarDays />} label="Doglan ýyly" value={String(horse.year)} />
               <InfoCard icon={<Tag />} label="Reňki" value={horse.color} />
-              <InfoCard icon={<MapPin />} label="Sanawdaky ýeri" value={horse.sourceSide && horse.sourceNumber ? `${horse.sourceSide} tarap — №${horse.sourceNumber}` : "Girizilmedik"} />
-              <InfoCard icon={<ShieldCheck />} label="Beden ölçegleri" value={horse.bodyMeasurements ?? "Girizilmedik"} wide />
-              <InfoCard icon={<Dna />} label="Tohumçylyk gymmaty" value={horse.breedingValue ?? "Girizilmedik"} />
-              <InfoCard icon={<Trophy />} label="Klasy" value={horse.horseClass ?? "Girizilmedik"} />
+              <InfoCard icon={<MapPin />} label="Doglan ýeri" value={horse.birthPlace ?? "Girizilmedik"} />
+              <InfoCard icon={<ShieldCheck />} label="Mikroçip belgisi" value={horse.microchip ?? "Girizilmedik"} wide />
+              <InfoCard icon={<Dna />} label="DNK ýagdaýy" value="Hasaba alnan" />
             </div>
 
             <div className="mt-8 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5">
@@ -127,26 +122,18 @@ function HorseProfile({ horse }: { horse: Horse }) {
                 <h3 className="text-xl font-bold text-[#0b2f24]">Nesil maglumatlary</h3>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <PedigreeItem label="Nesil ugry" value={horse.lineage ?? "Girizilmedik"} />
-                <PedigreeItem label="Atasy" value={horse.father ?? "Girizilmedik"} />
-                <PedigreeItem label="Enesi" value={horse.mother ?? "Girizilmedik"} />
+                <PedigreeItem label="Kakasy" value={horse.father ?? "Girizilmedik"} />
+                <PedigreeItem label="Ejesi" value={horse.mother ?? "Girizilmedik"} />
               </div>
             </div>
-
-            {horse.description && (
-              <div className="mt-6 rounded-2xl border border-amber-100 bg-amber-50/70 p-5">
-                <h3 className="text-lg font-bold text-[#0b2f24]">Bedew barada</h3>
-                <p className="mt-3 leading-7 text-gray-700">{horse.description}</p>
-              </div>
-            )}
           </div>
         </div>
       </section>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <StatusCard icon={<HeartPulse />} title="Beden ölçegleri" value={horse.bodyMeasurements ?? "Girizilmedik"} detail="Çeşme: iberilen resmi sanaw" color="green" />
-        <StatusCard icon={<Dna />} title="Nesil ugry" value={horse.lineage ?? "Girizilmedik"} detail="Şejere maglumatlary pasportda görkezilýär" color="blue" />
-        <StatusCard icon={<ShieldCheck />} title="Sanawdaky belgisi" value={horse.code} detail="Portal üçin içerki sanaw belgisi" color="amber" />
+        <StatusCard icon={<HeartPulse />} title="Saglyk ýagdaýy" value="Gowy" detail="Soňky barlag: maglumat girizilmedik" color="green" />
+        <StatusCard icon={<Dna />} title="Genetiki maglumat" value="DNK profili bar" detail="Nesil seljermesine taýýar" color="blue" />
+        <StatusCard icon={<ShieldCheck />} title="Hasaba alyş" value="Işjeň" detail={`Resmi ID: ${horse.code}`} color="amber" />
       </div>
     </>
   );
