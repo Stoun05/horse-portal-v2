@@ -32,7 +32,7 @@ const emptyForm: HorseForm = {
   color: "Mele",
   year: new Date().getFullYear(),
   code: "",
-  image: "/horses/galkynys.png",
+  image: "",
   champion: false,
 };
 
