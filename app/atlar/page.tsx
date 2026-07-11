@@ -27,9 +27,9 @@ import {
 
 const emptyForm: HorseForm = {
   name: "",
-  breed: "Ahal-teke",
-  sex: "Aýgyr",
-  color: "Doru",
+  breed: "Ahalteke",
+  sex: "At",
+  color: "Mele",
   year: new Date().getFullYear(),
   code: "",
   image: "/horses/galkynys.png",
@@ -71,7 +71,10 @@ export default function AtlarPage() {
         !query ||
         horse.name.toLocaleLowerCase("tk").includes(query) ||
         horse.code.toLocaleLowerCase("tk").includes(query) ||
-        horse.breed.toLocaleLowerCase("tk").includes(query);
+        horse.breed.toLocaleLowerCase("tk").includes(query) ||
+        horse.lineage?.toLocaleLowerCase("tk").includes(query) ||
+        horse.father?.toLocaleLowerCase("tk").includes(query) ||
+        horse.mother?.toLocaleLowerCase("tk").includes(query);
       return (
         matchesSearch &&
         (breed === "Ähli tohumlar" || horse.breed === breed) &&
@@ -168,9 +171,9 @@ export default function AtlarPage() {
             <aside className="h-fit rounded-2xl bg-white p-6 shadow-sm">
               <h2 className="mb-6 text-2xl font-bold text-[#0b2f24]">Filtrler</h2>
               <div className="space-y-5">
-                <FilterSelect label="Tohum / Nesil" value={breed} onChange={setBreed} options={["Ähli tohumlar", "Ahal-teke", "Ýomut"]} />
-                <FilterSelect label="Jyns" value={sex} onChange={setSex} options={["Ähli jynslar", "Aýgyr", "Baýtal"]} />
-                <FilterSelect label="Reňk" value={color} onChange={setColor} options={["Ähli reňkler", "Doru", "Al", "Gar"]} />
+                <FilterSelect label="Tohum" value={breed} onChange={setBreed} options={["Ähli tohumlar", ...Array.from(new Set(horses.map((horse) => horse.breed)))]} />
+                <FilterSelect label="Görnüşi" value={sex} onChange={setSex} options={["Ähli jynslar", ...Array.from(new Set(horses.map((horse) => horse.sex)))]} />
+                <FilterSelect label="Reňk" value={color} onChange={setColor} options={["Ähli reňkler", ...Array.from(new Set(horses.map((horse) => horse.color)))]} />
                 <button type="button" onClick={resetFilters} className="w-full rounded-xl border border-[#b58b2a] py-3 font-semibold text-[#9b741d] transition hover:bg-amber-50">
                   Täzeden başla
                 </button>
@@ -204,8 +207,12 @@ export default function AtlarPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                   {visibleHorses.map((horse) => (
                     <article key={horse.id} className="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-                      <div className="relative h-56 bg-slate-200">
-                        <Image src={horse.image} alt={horse.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw" className="object-cover" />
+                      <div className="relative h-56 overflow-hidden bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a]">
+                        {horse.image ? (
+                          <Image src={horse.image} alt={horse.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw" className="object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-7xl font-black text-white/20">{horse.name.slice(0, 1)}</div>
+                        )}
                         {horse.champion && (
                           <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950 shadow">
                             <Trophy size={14} /> Çempion
@@ -278,12 +285,12 @@ function HorseModal({ form, editing, onChange, onClose, onSubmit }: { form: Hors
         <form onSubmit={onSubmit} className="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
           <FormInput label="Atyň ady" required value={form.name} onChange={(value) => onChange({ ...form, name: value })} placeholder="Mysal: Galkynyş" />
           <FormInput label="Hasaba alyş ID" required value={form.code} onChange={(value) => onChange({ ...form, code: value })} placeholder="AT-2026-001" />
-          <FormSelect label="Tohumy" value={form.breed} onChange={(value) => onChange({ ...form, breed: value })} options={["Ahal-teke", "Ýomut"]} />
-          <FormSelect label="Jynsy" value={form.sex} onChange={(value) => onChange({ ...form, sex: value as Horse["sex"] })} options={["Aýgyr", "Baýtal"]} />
-          <FormSelect label="Reňki" value={form.color} onChange={(value) => onChange({ ...form, color: value as Horse["color"] })} options={["Doru", "Al", "Gar"]} />
+          <FormSelect label="Tohumy" value={form.breed} onChange={(value) => onChange({ ...form, breed: value })} options={["Ahalteke"]} />
+          <FormSelect label="Görnüşi" value={form.sex} onChange={(value) => onChange({ ...form, sex: value as Horse["sex"] })} options={["At", "Aýgyr", "Baýtal"]} />
+          <FormSelect label="Reňki" value={form.color} onChange={(value) => onChange({ ...form, color: value as Horse["color"] })} options={["Mele", "Gyr", "Dor", "Gara", "Al", "Çakan", "Gurt mele", "Akýal mele", "Altynsow mele"]} />
           <FormInput label="Doglan ýyly" required type="number" min="1980" max={String(new Date().getFullYear())} value={String(form.year)} onChange={(value) => onChange({ ...form, year: Number(value) })} />
           <div className="md:col-span-2">
-            <FormInput label="Suratyň ýoly" required value={form.image} onChange={(value) => onChange({ ...form, image: value })} placeholder="/horses/at.png" />
+            <FormInput label="Suratyň ýoly (hökmany däl)" value={form.image ?? ""} onChange={(value) => onChange({ ...form, image: value })} placeholder="/horses/at.png" />
           </div>
           <label className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 md:col-span-2">
             <input type="checkbox" checked={form.champion} onChange={(event) => onChange({ ...form, champion: event.target.checked })} className="h-5 w-5 accent-[#0b5e3c]" />
