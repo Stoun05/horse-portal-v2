@@ -28,3 +28,10 @@ export const initialHorses: Horse[] = [
   { id: "7", name: "Günnur", breed: "Ahal-teke", sex: "Baýtal", color: "Doru", year: 2022, code: "AT-2022-016", image: "/horses/gunnur.png", champion: false, father: "Galkan", mother: "Näzli", microchip: "795010000022016", birthPlace: "Balkan welaýaty" },
   { id: "8", name: "Pyrtykal", breed: "Ýomut", sex: "Aýgyr", color: "Gar", year: 2017, code: "AT-2017-019", image: "/horses/Galkan.png", champion: false, father: "Miras", mother: "Altyn", microchip: "795010000017019", birthPlace: "Daşoguz welaýaty" },
 ];
+
+export function mergeHorseDefaults(horses: Horse[]) {
+  return horses.map((horse) => ({
+    ...initialHorses.find((item) => item.id === horse.id),
+    ...horse,
+  }));
+}
