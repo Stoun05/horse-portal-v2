@@ -78,7 +78,7 @@ function HorseProfile({ horse }: { horse: Horse }) {
           <h1 className="text-3xl font-bold text-[#0b2f24] lg:text-4xl">At pasporty</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Link href="/nesil" className="inline-flex items-center gap-2 rounded-xl border border-[#0b5e3c] bg-white px-5 py-3 font-semibold text-[#0b5e3c] hover:bg-emerald-50">
+          <Link href={`/nesil?horse=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl border border-[#0b5e3c] bg-white px-5 py-3 font-semibold text-[#0b5e3c] hover:bg-emerald-50">
             <Network size={18} /> Nesil daragty
           </Link>
           <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-semibold text-white hover:bg-[#08462d]">
