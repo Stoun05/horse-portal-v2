@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Download, ExternalLink, Minus, Network, Plus, Printer, RotateCcw, Trophy } from "lucide-react";
+import { Download, ExternalLink, Minus, Network, Plus, Printer, RotateCcw, Search, Trophy } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
 import Breadcrumb from "../../components/Breadcrumb";
@@ -38,9 +38,29 @@ export default function NesilPage() {
   const [open, setOpen] = useState(false);
   const { horses } = useHorseCatalog();
   const [selectedId, setSelectedId] = useState("gundogar-01-akyol");
+  const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [generations, setGenerations] = useState<3 | 4 | 5>(3);
   const [zoom, setZoom] = useState(1);
   const horse = horses.find((item) => item.id === selectedId) ?? horses[0];
+
+  useEffect(() => {
+    const requestedId = new URLSearchParams(window.location.search).get("horse");
+    if (requestedId && horses.some((item) => item.id === requestedId)) setSelectedId(requestedId);
+  }, [horses]);
+
+  const searchResults = useMemo(() => {
+    const value = query.trim().toLocaleLowerCase("tk");
+    if (!value) return [];
+    return horses.filter((item) => item.name.toLocaleLowerCase("tk").includes(value) || item.code.toLocaleLowerCase("tk").includes(value)).slice(0, 8);
+  }, [query, horses]);
+
+  const selectHorse = (id: string) => {
+    setSelectedId(id);
+    setQuery("");
+    setSearchOpen(false);
+    window.history.replaceState(null, "", `/nesil?horse=${encodeURIComponent(id)}`);
+  };
 
   const columns = useMemo(() => {
     if (!horse) return [];
@@ -60,7 +80,7 @@ export default function NesilPage() {
     return result;
   }, [horse, horses, generations]);
 
-  const chooseNode = (node: TreeNode) => { if (node.horseId) setSelectedId(node.horseId); };
+  const chooseNode = (node: TreeNode) => { if (node.horseId) selectHorse(node.horseId); };
   const printTree = (pdf = false) => {
     const oldTitle = document.title;
     document.title = `${horse?.name || "At"} — nesil daragty${pdf ? " PDF" : ""}`;
@@ -76,7 +96,14 @@ export default function NesilPage() {
         <div className="print:hidden"><Breadcrumb /></div>
         <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between print:hidden">
           <div><div className="flex items-center gap-3"><Network className="text-[#0b5e3c]" /><h1 className="text-3xl font-black tracking-tight text-[#10261d] lg:text-4xl">Nesil daragty</h1></div><p className="mt-2 font-semibold text-[#4b5b53]">Kartoçka basylanda katalogda bar bolan at esasy at hökmünde saýlanýar.</p></div>
-          <label className="min-w-[280px] text-sm font-extrabold text-[#26352e]">Aty saýla<select value={horse?.id ?? ""} onChange={(e) => setSelectedId(e.target.value)} className="mt-2 w-full rounded-xl border-2 border-[#d9e2dd] bg-white px-4 py-3 font-bold shadow-sm outline-none focus:border-[#0b5e3c]">{horses.map((item) => <option key={item.id} value={item.id}>{item.name} — {item.code}</option>)}</select></label>
+          <div className="grid w-full gap-3 md:grid-cols-2 xl:w-auto">
+            <label className="relative min-w-[300px] text-sm font-extrabold text-[#26352e]">Ady ýa-da ID boýunça gözle
+              <Search className="absolute bottom-3.5 left-4 text-[#53645b]" size={19}/>
+              <input value={query} onFocus={() => setSearchOpen(true)} onChange={(e) => { setQuery(e.target.value); setSearchOpen(true); }} placeholder="Mysal: Parasat ýa-da GÜNDOGAR-02" className="mt-2 w-full rounded-xl border-2 border-[#d9e2dd] bg-white py-3 pl-11 pr-4 font-bold shadow-sm outline-none focus:border-[#0b5e3c]"/>
+              {searchOpen && query.trim() && <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-72 overflow-auto rounded-xl border-2 border-[#d9e2dd] bg-white p-2 shadow-xl">{searchResults.length ? searchResults.map((item) => <button type="button" key={item.id} onMouseDown={(e) => e.preventDefault()} onClick={() => selectHorse(item.id)} className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-left hover:bg-emerald-50"><span className="font-black text-[#10261d]">{item.name}</span><span className="text-sm font-bold text-[#53645b]">{item.code}</span></button>) : <p className="p-4 text-center font-bold text-gray-500">At tapylmady</p>}</div>}
+            </label>
+            <label className="min-w-[280px] text-sm font-extrabold text-[#26352e]">Aty saýla<select value={horse?.id ?? ""} onChange={(e) => selectHorse(e.target.value)} className="mt-2 w-full rounded-xl border-2 border-[#d9e2dd] bg-white px-4 py-3 font-bold shadow-sm outline-none focus:border-[#0b5e3c]">{horses.map((item) => <option key={item.id} value={item.id}>{item.name} — {item.code}</option>)}</select></label>
+          </div>
         </div>
 
         {horse && <>

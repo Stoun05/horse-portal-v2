@@ -236,7 +236,7 @@ export default function AtlarPage() {
 
                         <div className="mt-5 grid grid-cols-4 gap-2">
                           <ActionLink href={`/atlar/${horse.id}`} label="Gör" icon={<Eye size={18} />} />
-                          <ActionLink href="/nesil" label="Nesil" icon={<Network size={18} />} />
+                          <ActionLink href={`/nesil?horse=${encodeURIComponent(horse.id)}`} label={`${horse.name} — nesil daragty`} icon={<Network size={18} />} />
                           <ActionButton label="Redaktirle" onClick={() => openEditModal(horse)} icon={<Pencil size={18} />} />
                           <ActionButton label="Poz" onClick={() => deleteHorse(horse)} icon={<Trash2 size={18} />} danger />
                         </div>
