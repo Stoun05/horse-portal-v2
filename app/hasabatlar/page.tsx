@@ -7,7 +7,6 @@ import Breadcrumb from "../../components/Breadcrumb";
 import { useHorseCatalog } from "../../lib/useHorseCatalog";
 import type { Horse } from "../../lib/horses";
 import {
-  Download,
   FileSpreadsheet,
   FileText,
   GitBranch,
