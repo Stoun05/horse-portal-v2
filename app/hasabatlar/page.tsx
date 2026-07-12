@@ -10,7 +10,7 @@ import {
   FileSpreadsheet,
   FileText,
   GitBranch,
-  Horse as HorseIcon,
+  ClipboardList,
   Printer,
   Search,
   Trophy,
@@ -19,7 +19,7 @@ import {
 type ReportKey = "all" | "champions" | "lineages" | "breeding";
 
 const reports: { key: ReportKey; title: string; desc: string; icon: ReactNode }[] = [
-  { key: "all", title: "Atlaryň umumy sanawy", desc: "Ähli atlaryň pasport we esasy maglumatlary.", icon: <HorseIcon /> },
+  { key: "all", title: "Atlaryň umumy sanawy", desc: "Ähli atlaryň pasport we esasy maglumatlary.", icon: <ClipboardList /> },
   { key: "champions", title: "Çempion atlar", desc: "Diňe çempion hökmünde bellenen atlaryň sanawy.", icon: <Trophy /> },
   { key: "lineages", title: "Nesil ugurlary", desc: "Nesil ugurlary we olara degişli atlaryň sany.", icon: <GitBranch /> },
   { key: "breeding", title: "Tohumçylyk maglumatlary", desc: "Ata-enesi, beden ölçegleri we tohumçylyk gymmaty.", icon: <FileText /> },
@@ -121,7 +121,7 @@ export default function HasabatlarPage() {
           </header>
 
           <section className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4 print:hidden">
-            <Stat icon={<HorseIcon />} label="Jemi atlar" value={horses.length} />
+            <Stat icon={<ClipboardList />} label="Jemi atlar" value={horses.length} />
             <Stat icon={<Trophy />} label="Çempion atlar" value={champions.length} />
             <Stat icon={<GitBranch />} label="Nesil ugurlary" value={lineageRows.length} />
             <Stat icon={<FileText />} label="Maglumatly atlar" value={horses.filter((horse) => horse.breedingValue).length} />
