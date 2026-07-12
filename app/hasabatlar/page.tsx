@@ -315,7 +315,7 @@ function escapeXml(value: unknown) {
 
 function sheet(name: string, headers: string[], rows: (string | number)[][]) {
   const rowXml = [headers, ...rows]
-    .map((row, rowIndex) =>
+    .map((row) =>
       `<Row>${row.map((cell) => `<Cell><Data ss:Type="${typeof cell === "number" ? "Number" : "String"}">${escapeXml(cell)}</Data></Cell>`).join("")}</Row>`
     )
     .join("");
