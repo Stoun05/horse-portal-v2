@@ -28,7 +28,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-p, span, td, th, label, input, select, button, a { color: inherit; }
 table { color: #111827; }
 th { color: #26352e; font-weight: 800; }
 td { font-weight: 550; }

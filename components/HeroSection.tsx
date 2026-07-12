@@ -13,7 +13,7 @@ export default function HeroSection() {
   return (
     <section className="relative min-h-[720px] overflow-hidden rounded-3xl shadow-2xl md:min-h-[850px]">
       <img src="/horse-hero.png" alt="Ahalteke bedewi" className="absolute inset-0 h-full w-full object-cover" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/10" />
       <div className="relative z-10 flex min-h-[720px] flex-col justify-between p-6 md:min-h-[850px] md:p-16">
         <div>
           <p className="mb-6 font-semibold uppercase tracking-wider text-yellow-300">Sanly atçylyk — geljegiň ugry</p>
