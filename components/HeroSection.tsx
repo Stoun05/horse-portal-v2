@@ -1,107 +1,43 @@
+"use client";
 
 import Link from "next/link";
-import { ArrowRight, Trophy, FileText, Network } from "lucide-react";
+import { ArrowRight, Trophy, Network, Dna } from "lucide-react";
+import { useHorseCatalog } from "../lib/useHorseCatalog";
 
 export default function HeroSection() {
+  const { horses } = useHorseCatalog();
+  const champions = horses.filter((horse) => horse.champion).length;
+  const lineages = new Set(horses.map((horse) => horse.lineage).filter(Boolean)).size;
+  const relations = horses.reduce((sum, horse) => sum + Number(Boolean(horse.father)) + Number(Boolean(horse.mother)), 0);
+
   return (
-    <section className="relative overflow-hidden rounded-3xl min-h-[720px] md:min-h-[850px] shadow-2xl">
-
-      {/* Background */}
-      <img
-        src="/horse-hero.png"
-        alt="Horse"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/30 to-transparent"></div>
-
-      {/* Content */}
-      <div className="relative z-10 flex flex-col justify-between h-full min-h-[720px] md:min-h-[850px] p-6 md:p-16">
-
+    <section className="relative min-h-[720px] overflow-hidden rounded-3xl shadow-2xl md:min-h-[850px]">
+      <img src="/horse-hero.png" alt="Ahalteke bedewi" className="absolute inset-0 h-full w-full object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-transparent" />
+      <div className="relative z-10 flex min-h-[720px] flex-col justify-between p-6 md:min-h-[850px] md:p-16">
         <div>
-          <p className="text-yellow-300 font-semibold tracking-wider uppercase mb-6">
-            SANLY ATÇYLYK — GELJEGIŇ UGURY
-          </p>
-
-          <h1 className="text-4xl md:text-6xl xl:text-7xl font-extrabold leading-tight text-white max-w-5xl">
-            ATLARYŇ NESIL
-            <br />
-            MAGLUMATLARYNY
-            <br />
-            SANLY DOLANDYRYŞ
-            <br />
-            ULGAMY
+          <p className="mb-6 font-semibold uppercase tracking-wider text-yellow-300">Sanly atçylyk — geljegiň ugry</p>
+          <h1 className="max-w-5xl text-4xl font-extrabold leading-tight text-white md:text-6xl xl:text-7xl">
+            ATLARYŇ NESIL<br />MAGLUMATLARYNY<br />SANLY DOLANDYRYŞ<br />ULGAMY
           </h1>
-
-          <p className="text-white/90 text-base md:text-xl mt-6 md:mt-8 max-w-2xl leading-7 md:leading-9">
-            Atlaryň nesil şejeresini öwrenmek, maglumatlary saklamak,
-            seljermek we sanly dolandyryş üçin döredilen häzirki zaman
-            platformasy.
+          <p className="mt-6 max-w-2xl text-base leading-7 text-white/90 md:mt-8 md:text-xl md:leading-9">
+            24 sany Ahalteke bedewiniň hakyky maglumatlary, şejeresi we üstünlikleri bir ýerde.
           </p>
-
-          <Link
-            href="/atlar"
-            className="inline-flex items-center gap-3 mt-10 bg-[#0b5d3d] hover:bg-[#084a31] text-white px-8 py-4 rounded-xl font-semibold transition duration-300 shadow-lg"
-          >
-            ATLARYŇ KATALOGYNA GIRIŇ
-            <ArrowRight size={22} />
+          <Link href="/atlar" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#0b5e3c] px-6 py-4 font-semibold text-white hover:bg-[#08462d]">
+            Atlaryň katalogyna gir <ArrowRight size={19} />
           </Link>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 mt-8">
-
-          <StatCard
-            icon={"🐎"}
-            title="Jemi atlar"
-            value="1,456"
-          />
-
-          <StatCard
-            icon={<Network size={34} />}
-            title="Nesil baglanyşyklary"
-            value="5,000"
-          />
-
-          <StatCard
-            icon={<Trophy size={34} />}
-            title="Çempion atlar"
-            value="87"
-          />
-
-          <StatCard
-            icon={<FileText size={34} />}
-            title="Hasabatlar"
-            value="12"
-          />
-
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 md:gap-6">
+          <StatCard icon="🐎" title="Jemi atlar" value={horses.length} />
+          <StatCard icon={<Network size={30} />} title="Nesil baglanyşyklary" value={relations} />
+          <StatCard icon={<Trophy size={30} />} title="Çempion atlar" value={champions} />
+          <StatCard icon={<Dna size={30} />} title="Nesil ugurlary" value={lineages} />
         </div>
-
       </div>
     </section>
   );
 }
 
-function StatCard({
-  icon,
-  title,
-  value,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  value: string;
-}) {
-  return (
-    <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-6 shadow-xl hover:-translate-y-2 hover:shadow-2xl transition duration-300">
-
-      <div className="w-14 h-14 rounded-full bg-[#0b5d3d] text-white flex items-center justify-center mb-4">
-        {icon}
-      </div>
-
-      <p className="text-gray-500 text-sm">{title}</p>
-
-      <h3 className="text-4xl font-bold text-[#0b2f24] mt-2">
-        {value}
-      </h3>
-    </div>
-  );
+function StatCard({ icon, title, value }: { icon: React.ReactNode; title: string; value: number }) {
+  return <div className="rounded-2xl bg-white/95 p-6 shadow-xl backdrop-blur-xl"><div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#0b5d3d] text-white">{icon}</div><p className="text-sm text-gray-500">{title}</p><h3 className="mt-2 text-4xl font-bold text-[#0b2f24]">{value}</h3></div>;
 }
