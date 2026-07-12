@@ -34,6 +34,15 @@ const emptyForm: HorseForm = {
   code: "",
   image: "",
   champion: false,
+  lineage: "",
+  father: "",
+  mother: "",
+  bodyMeasurements: "",
+  breedingValue: "",
+  horseClass: "Naýbaşy",
+  description: "",
+  sourceSide: undefined,
+  sourceNumber: undefined,
 };
 
 export default function AtlarPage() {
@@ -288,10 +297,31 @@ function HorseModal({ form, editing, onChange, onClose, onSubmit }: { form: Hors
           <FormSelect label="Tohumy" value={form.breed} onChange={(value) => onChange({ ...form, breed: value })} options={["Ahalteke"]} />
           <FormSelect label="Görnüşi" value={form.sex} onChange={(value) => onChange({ ...form, sex: value as Horse["sex"] })} options={["At", "Aýgyr", "Baýtal"]} />
           <FormSelect label="Reňki" value={form.color} onChange={(value) => onChange({ ...form, color: value as Horse["color"] })} options={["Mele", "Gyr", "Dor", "Gara", "Al", "Çakan", "Gurt mele", "Akýal mele", "Altynsow mele"]} />
-          <FormInput label="Doglan ýyly" required type="number" min="1980" max={String(new Date().getFullYear())} value={String(form.year)} onChange={(value) => onChange({ ...form, year: Number(value) })} />
+          <FormInput label="Doglan ýyly" required type="number" min="1900" max={String(new Date().getFullYear())} value={String(form.year)} onChange={(value) => onChange({ ...form, year: Number(value) })} />
           <div className="md:col-span-2">
-            <FormInput label="Suratyň ýoly (hökmany däl)" value={form.image ?? ""} onChange={(value) => onChange({ ...form, image: value })} placeholder="/horses/at.png" />
+            <ImageUpload value={form.image ?? ""} horseName={form.name} onChange={(value) => onChange({ ...form, image: value })} />
           </div>
+
+          <div className="md:col-span-2 border-t pt-5">
+            <h3 className="text-lg font-black text-[#0b2f24]">Nesil we pasport maglumatlary</h3>
+            <p className="mt-1 text-sm font-semibold text-gray-500">Bu maglumatlar pasportda we nesil daragtynda awtomatik görkeziler.</p>
+          </div>
+          <FormInput label="Nesil ugry" value={form.lineage ?? ""} onChange={(value) => onChange({ ...form, lineage: value })} placeholder="Mysal: Gyrsakaryň nesil ugry" />
+          <FormInput label="Klasy" value={form.horseClass ?? ""} onChange={(value) => onChange({ ...form, horseClass: value })} placeholder="Mysal: Naýbaşy" />
+          <div className="md:col-span-2">
+            <FormTextarea label="Atasy" value={form.father ?? ""} onChange={(value) => onChange({ ...form, father: value })} placeholder="Ady — reňki, ýyly (atasy – enesi), nesil ugry" rows={3} />
+          </div>
+          <div className="md:col-span-2">
+            <FormTextarea label="Enesi" value={form.mother ?? ""} onChange={(value) => onChange({ ...form, mother: value })} placeholder="Ady — reňki, ýyly (atasy – enesi), nesil ugry" rows={3} />
+          </div>
+          <FormInput label="Beden ölçegleri" value={form.bodyMeasurements ?? ""} onChange={(value) => onChange({ ...form, bodyMeasurements: value })} placeholder="161-162-180-19.5" />
+          <FormInput label="Tohumçylyk gymmaty" value={form.breedingValue ?? ""} onChange={(value) => onChange({ ...form, breedingValue: value })} placeholder="9.5-9.0-8.5-9.0-8.5" />
+          <FormSelect label="Sanawdaky tarapy" value={form.sourceSide ?? ""} onChange={(value) => onChange({ ...form, sourceSide: value ? value as Horse["sourceSide"] : undefined })} options={["", "Gündogar", "Günbatar"]} optionLabels={{ "": "Saýlanmady" }} />
+          <FormInput label="Sanawdaky belgisi" type="number" min="1" value={form.sourceNumber ? String(form.sourceNumber) : ""} onChange={(value) => onChange({ ...form, sourceNumber: value ? Number(value) : undefined })} placeholder="1" />
+          <div className="md:col-span-2">
+            <FormTextarea label="Bedew barada düşündiriş" value={form.description ?? ""} onChange={(value) => onChange({ ...form, description: value })} placeholder="At barada taryhy maglumatlar, üstünlikleri we aýratynlyklary..." rows={5} />
+          </div>
+
           <label className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 md:col-span-2">
             <input type="checkbox" checked={form.champion} onChange={(event) => onChange({ ...form, champion: event.target.checked })} className="h-5 w-5 accent-[#0b5e3c]" />
             <span className="font-semibold text-gray-800">Çempion at hökmünde bellemek</span>
@@ -326,14 +356,63 @@ function FormInput({ label, value, onChange, type = "text", ...props }: { label:
   );
 }
 
-function FormSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: string[] }) {
+function FormSelect({ label, value, onChange, options, optionLabels = {} }: { label: string; value: string; onChange: (value: string) => void; options: string[]; optionLabels?: Record<string, string> }) {
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-semibold text-gray-700">{label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-[#0b5e3c]">
-        {options.map((option) => <option key={option}>{option}</option>)}
+        {options.map((option) => <option key={option} value={option}>{optionLabels[option] ?? option}</option>)}
       </select>
     </label>
+  );
+}
+
+function FormTextarea({ label, value, onChange, rows = 3, placeholder }: { label: string; value: string; onChange: (value: string) => void; rows?: number; placeholder?: string }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-semibold text-gray-700">{label}</span>
+      <textarea rows={rows} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="w-full resize-y rounded-xl border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-[#0b5e3c] focus:ring-2 focus:ring-emerald-100" />
+    </label>
+  );
+}
+
+function ImageUpload({ value, horseName, onChange }: { value: string; horseName: string; onChange: (value: string) => void }) {
+  function selectImage(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { window.alert("Diňe surat faýlyny saýlaň."); return; }
+    if (file.size > 8 * 1024 * 1024) { window.alert("Suratyň ölçegi 8 MB-dan uly bolmaly däl."); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const source = String(reader.result);
+      const picture = new window.Image();
+      picture.onload = () => {
+        const max = 1400;
+        const scale = Math.min(1, max / Math.max(picture.width, picture.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(picture.width * scale);
+        canvas.height = Math.round(picture.height * scale);
+        canvas.getContext("2d")?.drawImage(picture, 0, 0, canvas.width, canvas.height);
+        onChange(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      picture.src = source;
+    };
+    reader.readAsDataURL(file);
+  }
+  return (
+    <div>
+      <span className="mb-2 block text-sm font-semibold text-gray-700">Atyň suraty</span>
+      <div className="grid gap-4 rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/40 p-4 sm:grid-cols-[160px_1fr] sm:items-center">
+        <div className="flex h-36 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[#0b2f24] to-[#b58b2a]">
+          {value ? <img src={value} alt={horseName || "At suraty"} className="h-full w-full object-cover" /> : <span className="text-5xl font-black text-white/60">{horseName?.[0] || "🐎"}</span>}
+        </div>
+        <div>
+          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={selectImage} className="block w-full rounded-xl border bg-white p-3 font-semibold" />
+          <p className="mt-2 text-sm font-semibold text-gray-500">JPG, PNG ýa-da WEBP · iň köp 8 MB. Surat brauzer üçin awtomatik kiçeldiler.</p>
+          {value && <button type="button" onClick={() => onChange("")} className="mt-3 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50">Suraty aýyr</button>}
+        </div>
+      </div>
+    </div>
   );
 }
 
