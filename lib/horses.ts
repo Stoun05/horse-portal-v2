@@ -19,19 +19,7 @@ export type Horse = {
   sourceNumber?: number;
 };
 
-export type HorseForm = Omit<
-  Horse,
-  | "id"
-  | "lineage"
-  | "father"
-  | "mother"
-  | "bodyMeasurements"
-  | "breedingValue"
-  | "horseClass"
-  | "description"
-  | "sourceSide"
-  | "sourceNumber"
->;
+export type HorseForm = Omit<Horse, "id">;
 
 // Täze açar öňki demo maglumatlaryň localStorage-dan gaýtadan ýüklenmeginiň öňüni alýar.
 export const HORSE_STORAGE_KEY = "horse-portal-v3-real-horses";
