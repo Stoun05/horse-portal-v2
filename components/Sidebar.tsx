@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";\nimport { usePortalSettings } from "../lib/usePortalSettings";
+import { usePathname } from "next/navigation";
+import { usePortalSettings } from "../lib/usePortalSettings";
 import {
   Home,
   Badge,
@@ -21,7 +22,8 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ open, setOpen }: SidebarProps) {
-  const pathname = usePathname();\n  const { settings } = usePortalSettings();
+  const pathname = usePathname();
+  const { settings } = usePortalSettings();
 
   const menuItems = [
     { name: "Baş sahypa", icon: Home, href: "/" },
