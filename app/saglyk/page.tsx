@@ -4,6 +4,7 @@ import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
 import Breadcrumb from "../../components/Breadcrumb";
+import { assetPath } from "../../lib/assetPath";
 import { useHorseCatalog } from "../../lib/useHorseCatalog";
 import {
   AlertTriangle,
@@ -251,7 +252,7 @@ export default function SaglykPage() {
                 <div className="grid md:grid-cols-[220px_1fr]">
                   <div className="flex min-h-44 items-center justify-center bg-gradient-to-br from-[#064e3b] to-[#b38b24] p-6 text-white">
                     {selectedHorse.image ? (
-                      <img src={selectedHorse.image} alt={selectedHorse.name} className="h-32 w-32 rounded-full object-cover ring-4 ring-white/60" />
+                      <img src={assetPath(selectedHorse.image)} alt={selectedHorse.name} className="h-32 w-32 rounded-full object-cover ring-4 ring-white/60" />
                     ) : (
                       <span className="text-7xl font-black">{selectedHorse.name.charAt(0)}</span>
                     )}
