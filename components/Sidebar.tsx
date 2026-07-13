@@ -65,7 +65,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
 
         <div className="mb-8 flex justify-center">
           <img
-            src={assetPath("/logo.png")}
+            src={assetPath("/logo.jpg")}
             alt="Atçylyk Akademiýasy"
             className="w-44 mx-auto"
           />
