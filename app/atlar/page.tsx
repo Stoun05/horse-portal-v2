@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
+  Award,
   Eye,
   Network,
   Pencil,
@@ -151,7 +152,7 @@ export default function AtlarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 lg:flex">
+    <div className="min-h-screen bg-[#f4f7f5] lg:flex">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
       <div className="min-w-0 flex-1 border-[#93c5fd] sm:border-x-4 lg:border-x-[15px]">
@@ -160,25 +161,34 @@ export default function AtlarPage() {
         <main className="p-4 sm:p-6 lg:p-8">
           <Breadcrumb />
 
-          <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-[#0b2f24]">Atlar katalogy</h1>
-              <p className="mt-2 text-gray-500">
-                Jemi atlar: <b className="text-[#0b5e3c]">{horses.length}</b>
-              </p>
+          <section className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-[#052b1f] via-[#0b5e3c] to-[#b58b2a] p-6 text-white shadow-lg sm:p-8">
+            <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[36px] border-white/5" />
+            <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+              <div className="max-w-3xl">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/20 bg-white/15">
+                  <Award size={30} />
+                </div>
+                <p className="mb-2 text-sm font-black uppercase tracking-[0.2em] text-amber-300">Ahalteke bedewleriniň resmi katalogy</p>
+                <h1 className="text-3xl font-black sm:text-4xl lg:text-5xl">Atlar katalogy</h1>
+                <p className="mt-3 max-w-2xl leading-7 text-white/85">Atlaryň pasport, nesil, tohumçylyk we çempionlyk maglumatlaryny bir ýerden gözläň we dolandyryň.</p>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <HeroStat label="Jemi atlar" value={horses.length} />
+                <HeroStat label="Çempionlar" value={horses.filter((horse) => horse.champion).length} />
+                <HeroStat label="Nesil ugurlary" value={new Set(horses.map((horse) => horse.lineage).filter(Boolean)).size} />
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={openCreateModal}
-              className="flex w-fit items-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-semibold text-white transition hover:bg-[#08462d] focus:outline-none focus:ring-4 focus:ring-emerald-200"
-            >
+          </section>
+
+          <div className="mb-6 flex justify-end">
+            <button type="button" onClick={openCreateModal} className="inline-flex items-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white shadow-sm transition hover:bg-[#08462d] focus:outline-none focus:ring-4 focus:ring-emerald-200">
               <Plus size={19} /> Täze at goş
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
-            <aside className="h-fit rounded-2xl bg-white p-6 shadow-sm">
-              <h2 className="mb-6 text-2xl font-bold text-[#0b2f24]">Filtrler</h2>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
+            <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-6">
+              <h2 className="mb-6 text-xl font-black text-[#082f24]">Filtrler</h2>
               <div className="space-y-5">
                 <FilterSelect label="Tohum" value={breed} onChange={setBreed} options={["Ähli tohumlar", ...Array.from(new Set(horses.map((horse) => horse.breed)))]} />
                 <FilterSelect label="Görnüşi" value={sex} onChange={setSex} options={["Ähli jynslar", ...Array.from(new Set(horses.map((horse) => horse.sex)))]} />
@@ -215,12 +225,12 @@ export default function AtlarPage() {
               {visibleHorses.length ? (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                   {visibleHorses.map((horse) => (
-                    <article key={horse.id} className="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+                    <article key={horse.id} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl">
                       <div className="relative h-56 overflow-hidden bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a]">
                         {horse.image ? (
-                          <Image src={horse.image} alt={horse.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw" className="object-cover" />
+                          <Image src={horse.image} alt={horse.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw" className="object-cover transition duration-500 group-hover:scale-105" />
                         ) : (
-                          <div className="flex h-full items-center justify-center text-7xl font-black text-white/20">{horse.name.slice(0, 1)}</div>
+                          <div className="flex h-full flex-col items-center justify-center"><span className="text-7xl font-black text-white/20">{horse.name.slice(0, 1)}</span><span className="mt-2 rounded-full bg-black/20 px-3 py-1 text-xs font-bold text-white/75">Surat ýok</span></div>
                         )}
                         {horse.champion && (
                           <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950 shadow">
@@ -237,11 +247,7 @@ export default function AtlarPage() {
                           </div>
                           <span className="rounded-lg bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">{horse.sex}</span>
                         </div>
-                        <div className="mt-3 flex justify-between text-sm text-gray-600">
-                          <span>{horse.color}</span>
-                          <span>{horse.year}</span>
-                        </div>
-                        <p className="mt-2 text-sm text-gray-500">ID: {horse.code}</p>
+                        <div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Reňki</p><p className="mt-1 font-black text-slate-950">{horse.color}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Doglan ýyly</p><p className="mt-1 font-black text-slate-950">{horse.year}</p></div></div><p className="mt-3 truncate text-sm font-bold text-slate-600">ID: {horse.code}</p><p className="mt-2 line-clamp-1 text-sm font-bold text-[#0b5e3c]">{horse.lineage || "Nesil ugry barada maglumat ýok"}</p>
 
                         <div className="mt-5 grid grid-cols-4 gap-2">
                           <ActionLink href={`/atlar/${horse.id}`} label="Gör" icon={<Eye size={18} />} />
@@ -277,6 +283,10 @@ export default function AtlarPage() {
       )}
     </div>
   );
+}
+
+function HeroStat({ label, value }: { label: string; value: number }) {
+  return <div className="min-w-0 rounded-2xl border border-white/20 bg-white/10 px-3 py-4 text-center backdrop-blur-sm sm:min-w-[120px] sm:px-5"><p className="text-2xl font-black sm:text-3xl">{value}</p><p className="mt-1 text-xs font-bold text-white/75 sm:text-sm">{label}</p></div>;
 }
 
 function HorseModal({ form, editing, onChange, onClose, onSubmit }: { form: HorseForm; editing: boolean; onChange: (form: HorseForm) => void; onClose: () => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
