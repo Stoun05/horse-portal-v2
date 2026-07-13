@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import Breadcrumb from "../../components/Breadcrumb";
+import { assetPath } from "../../lib/assetPath";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
 import {
@@ -228,7 +229,7 @@ export default function AtlarPage() {
                     <article key={horse.id} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl">
                       <div className="relative h-56 overflow-hidden bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a]">
                         {horse.image ? (
-                          <Image src={horse.image} alt={horse.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw" className="object-cover transition duration-500 group-hover:scale-105" />
+                          <Image src={assetPath(horse.image)} alt={horse.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw" className="object-cover transition duration-500 group-hover:scale-105" />
                         ) : (
                           <div className="flex h-full flex-col items-center justify-center"><span className="text-7xl font-black text-white/20">{horse.name.slice(0, 1)}</span><span className="mt-2 rounded-full bg-black/20 px-3 py-1 text-xs font-bold text-white/75">Surat ýok</span></div>
                         )}
