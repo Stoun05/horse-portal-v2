@@ -26,6 +26,7 @@ import {
   type RoleName,
   usePortalSettings,
 } from "../../lib/usePortalSettings";
+import { assetPath } from "../../lib/assetPath";
 
 const roles: RoleName[] = ["Admin", "Operator", "Weterinar", "Gözegçi"];
 const permissions: { key: PermissionName; label: string }[] = [
@@ -198,7 +199,7 @@ export default function SazlamalarPage() {
             <Card title="Logo we reňk" icon={<Palette />}>
               <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
                 <div className="flex h-32 w-40 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                  <img src={draft.logo || "/logo.png"} alt="Portal logo" className="max-h-full max-w-full object-contain" />
+                  <img src={assetPath(draft.logo || "/logo.png")} alt="Portal logo" className="max-h-full max-w-full object-contain" />
                 </div>
                 <div className="flex-1 space-y-4">
                   <Field label="Logo ýükle">

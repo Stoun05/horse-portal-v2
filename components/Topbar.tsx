@@ -2,6 +2,7 @@
 
 import { Menu } from "lucide-react";
 import { usePortalSettings } from "../lib/usePortalSettings";
+import { assetPath } from "../lib/assetPath";
 
 type TopbarProps = {
   setOpen: (open: boolean) => void;
@@ -22,7 +23,7 @@ export default function Topbar({ setOpen }: TopbarProps) {
           <Menu size={22} />
         </button>
         {settings.logo && (
-          <img src={settings.logo} alt="" className="hidden h-10 w-10 rounded-lg object-contain sm:block" />
+          <img src={assetPath(settings.logo)} alt="" className="hidden h-10 w-10 rounded-lg object-contain sm:block" />
         )}
         <div>
           <p className="text-xs text-gray-500">{settings.organization}</p>

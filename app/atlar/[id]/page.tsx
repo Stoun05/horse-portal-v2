@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 import Breadcrumb from "../../../components/Breadcrumb";
+import { assetPath } from "../../../lib/assetPath";
 import Sidebar from "../../../components/Sidebar";
 import Topbar from "../../../components/Topbar";
 import {
@@ -217,7 +218,7 @@ function HorseProfile({
         <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr]">
           <div className="relative min-h-[360px] overflow-hidden bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a] xl:min-h-[520px]">
             {horse.image ? (
-              <Image src={horse.image} alt={horse.name} fill priority sizes="(max-width: 1280px) 100vw, 420px" className="object-cover" />
+              <Image src={assetPath(horse.image)} alt={horse.name} fill priority sizes="(max-width: 1280px) 100vw, 420px" className="object-cover" />
             ) : (
               <div className="flex min-h-[520px] items-center justify-center text-[12rem] font-black text-white/15">{horse.name.slice(0, 1)}</div>
             )}
