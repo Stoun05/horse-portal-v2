@@ -11,6 +11,10 @@ export default function Breadcrumb() {
 
   if (pathname.startsWith("/atlar")) {
     currentPage = "Atlar katalogy";
+  } else if (pathname.startsWith("/yenijiler")) {
+    currentPage = "Gözellik bäsleşiginiň ýeňijileri";
+  } else if (pathname.startsWith("/arkadag-atlary")) {
+    currentPage = "Arkadag şäheriniň 24 aty";
   } else if (pathname.startsWith("/nesil")) {
     currentPage = "Nesil daragty";
   } else if (pathname.startsWith("/tohumcylyk")) {
