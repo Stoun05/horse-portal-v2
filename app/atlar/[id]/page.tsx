@@ -13,6 +13,8 @@ import {
   HeartPulse,
   MapPin,
   Network,
+  Pencil,
+  Save,
   ShieldCheck,
   Tag,
   Trash2,
@@ -49,7 +51,7 @@ export default function AtProfilePage() {
     }
   }, [params.id]);
 
-  const updateHorseImage = (image?: string) => {
+  const updateHorse = (changes: Partial<Horse>) => {
     if (!horse) return false;
 
     try {
@@ -57,7 +59,7 @@ export default function AtProfilePage() {
       const horses = saved
         ? mergeHorseDefaults(JSON.parse(saved) as Horse[])
         : initialHorses;
-      const updatedHorse = { ...horse, image };
+      const updatedHorse = { ...horse, ...changes };
       const updatedHorses = horses.map((item) =>
         item.id === horse.id ? updatedHorse : item,
       );
@@ -66,7 +68,7 @@ export default function AtProfilePage() {
       setHorse(updatedHorse);
       return true;
     } catch {
-      window.alert("Suraty saklamak başartmady. Has kiçi surat saýlap täzeden synanyşyň.");
+      window.alert("Üýtgeşmäni saklamak başartmady. Täzeden synanyşyň.");
       return false;
     }
   };
@@ -86,7 +88,11 @@ export default function AtProfilePage() {
           ) : horse === null ? (
             <NotFoundState />
           ) : (
-            <HorseProfile horse={horse} onImageChange={updateHorseImage} />
+            <HorseProfile
+              horse={horse}
+              onImageChange={(image) => updateHorse({ image })}
+              onDescriptionChange={(description) => updateHorse({ description })}
+            />
           )}
         </main>
       </div>
@@ -97,9 +103,11 @@ export default function AtProfilePage() {
 function HorseProfile({
   horse,
   onImageChange,
+  onDescriptionChange,
 }: {
   horse: Horse;
   onImageChange: (image?: string) => boolean;
+  onDescriptionChange: (description: string) => boolean;
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [sourceImage, setSourceImage] = useState("");
@@ -108,6 +116,8 @@ function HorseProfile({
   const [positionY, setPositionY] = useState(50);
   const [processing, setProcessing] = useState(false);
   const [editorError, setEditorError] = useState("");
+  const [descriptionEditing, setDescriptionEditing] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState(horse.description ?? "");
 
   const openEditor = () => {
     setSourceImage(horse.image ?? "");
@@ -171,6 +181,17 @@ function HorseProfile({
       setSourceImage("");
       setEditorOpen(false);
     }
+  };
+
+  const saveDescription = () => {
+    if (onDescriptionChange(descriptionDraft.trim())) {
+      setDescriptionEditing(false);
+    }
+  };
+
+  const cancelDescriptionEdit = () => {
+    setDescriptionDraft(horse.description ?? "");
+    setDescriptionEditing(false);
   };
 
   return (
@@ -246,12 +267,61 @@ function HorseProfile({
               </div>
             </div>
 
-            {horse.description && (
-              <div className="mt-6 rounded-2xl border border-amber-100 bg-amber-50/70 p-5">
+            <div className="mt-6 rounded-2xl border border-amber-100 bg-amber-50/70 p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-lg font-bold text-[#0b2f24]">Bedew barada</h3>
-                <p className="mt-3 leading-7 text-gray-700">{horse.description}</p>
+                {!descriptionEditing && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDescriptionDraft(horse.description ?? "");
+                      setDescriptionEditing(true);
+                    }}
+                    className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm font-bold text-amber-800 hover:bg-amber-50 print:hidden"
+                  >
+                    <Pencil size={16} /> Üýtget
+                  </button>
+                )}
               </div>
-            )}
+
+              {descriptionEditing ? (
+                <div className="mt-4 print:hidden">
+                  <textarea
+                    value={descriptionDraft}
+                    onChange={(event) => setDescriptionDraft(event.target.value)}
+                    rows={6}
+                    maxLength={3000}
+                    placeholder="Bedewiň taryhy, üstünlikleri we aýratynlyklary barada ýazyň..."
+                    className="w-full resize-y rounded-xl border border-amber-200 bg-white px-4 py-3 leading-7 text-gray-900 outline-none focus:border-[#0b5e3c] focus:ring-2 focus:ring-emerald-100"
+                  />
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-xs font-semibold text-gray-500">
+                      {descriptionDraft.length} / 3000 nyşan
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={cancelDescriptionEdit}
+                        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50"
+                      >
+                        Ýatyr
+                      </button>
+                      <button
+                        type="button"
+                        onClick={saveDescription}
+                        className="inline-flex items-center gap-2 rounded-lg bg-[#0b5e3c] px-4 py-2 text-sm font-bold text-white hover:bg-[#08462d]"
+                      >
+                        <Save size={16} /> Sakla
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-3 whitespace-pre-wrap leading-7 text-gray-800">
+                  {horse.description || "Bu bedew barada maglumat girizilmedik."}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </section>
