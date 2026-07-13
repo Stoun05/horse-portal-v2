@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import Breadcrumb from "./Breadcrumb";
+import { assetPath } from "../lib/assetPath";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import {
@@ -184,7 +185,7 @@ function HorseCard({
       <div className="relative h-56 overflow-hidden bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a]">
         {horse.image ? (
           <Image
-            src={horse.image}
+            src={assetPath(horse.image)}
             alt={horse.name}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
