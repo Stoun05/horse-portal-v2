@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePortalSettings } from "../lib/usePortalSettings";
+import { assetPath } from "../lib/assetPath";
 import {
   Home,
   Badge,
@@ -64,7 +65,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
 
         <div className="mb-8 flex justify-center">
           <img
-            src="/logo.png"
+            src={assetPath("/logo.png")}
             alt="Atçylyk Akademiýasy"
             className="w-44 mx-auto"
           />
