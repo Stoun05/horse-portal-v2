@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "desktop": "npm run build && electron .",
-    "dist:win": "npm run build && electron-builder --win nsis"
+    "dist:win": "npm run build && electron-builder --win nsis --publish never"
   },
   "dependencies": {
     "lucide-react": "^1.23.0",
