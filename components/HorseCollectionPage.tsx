@@ -23,6 +23,7 @@ import {
   mergeHorseDefaults,
   type Horse,
 } from "../lib/horses";
+import { horsePassportHref } from "../lib/routes";
 
 type CollectionMode = "winners" | "arkadag";
 
@@ -230,7 +231,7 @@ function HorseCard({
 
         <div className="mt-5 grid grid-cols-2 gap-2">
           <Link
-            href={`/atlar/${horse.id}`}
+            href={horsePassportHref(horse.id)}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0b5e3c] px-3 py-2.5 text-sm font-bold text-white hover:bg-[#08462d]"
           >
             <Eye size={17} /> Pasporty

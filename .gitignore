@@ -19,6 +19,9 @@
 
 # production
 /build
+/release/
+!/build/
+!/build/icon.ico
 
 # misc
 .DS_Store

@@ -1,0 +1,29 @@
+appId: tm.edu.atcylyk.portal
+productName: Atçylyk Portal
+asar: true
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - electron/**/*
+  - out/**/*
+  - build/icon.ico
+  - package.json
+
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: Atcylyk-Portal-Setup-1.0.0.${ext}
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Atçylyk Portal
+  uninstallDisplayName: Atçylyk Portal
