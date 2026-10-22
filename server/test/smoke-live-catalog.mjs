@@ -27,6 +27,7 @@ try {
  if(catalog.status!==200) throw Error("Catalog returned "+catalog.status);
  const body=await catalog.json();
  if(!Array.isArray(body?.horses)) throw Error("Invalid catalog response");
+ if(process.env.PORTAL_EXPECT_SEEDED_HORSE==="1" && !body.horses.some(h=>h.id==="ci-horse-001" && h.data?.name==="CI Test Aty")) throw Error("Seeded test horse not returned correctly");
  if (process.env.WEB_ORIGIN) {
    const origin=process.env.WEB_ORIGIN;
    const preflight=await fetch(endpoint("/api/auth/login"),{
