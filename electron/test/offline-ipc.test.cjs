@@ -103,3 +103,12 @@ test("offline preload has read-only methods and no write or generic invoke bridg
  assert.match(source,/getPendingCount/);
  assert.doesNotMatch(source,/addLocalChange|flushPending|sendSync/);
 });
+
+test("main process never exposes offline authorization to renderer or BrowserWindow",()=>{
+ const fs=require("node:fs"),path=require("node:path");
+ const source=fs.readFileSync(path.join(__dirname,"..","main.cjs"),"utf8");
+ assert.match(source,/attachAuthorizedWindow/);
+ assert.match(source,/revokeOfflineSession/);
+ assert.doesNotMatch(source,/window\.authorizeOfflineAccount\s*=/);
+ assert.doesNotMatch(source,/ipcMain\.handle\(\s*["']offline:authorize/);
+});
