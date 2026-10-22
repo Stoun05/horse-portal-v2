@@ -120,3 +120,31 @@ test("existing vault lock prevents any queued horse change",()=>{
   assert.equal(openAccountOfflineStore({root,userId:a,key}).listPending().length,1);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("failed encrypted write releases own lock but keeps earlier horse edits",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-write-lock-failure-")),key=randomBytes(32);
+ try{
+  const store=openAccountOfflineStore({root,userId:a,key});
+  store.addLocalChange({entityId:"h1",action:"create",payload:{name:"Saved"}});
+  const filename=accountPath(root,a);
+  assert.throws(()=>store.addLocalChange({entityId:"h2",action:"create",payload:{name:"Invalid",broken:BigInt(1)}}));
+  assert.equal(fs.existsSync(filename+".lock"),false,"own lock should be released after serialization fails");
+  store.addLocalChange({entityId:"h3",action:"create",payload:{name:"After failure"}});
+  const reopened=openAccountOfflineStore({root,userId:a,key});
+  assert.deepEqual(reopened.listPending().map(x=>x.entity_id),["h1","h3"]);
+  assert.equal(reopened.listHorses().h1.name,"Saved");
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test("a stale vault writer never deletes another process's lock",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-lock-owner-")),key=randomBytes(32);
+ try{
+  const first=openAccountOfflineStore({root,userId:a,key});
+  const stale=openAccountOfflineStore({root,userId:a,key});
+  first.addLocalChange({entityId:"h1",action:"create",payload:{name:"Authoritative"}});
+  assert.throws(()=>stale.addLocalChange({entityId:"h2",action:"create",payload:{name:"Rejected"}}),/changed since opening/);
+  const filename=accountPath(root,a);
+  assert.equal(fs.existsSync(filename+".lock"),false);
+  assert.equal(openAccountOfflineStore({root,userId:a,key}).listPending().length,1);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
