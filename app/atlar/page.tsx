@@ -20,6 +20,7 @@ import Breadcrumb from "../../components/Breadcrumb";
 import { assetPath } from "../../lib/assetPath";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
+import RemoteHorsePanel from "../../components/RemoteHorsePanel";
 import {
   HORSE_STORAGE_KEY,
   initialHorses,
@@ -203,6 +204,7 @@ export default function AtlarPage() {
 
         <main className="p-4 sm:p-6 lg:p-8">
           <Breadcrumb />
+          <RemoteHorsePanel />
           {!storageReadable && <p role="alert" className="my-4 rounded-lg border border-red-500 bg-red-50 p-4 text-red-900">Ýerli at maglumatlaryny okamak ýa-da saklamak başa barmady. Maglumatlaryň üstünden ýazmazlyk üçin üýtgetmek wagtlaýyn ýapyldy. Maglumatlary dikeltmezden brauzeriň saklaýjysyny arassalamaň.</p>}
 
           <section className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-[#052b1f] via-[#0b5e3c] to-[#b58b2a] p-6 text-white shadow-lg sm:p-8">
