@@ -103,3 +103,20 @@ test("stale account handle cannot overwrite a newer encrypted write",()=>{
   assert.equal(reopened.listHorses().h1.name,"Newest");
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("existing vault lock prevents any queued horse change",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-lock-")),key=randomBytes(32);
+ try{
+  const store=openAccountOfflineStore({root,userId:a,key});
+  const filename=accountPath(root,a);
+  fs.mkdirSync(path.dirname(filename),{recursive:true});
+  const lockPath=filename+".lock";
+  fs.writeFileSync(lockPath,"held");
+  assert.throws(()=>store.addLocalChange({entityId:"horse-locked",action:"create",payload:{name:"Protected"}}),/EEXIST/);
+  assert.equal(store.listPending().length,0);
+  assert.equal(fs.readFileSync(lockPath,"utf8"),"held");
+  fs.unlinkSync(lockPath);
+  store.addLocalChange({entityId:"horse-locked",action:"create",payload:{name:"Protected"}});
+  assert.equal(openAccountOfflineStore({root,userId:a,key}).listPending().length,1);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
