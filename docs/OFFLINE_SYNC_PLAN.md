@@ -35,3 +35,6 @@ Migration 005 adds horse version and a durable sync operation ledger. `server/sr
 
 ## Phase 7: prototype encrypted account vault
 `electron/offline-vault.cjs` provides AES-256-GCM authenticated encryption for a JSON object stored in a deterministic hashed account folder, with write-then-rename and isolated vaults. Tests check persistence, ciphertext tampering, and wrong-key rejection. **This is a prototype only.** The existing SQLite offline cache and outbox are still plaintext and not integrated with this vault. Key generation, OS-protected key storage, key rotation, backup/recovery, secure login and user-specific filtering are not implemented. Do not activate the offline cache for sensitive production data yet.
+
+## Phase 8: Windows-protected key adapter
+`electron/offline-key-store.cjs` adds opt-in per-account AES key wrapping with Electron safeStorage, refusing unsupported Windows encryption and overwrites. Tests use a mock adapter only; actual Windows DPAPI, multiuser OS profiles, file ACLs, backup/key recovery, process isolation, and migration from plaintext SQLite have **not** been tested. The key adapter and encrypted JSON vault are not connected to the active local SQLite store or Electron window.
