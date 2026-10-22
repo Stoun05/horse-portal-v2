@@ -54,3 +54,6 @@ jobs:
       - name: Test sync transport and runner
         if: always()
         run: node --test electron/test/sync-transport-runner.test.cjs
+      - name: Test encrypted end-to-end sync
+        if: always()
+        run: node --test electron/test/sync-encrypted-end-to-end.test.cjs
