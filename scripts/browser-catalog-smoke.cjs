@@ -5,13 +5,14 @@ const assert = require("node:assert/strict");
  try{
   const page=await browser.newPage();
   const url="http://127.0.0.1:4173/atlar/";
-  await page.goto("http://127.0.0.1:4173/");
+  page.on("pageerror",e=>console.error("PAGE ERROR:",e.message));
   const key="horse-portal-v3-real-horses";
   const record=[{id:"browser-local-test",name:"Local Test Horse",code:"LOCAL-001",breed:"Ahalteke",sex:"At",color:"Mele",year:2022,champion:false}];
   const raw=JSON.stringify(record);
-  await page.evaluate(([k,v])=>localStorage.setItem(k,v),[key,raw]);
-  await page.goto(url);
-  await page.getByText("Local Test Horse").first().waitFor();
+  await page.addInitScript(({key,raw})=>{if(!sessionStorage.getItem("smoke-seeded")){localStorage.setItem(key,raw);sessionStorage.setItem("smoke-seeded","1");}},{key,raw});
+  const response=await page.goto(url);
+  assert.equal(response?.status(),200,"Horse page did not load");
+  await page.getByText("Local Test Horse").first().waitFor({timeout:15000});
   await page.waitForTimeout(300);
   const stable=await page.evaluate(k=>localStorage.getItem(k),key);
   assert.ok(stable?.includes("Local Test Horse"),"Local horse was not hydrated");
