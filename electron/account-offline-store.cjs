@@ -1,5 +1,6 @@
 const {randomUUID}=require("node:crypto");
 const {saveVault,loadVault}=require("./offline-vault.cjs");
+const {classifyServerResponse}=require("./sync-planner.cjs");
 // Isolated prototype, not wired into the Electron renderer or plaintext SQLite.
 function openAccountOfflineStore({root,userId,key}) {
  if(typeof root!=="string" || !Buffer.isBuffer(key) || key.length!==32) throw Error("Invalid configuration");
@@ -29,10 +30,11 @@ function openAccountOfflineStore({root,userId,key}) {
    item.status="conflict";
    persist(next);return true;
   },
-  acknowledge(id) {
-   const next=structuredClone(state),before=next.pending.length;
-   next.pending=next.pending.filter(x=>x.id!==id || x.status==="conflict");
-   if(next.pending.length===before) return false;
+  acknowledge(id,response) {
+   const item=state.pending.find(x=>x.id===id);
+   if(!item || item.status==="conflict" || classifyServerResponse(item,response)!=="ack") return false;
+   const next=structuredClone(state);
+   next.pending=next.pending.filter(x=>x.id!==id);
    persist(next);return true;
   }
  };
