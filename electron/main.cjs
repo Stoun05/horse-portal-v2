@@ -121,7 +121,9 @@ async function createWindow() {
     });
   };
   // Keep this function bound to the owning window, not exposed through IPC.
-  window.authorizeOfflineAccount = authorizeOfflineAccount;
+  // A verified main-process login flow can use this scoped callback later.
+  // Do not attach a custom authorization method to BrowserWindow itself.
+  void authorizeOfflineAccount;
   window.on("closed",()=>{revokeOfflineSession?.();revokeOfflineSession=null;});
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   window.webContents.on("will-navigate", (event, url) => {
