@@ -15,4 +15,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test electron/test/account-offline-store.test.cjs electron/test/authorized-offline-store.test.cjs electron/test/offline-access.test.cjs electron/test/offline-backup.test.cjs electron/test/offline-ipc.test.cjs electron/test/offline-key-store.test.cjs electron/test/offline-store.test.cjs electron/test/offline-vault.test.cjs electron/test/protected-offline-store.test.cjs electron/test/sync-planner.test.cjs
+      - name: Test account-offline-store
+        run: node --test electron/test/account-offline-store.test.cjs
+      - name: Test authorized-offline-store
+        run: node --test electron/test/authorized-offline-store.test.cjs
+      - name: Test offline-access
+        run: node --test electron/test/offline-access.test.cjs
+      - name: Test offline-backup
+        run: node --test electron/test/offline-backup.test.cjs
+      - name: Test offline-ipc
+        run: node --test electron/test/offline-ipc.test.cjs
+      - name: Test offline-key-store
+        run: node --test electron/test/offline-key-store.test.cjs
+      - name: Test offline-store
+        run: node --test electron/test/offline-store.test.cjs
+      - name: Test offline-vault
+        run: node --test electron/test/offline-vault.test.cjs
+      - name: Test protected-offline-store
+        run: node --test electron/test/protected-offline-store.test.cjs
+      - name: Test sync-planner
+        run: node --test electron/test/sync-planner.test.cjs
