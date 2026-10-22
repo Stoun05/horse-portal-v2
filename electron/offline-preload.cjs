@@ -10,3 +10,10 @@ contextBridge.exposeInMainWorld("atcylykOffline", Object.freeze({
   listHorses: () => ipcRenderer.invoke(CHANNELS.horses),
   getPendingCount: () => ipcRenderer.invoke(CHANNELS.pendingCount),
 }));
+
+/* Fixed credential-only desktop authentication bridge. No token or grant access. */
+contextBridge.exposeInMainWorld("atcylykDesktopAuth",Object.freeze({
+ login:(username,password)=>ipcRenderer.invoke("desktop-auth:login",{username,password}),
+ logout:()=>ipcRenderer.invoke("desktop-auth:logout"),
+ getStatus:()=>ipcRenderer.invoke("desktop-auth:status"),
+}));
