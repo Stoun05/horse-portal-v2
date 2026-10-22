@@ -104,3 +104,25 @@ test("navigation start immediately revokes offline catalog access",async()=>{
   revoke();
  } finally {fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("second desktop session cannot steal active global offline IPC handlers",async()=>{
+ const {EventEmitter}=require("node:events");
+ const {attachAuthorizedWindow}=require("../authorized-window.cjs");
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"atcylyk-two-sessions-"));
+ try{
+  const grant={userId,expiresAt:Date.now()+60000,permissions:["horses:read"]};
+  const makeWindow=()=>{const sender=new EventEmitter();sender.mainFrame={url:"http://127.0.0.1:4444/atlar"};return sender;};
+  const one=makeWindow(),two=makeWindow(),handlers=new Map();
+  const ipcMain={handle:(n,fn)=>handlers.set(n,fn),removeHandler:n=>handlers.delete(n)};
+  const options={ipcMain,expectedOrigin:"http://127.0.0.1:4444",root,userId,safeStorage,publicKey,grant,signature:signed(grant),platform:"win32"};
+  const close=attachAuthorizedWindow({...options,webContents:one});
+  const saved=handlers.get("offline:horses");
+  assert.throws(()=>attachAuthorizedWindow({...options,webContents:two}),/already active/);
+  assert.deepEqual(await saved({sender:one,senderFrame:one.mainFrame}),{});
+  close();
+  assert.equal(handlers.size,0);
+  const closeTwo=attachAuthorizedWindow({...options,webContents:two});
+  assert.deepEqual(await handlers.get("offline:horses")({sender:two,senderFrame:two.mainFrame}),{});
+  closeTwo();
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
