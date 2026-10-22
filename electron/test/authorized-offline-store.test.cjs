@@ -148,3 +148,23 @@ test("failed lifecycle listener setup releases offline IPC for next login",()=>{
   close();
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("listener removal failure cannot leave authorized IPC readable",async()=>{
+ const {EventEmitter}=require("node:events");
+ const {attachAuthorizedWindow}=require("../authorized-window.cjs");
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"atcylyk-cleanup-fail-"));
+ try {
+  const grant={userId,expiresAt:Date.now()+60000,permissions:["horses:read"]};
+  const webContents=new EventEmitter(),frame={url:"http://127.0.0.1:4444/atlar"};
+  webContents.mainFrame=frame;
+  const handlers=new Map();
+  const ipcMain={handle:(k,v)=>handlers.set(k,v),removeHandler:k=>handlers.delete(k)};
+  const close=attachAuthorizedWindow({ipcMain,webContents,expectedOrigin:"http://127.0.0.1:4444",root,userId,safeStorage,publicKey,grant,signature:signed(grant),platform:"win32"});
+  const cached=handlers.get("offline:horses");
+  const remove=webContents.removeListener.bind(webContents);
+  webContents.removeListener=(event,fn)=>{if(event==="did-navigate")throw Error("cleanup failed");return remove(event,fn);};
+  close();
+  assert.equal(handlers.size,0);
+  await assert.rejects(()=>cached({sender:webContents,senderFrame:frame}),/session closed/);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
