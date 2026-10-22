@@ -47,3 +47,15 @@ test("offline IPC cleanup can be called repeatedly",()=>{
  close();close();
  assert.equal(handlers.size,0);
 });
+
+test("captured IPC handler denies reads after session is closed",async()=>{
+ const handlers=new Map();
+ const ipcMain={handle:(name,fn)=>handlers.set(name,fn),removeHandler:name=>handlers.delete(name)};
+ const store={listHorses:()=>({}),listPending:()=>[],lastSyncedAt:()=>null};
+ const close=registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444"});
+ const heldHandler=handlers.get("offline:horses");
+ const frame={url:"http://127.0.0.1:4444/atlar"};
+ const event={sender:{mainFrame:frame},senderFrame:frame};
+ close();
+ await assert.rejects(()=>heldHandler(event),/session closed/);
+});
