@@ -20,11 +20,16 @@ function attachAuthorizedWindow({ipcMain,webContents,expectedOrigin,root,userId,
   revokeIpc();
  };
  // A new document or crashed renderer needs a fresh user authorization.
- webContents.on("did-navigate",revoke);
- webContents.on("did-start-navigation",revoke);
- webContents.on("render-process-gone",revoke);
- webContents.on("destroyed",revoke);
- if(webContents.isDestroyed?.()) {revoke();throw Error("Desktop window destroyed during authorization");}
+ try {
+  webContents.on("did-navigate",revoke);
+  webContents.on("did-start-navigation",revoke);
+  webContents.on("render-process-gone",revoke);
+  webContents.on("destroyed",revoke);
+  if(webContents.isDestroyed?.()) throw Error("Desktop window destroyed during authorization");
+ } catch(error) {
+  revoke();
+  throw error;
+ }
  return revoke;
 }
 module.exports={attachAuthorizedWindow};
