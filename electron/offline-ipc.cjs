@@ -23,12 +23,14 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     expectedSender?.removeListener?.("destroyed",closeOnDestroyed);
     IPC_NAMES.forEach(channel=>ipcMain.removeHandler(channel));
   };
+  if(expectedSender?.isDestroyed?.()) throw new Error("Offline IPC window already destroyed");
   expectedSender?.once?.("destroyed",closeOnDestroyed);
   const check = (event) => {
     if(!active) throw new Error("Offline IPC session closed");
     if (expectedSender && event?.sender !== expectedSender) throw new Error("Forbidden IPC window");
     if (!trustedSender(event, expectedOrigin)) throw new Error("Forbidden IPC sender");
   };
+  try {
   ipcMain.handle(CHANNELS.status, async (event) => {
     check(event);
     return { lastSyncedAt: store.lastSyncedAt(), pendingCount: store.listPending().length };
@@ -41,6 +43,7 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     check(event);
     return store.listPending().length;
   });
+  } catch(error) { cleanup(); throw error; }
   return cleanup;
 }
 module.exports = { CHANNELS, trustedSender, registerOfflineReadIpc };
