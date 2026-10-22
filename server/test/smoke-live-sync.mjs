@@ -1,10 +1,13 @@
 /* Destructive writes ONLY to the ephemeral PostgreSQL GitHub Actions database. */
 import {randomUUID} from "node:crypto";
 const base=process.env.PORTAL_URL??"http://127.0.0.1:4100";
-if(process.env.PORTAL_INTEGRATION_DISPOSABLE!=="YES" ||
-   !process.env.DATABASE_URL?.includes("/portal_integration") ||
+if(process.env.PORTAL_INTEGRATION_DISPOSABLE!=="YES") {
+ console.log("SKIP: destructive sync smoke requires disposable integration database");
+ process.exit(0);
+}
+if(!process.env.DATABASE_URL?.includes("/portal_integration") ||
    !process.env.PORTAL_TEST_USER || !process.env.PORTAL_TEST_PASSWORD)
- throw Error("Refusing sync integration test outside disposable database");
+ throw Error("Refusing sync integration test without isolated credentials and database");
 const url=new URL(base);
 if(url.protocol!=="http:"||!["localhost","127.0.0.1"].includes(url.hostname)||url.pathname!=="/"||url.username||url.password||url.search||url.hash)
  throw Error("Loopback test server required");
