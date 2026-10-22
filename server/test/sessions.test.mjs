@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { bearerToken, digestToken } from "../src/sessions.mjs";
+process.env.DATABASE_URL ||= "postgresql://unused:unused@127.0.0.1:5432/unused";
+const { bearerToken, digestToken } = await import("../src/sessions.mjs");
 test("session bearer parsing is strict", () => {
   const token = "a".repeat(64);
   assert.equal(bearerToken({ headers: { authorization: "Bearer " + token } }), token);
