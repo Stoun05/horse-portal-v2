@@ -117,7 +117,7 @@ async function createWindow() {
     expectedOrigin:`http://127.0.0.1:${port}`,safeStorage,
     root:app.getPath("userData")
   });
-  window.on("closed",()=>offlineSessions.logout());
+  window.on("closed",()=>offlineSessions.dispose());
   // Login integration is still pending. No session is authorized here.
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   window.webContents.on("will-navigate", (event, url) => {
