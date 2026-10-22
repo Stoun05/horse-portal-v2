@@ -296,7 +296,7 @@ test("desktop login flow activates offline only with matching signed grant",asyn
   withToken:async callback=>callback("token")
  };
  const offlineSessions={logout:()=>{closed++;activated=false;},authorize:()=>{activated=true;}};
- const flow=createDesktopLoginFlow({loginClient,offlineSessions,getSignedGrant:async()=>({grant:{userId},publicKey:"key",signature:"signature"})});
+ const flow=createDesktopLoginFlow({trustedPublicKey:publicKey,loginClient,offlineSessions,getSignedGrant:async()=>({grant:{userId},publicKey:publicKey.export({type:"spki",format:"pem"}),signature:"signature"})});
  await flow.login("operator","password");
  assert.equal(signedIn,true);
  assert.equal(activated,true);
@@ -310,7 +310,7 @@ test("desktop login flow clears login if signed offline grant missing",async()=>
  let signedIn=false,activated=0;
  const loginClient={login:async()=>{signedIn=true;return {id:userId};},logout:async()=>{signedIn=false;},withToken:async cb=>cb("token")};
  const offlineSessions={logout:()=>{},authorize:()=>{activated++;}};
- const flow=createDesktopLoginFlow({loginClient,offlineSessions,getSignedGrant:async()=>null});
+ const flow=createDesktopLoginFlow({trustedPublicKey:publicKey,loginClient,offlineSessions,getSignedGrant:async()=>null});
  await assert.rejects(()=>flow.login("u","p"),/Missing signed offline grant/);
  assert.equal(signedIn,false);
  assert.equal(activated,0);
@@ -320,10 +320,21 @@ test("desktop login fetches server-signed offline grant through authenticated cl
  const {createDesktopLoginFlow}=require("../desktop-login-flow.cjs");
  const user={id:"user-001",role:"Operator"};
  let requested=0,authorized=null;
- const loginClient={login:async()=>user,logout:async()=>{},getSignedGrant:async()=>{requested++;return {grant:{userId:user.id,expiresAt:Date.now()+1000,permissions:["horses:read"]},signature:"aa",publicKey:"server-public"};},withToken:async cb=>cb("server-token")};
- const flow=createDesktopLoginFlow({loginClient,offlineSessions:{logout(){},authorize(value){authorized=value;}}});
+ const loginClient={login:async()=>user,logout:async()=>{},getSignedGrant:async()=>{requested++;return {grant:{userId:user.id,expiresAt:Date.now()+1000,permissions:["horses:read"]},signature:"aa",publicKey:publicKey.export({type:"spki",format:"pem"})};},withToken:async cb=>cb("server-token")};
+ const flow=createDesktopLoginFlow({trustedPublicKey:publicKey,loginClient,offlineSessions:{logout(){},authorize(value){authorized=value;}}});
  await flow.login("staff","secret");
  assert.equal(requested,1);
  assert.equal(authorized.userId,user.id);
- assert.equal(authorized.publicKey,"server-public");
+ assert.equal(authorized.publicKey.asymmetricKeyType,"ed25519");
+});
+
+test("desktop rejects an untrusted offline signing key",async()=>{
+ const {createDesktopLoginFlow}=require("../desktop-login-flow.cjs");
+ const other=crypto.generateKeyPairSync("ed25519").publicKey;
+ let activated=0,logoutCount=0;
+ const loginClient={login:async()=>({id:userId}),logout:async()=>{logoutCount++;},withToken:async cb=>cb("token")};
+ const flow=createDesktopLoginFlow({trustedPublicKey:publicKey,loginClient,offlineSessions:{logout(){},authorize(){activated++;}},getSignedGrant:async()=>({grant:{userId},publicKey:other.export({type:"spki",format:"pem"}),signature:"aa"})});
+ await assert.rejects(()=>flow.login("u","p"),/signing key mismatch/);
+ assert.equal(activated,0);
+ assert.ok(logoutCount>=2);
 });
