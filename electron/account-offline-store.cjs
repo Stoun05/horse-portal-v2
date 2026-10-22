@@ -12,10 +12,20 @@ function openAccountOfflineStore({root,userId,key}) {
  let loadedFingerprint=fingerprint();
  const persist=next=>{
   // Refuse stale writes from another open handle instead of discarding newer edits.
-  if(fingerprint()!==loadedFingerprint) throw Error("Offline vault changed since opening; reload account data");
-  saveVault(root,userId,next,key);
-  loadedFingerprint=fingerprint();
-  Object.assign(state,next);
+  // An exclusive lock closes the check-then-write race across Windows processes.
+  // Never auto-remove an unknown lock: a failed write is safer than lost horse data.
+  fs.mkdirSync(require("node:path").dirname(filename),{recursive:true,mode:0o700});
+  const lockPath=filename+".lock";
+  const lock=fs.openSync(lockPath,"wx",0o600);
+  try {
+   if(fingerprint()!==loadedFingerprint) throw Error("Offline vault changed since opening; reload account data");
+   saveVault(root,userId,next,key);
+   loadedFingerprint=fingerprint();
+   Object.assign(state,next);
+  } finally {
+   fs.closeSync(lock);
+   fs.unlinkSync(lockPath);
+  }
  };
  return {
   listHorses:()=>structuredClone(state.horses),
