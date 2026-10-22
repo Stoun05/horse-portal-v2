@@ -17,3 +17,6 @@ Scope: Windows Electron client only. Browser users remain server-backed.
 
 ## Current limitations
 SQLite module uses the Node built-in `node:sqlite` API; compatibility with the Electron runtime and Windows packaging must be validated. Current code is a scaffold and unit-test target, not deployed storage. Existing localStorage remains unchanged. No offline authorization, multi-user separation, data migration, upload or recovery workflow is implemented yet.
+
+## Phase 2: pure synchronization planner
+`electron/sync-planner.cjs` validates queued changes, retains ordering and classifies server replies as acknowledged, conflict, forbidden or retry. This module does **not** send requests or delete pending operations. It cannot synchronize without authenticated server sync endpoints, user isolation and resolution of version conflicts. The Windows test workflow runs its tests.
