@@ -12,6 +12,7 @@ function openAuthorizedOfflineStore({root,userId,safeStorage,publicKey,grant,sig
  return Object.freeze({
   listHorses:()=>{ensureActive("horses:read");return store.listHorses();},
   listPending:()=>{ensureActive("horses:read");return store.listPending();},
+  lastSyncedAt:()=>{ensureActive("horses:read");return store.lastSyncedAt();},
   addLocalChange:change=>{
    const permission={create:"horses:create",update:"horses:update",delete:"horses:delete"}[change?.action];
    if(!permission) throw Error("Offline edit forbidden");
