@@ -17,6 +17,14 @@ function createLocalLoginClient({baseUrl="http://127.0.0.1:4100",fetchImpl=fetch
    return session.user;
   },
   getSession(){return session?Object.freeze({user:session.user}):null;},
+  async getSignedGrant(){
+   if(!session)throw Error("Not authenticated");
+   const response=await request("/api/auth/offline-grant",{method:"POST",headers:{Authorization:"Bearer "+session.token}});
+   if(response.status!==200)throw Error("Offline grant rejected");
+   const data=await response.json();
+   if(data?.grant?.userId!==session.user.id||!Array.isArray(data.grant.permissions)||!Number.isSafeInteger(data.grant.expiresAt)||typeof data.signature!=="string"||typeof data.publicKey!=="string")throw Error("Invalid signed grant");
+   return data;
+  },
   async withToken(callback){
    if(!session||typeof callback!=="function")throw Error("Not authenticated");
    return callback(session.token,session.user);
