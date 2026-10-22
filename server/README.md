@@ -20,3 +20,6 @@ After database initialization, use `GET /api/horses?limit=50` with header `Autho
 Schema currently contains tables for horses, users and audit events, plus indexed horse code and basic horse fields. These are preparation, not active persistence; the UI still uses browser localStorage. Authentication and protected CRUD routes are not implemented in phase 1.
 
 Never commit `.env`, passwords, medical histories, real user records, or database dumps.
+
+## Login foundation (not production ready)
+Migration 003 adds hashed, expiring sessions. Endpoints: POST `/api/auth/login` with `{username,password}`, GET `/api/auth/me` and POST `/api/auth/logout` with `Authorization: Bearer <session token>`. No initial admin account is provisioned, so login cannot work until secure account provisioning is implemented. The old `/api/horses` endpoint still uses a shared development API_TOKEN, and is NOT connected to user session permissions yet. Do not deploy this to shared academy LAN computers until authorization, brute-force protection, and protected transport are completed.
