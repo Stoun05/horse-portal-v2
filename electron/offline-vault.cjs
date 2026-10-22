@@ -27,7 +27,9 @@ function saveVault(root,userId,value,key){
  fs.mkdirSync(path.dirname(filename),{recursive:true,mode:0o700});
  const temporary=filename+"."+randomBytes(8).toString("hex")+".tmp";
  try {
-  fs.writeFileSync(temporary,JSON.stringify(encryptObject(value,key)),{mode:0o600,flag:"wx"});
+  const handle=fs.openSync(temporary,"wx",0o600);
+  try {fs.writeFileSync(handle,JSON.stringify(encryptObject(value,key)));fs.fsyncSync(handle);}
+  finally {fs.closeSync(handle);}
   fs.renameSync(temporary,filename);
  } finally {try{fs.unlinkSync(temporary)}catch{}}
 }
