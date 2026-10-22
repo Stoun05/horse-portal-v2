@@ -6,12 +6,16 @@ function openAuthorizedOfflineStore({root,userId,safeStorage,publicKey,grant,sig
  const permissions=verifyOfflineGrant(grant,signature,publicKey,userId,now);
  if(!permissions || !canUseLocalAction(permissions,"horses:read")) throw Error("Offline access denied");
  const store=openProtectedOfflineStore({root,userId,safeStorage,platform});
+ const ensureActive=(action)=>{
+  if(grant.expiresAt<=Date.now() || !canUseLocalAction(permissions,action)) throw Error("Offline access expired or forbidden");
+ };
  return Object.freeze({
-  listHorses:()=>store.listHorses(),
-  listPending:()=>store.listPending(),
+  listHorses:()=>{ensureActive("horses:read");return store.listHorses();},
+  listPending:()=>{ensureActive("horses:read");return store.listPending();},
   addLocalChange:change=>{
    const permission={create:"horses:create",update:"horses:update",delete:"horses:delete"}[change?.action];
-   if(!permission || !canUseLocalAction(permissions,permission) || grant.expiresAt<=Date.now()) throw Error("Offline edit forbidden");
+   if(!permission) throw Error("Offline edit forbidden");
+   ensureActive(permission);
    return store.addLocalChange(change);
   }
  });
