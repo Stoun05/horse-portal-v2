@@ -26,3 +26,6 @@ Migration 005 adds horse version and a durable sync operation ledger. `server/sr
 
 ## Phase 4: initial authenticated sync endpoint
 `POST /api/sync/horses` requires a valid staff session. Transactional apply checks user role, record version and a durable change ID; only accepted changes should be acknowledged by clients. This is a preliminary endpoint, **not production ready**: no real PostgreSQL integration test yet, no offline authorization grants, no rate limiting, no LAN TLS, no multiuser cache isolation, no conflict resolution UI, and no safe online migration of previous browser localStorage records. An authorized user might have offline edits rejected when a role is revoked. The desktop application has not been wired to this endpoint.
+
+## Phase 5: opt-in Electron IPC adapter
+`electron/offline-ipc.cjs` and `electron/offline-preload.cjs` define three read-only channels (status, horses, pending count) and reject senders outside the designated loopback main frame. They are deliberately **not loaded by electron/main.cjs**: local cache data is not yet scoped to authenticated users or encrypted, and exposing it to a renderer would leak records. Once account isolation, authorization and secure storage are implemented and tested, wire main/preload to this adapter. No renderer write or arbitrary SQL IPC is provided.
