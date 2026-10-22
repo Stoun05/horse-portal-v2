@@ -32,3 +32,22 @@ test("forbidden and malformed acknowledgements never clear queue",()=>withStore(
  assert.equal((await flushPending({store,send:async()=>({changeId:id,status:"accepted",serverVersion:9})})).state,"retry");
  assert.equal(reload().listPending().length,1);
 }));
+
+test("simultaneous flush calls cannot send same operation twice",async()=>{
+ let release;
+ const gate=new Promise(resolve=>{release=resolve;});
+ const pending=[{id:"op1",entity_id:"h1",action:"create",base_version:null,payload:{name:"Horse"}}];
+ let calls=0;
+ const store={
+  listPending:()=>pending.map(x=>({...x})),
+  acknowledge:()=>{pending.shift();return true;},
+  markConflict:()=>false
+ };
+ const first=flushPending({store,send:async request=>{calls++;await gate;return {changeId:request.changeId,status:"accepted",serverVersion:1};}});
+ const second=await flushPending({store,send:async()=>{calls++;throw Error("must not send");}});
+ assert.equal(second.state,"busy");
+ release();
+ assert.equal((await first).state,"complete");
+ assert.equal(calls,1);
+ assert.equal(pending.length,0);
+});
