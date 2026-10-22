@@ -181,3 +181,14 @@ test("main-process session controller revokes previous login and logout",()=>{
  controller.logout();
  assert.equal(closes,2);
 });
+
+test("session controller refuses closed Electron window and invalid cleanup",()=>{
+ const {createOfflineSessionController}=require("../offline-session-controller.cjs");
+ let attached=0;
+ const closed=createOfflineSessionController({attach:()=>{attached++;return ()=>{};},ipcMain:{},webContents:{isDestroyed:()=>true},expectedOrigin:"http://127.0.0.1:4444",safeStorage:{},root:"test"});
+ assert.throws(()=>closed.authorize({userId:"u"}),/window closed/);
+ assert.equal(attached,0);
+ const invalid=createOfflineSessionController({attach:()=>null,ipcMain:{},webContents:{},expectedOrigin:"http://127.0.0.1:4444",safeStorage:{},root:"test"});
+ assert.throws(()=>invalid.authorize({userId:"u"}),/cleanup function/);
+ invalid.logout();
+});
