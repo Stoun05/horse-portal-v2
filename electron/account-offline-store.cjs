@@ -20,7 +20,13 @@ function openAccountOfflineStore({root,userId,key}) {
    persist(next);
    return id;
   },
-  markConflict(id) {\n   const next=structuredClone(state), item=next.pending.find(x=>x.id===id);\n   if(!item || item.status==="conflict") return false;\n   item.status="conflict";\n   persist(next);return true;\n  },\n  acknowledge(id) {
+  markConflict(id) {
+   const next=structuredClone(state), item=next.pending.find(x=>x.id===id);
+   if(!item || item.status==="conflict") return false;
+   item.status="conflict";
+   persist(next);return true;
+  },
+  acknowledge(id) {
    const next=structuredClone(state),before=next.pending.length;
    next.pending=next.pending.filter(x=>x.id!==id || x.status==="conflict");
    if(next.pending.length===before) return false;
