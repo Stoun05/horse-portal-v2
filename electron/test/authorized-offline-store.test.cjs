@@ -168,3 +168,16 @@ test("listener removal failure cannot leave authorized IPC readable",async()=>{
   await assert.rejects(()=>cached({sender:webContents,senderFrame:frame}),/session closed/);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("main-process session controller revokes previous login and logout",()=>{
+ const {createOfflineSessionController}=require("../offline-session-controller.cjs");
+ let closes=0,opens=0;
+ const controller=createOfflineSessionController({attach:()=>{opens++;return ()=>{closes++;};},ipcMain:{},webContents:{},expectedOrigin:"http://127.0.0.1:4444",safeStorage:{},root:"test"});
+ controller.authorize({userId:"first"});
+ controller.authorize({userId:"second"});
+ assert.equal(opens,2);
+ assert.equal(closes,1);
+ controller.logout();
+ controller.logout();
+ assert.equal(closes,2);
+});
