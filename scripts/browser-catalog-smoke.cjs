@@ -30,7 +30,7 @@ const assert = require("node:assert/strict");
   await page.evaluate(([k,v])=>localStorage.setItem(k,v),[key,broken]);
   console.log("STAGE: reloading corrupt catalog");
   await page.reload();
-  await page.getByRole("alert").waitFor();
+  await page.getByRole("alert").filter({hasText:"Ýerli at maglumatlaryny"}).waitFor();
   assert.equal(await page.evaluate(k=>localStorage.getItem(k),key),broken);
   console.log("PASS: remote preview preserves local data; corrupt data not overwritten.");
  }catch(e){
