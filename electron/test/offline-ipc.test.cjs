@@ -94,3 +94,12 @@ test("partial IPC registration failure removes previously added handlers",()=>{
  assert.throws(()=>registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444"}),/Registration failed/);
  assert.equal(handlers.size,0);
 });
+
+test("offline preload has read-only methods and no write or generic invoke bridge",()=>{
+ const fs=require("node:fs"),path=require("node:path");
+ const source=fs.readFileSync(path.join(__dirname,"..","offline-preload.cjs"),"utf8");
+ assert.match(source,/getStatus/);
+ assert.match(source,/listHorses/);
+ assert.match(source,/getPendingCount/);
+ assert.doesNotMatch(source,/addLocalChange|flushPending|sendSync/);
+});
