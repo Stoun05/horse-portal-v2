@@ -47,3 +47,6 @@ Migration 005 adds horse version and a durable sync operation ledger. `server/sr
 
 ## Phase 11: guarded encrypted store prototype
 `electron/authorized-offline-store.cjs` gates the encrypted account store behind a verified short-lived offline grant. Read-only grants cannot create edits. This is not a complete authentication mechanism: no local human authentication, signed grant issuance, persisted secure grant, complete permission scope, or connection to the UI. Do not deploy until these constraints and real Windows integration are tested.
+
+## Phase 12: server-issued offline grant function
+`server/src/offline-grants.mjs` can sign up-to-15-minute, role-derived Ed25519 grants. The private key is supplied at runtime. Server key provisioning and protected storage, issuance via authenticated HTTP, revocation model, client key trust, device binding, account login, and Windows acceptance are not complete; therefore this functionality is not active or production-ready.
