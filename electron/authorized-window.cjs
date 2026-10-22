@@ -10,6 +10,7 @@ function attachAuthorizedWindow({ipcMain,webContents,expectedOrigin,root,userId,
   if(!active)return;
   active=false;
   webContents.removeListener("did-navigate",revoke);
+  webContents.removeListener("did-start-navigation",revoke);
   webContents.removeListener("render-process-gone",revoke);
   webContents.removeListener("destroyed",revoke);
   revokeIpc();
