@@ -1,0 +1,25 @@
+const { chromium } = require("playwright");
+const assert = require("node:assert/strict");
+(async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  const page=await browser.newPage();
+  const url="http://127.0.0.1:4173/atlar/";
+  await page.goto("http://127.0.0.1:4173/");
+  const key="horse-portal-v3-real-horses";
+  const record=[{id:"browser-local-test",name:"Local Test Horse",code:"LOCAL-001",breed:"Ahalteke",sex:"At",color:"Mele",year:2022,champion:false}];
+  const raw=JSON.stringify(record);
+  await page.evaluate(([k,v])=>localStorage.setItem(k,v),[key,raw]);
+  await page.goto(url);
+  await page.getByRole("button",{name:/Merkezi serweriň katalogyny görkez/}).click();
+  assert.equal(await page.evaluate(k=>localStorage.getItem(k),key),raw);
+  await page.getByText("Ýerli serwer: 127.0.0.1:4100",{exact:false}).waitFor();
+  assert.equal(await page.evaluate(k=>localStorage.getItem(k),key),raw);
+  const broken="{ invalid json";
+  await page.evaluate(([k,v])=>localStorage.setItem(k,v),[key,broken]);
+  await page.reload();
+  await page.getByRole("alert").waitFor();
+  assert.equal(await page.evaluate(k=>localStorage.getItem(k),key),broken);
+  console.log("PASS: remote preview preserves local data; corrupt data not overwritten.");
+ }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});
