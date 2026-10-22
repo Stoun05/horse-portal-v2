@@ -9,7 +9,11 @@ export async function applyHorseSync(user, change) {
     await client.query("BEGIN");
     // The change ID is a durable idempotency key. Serialize repeated attempts.
     await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [change.changeId]);
-    if (!maySyncHorse(user.role, change.action)) {\n      await client.query("ROLLBACK");\n      return { status: 403, error: "Forbidden" };\n    }\n    const previous = await client.query(
+    if (!maySyncHorse(user.role, change.action)) {
+      await client.query("ROLLBACK");
+      return { status: 403, error: "Forbidden" };
+    }
+    const previous = await client.query(
       "SELECT actor_id,entity_id,status,server_version FROM sync_operations WHERE change_id=$1",
       [change.changeId]
     );
@@ -18,18 +22,14 @@ export async function applyHorseSync(user, change) {
       const prior = previous.rows[0];
       if (prior.actor_id !== user.id || prior.entity_id !== change.entityId)
         return { status: 409, error: "Change ID already used" };
-      return { status: 200, changeId: change.changeId, statusText: prior.status, serverVersion: prior.server_version };
-    }
-    if (!maySyncHorse(user.role, change.action)) {
-      await client.query("ROLLBACK");
-      return { status: 403, error: "Forbidden" };
+      return { status: 200, changeId: change.changeId, syncStatus: prior.status, serverVersion: prior.server_version };
     }
     const existing = await client.query("SELECT id,version FROM horses WHERE id=$1 FOR UPDATE", [change.entityId]);
     const currentVersion = existing.rows[0]?.version ?? null;
     if ((change.action === "create" && currentVersion !== null) ||
         (change.action !== "create" && change.baseVersion !== currentVersion)) {
       await client.query("ROLLBACK");
-      return { status: 409, changeId: change.changeId, statusText: "conflict", serverVersion: currentVersion };
+      return { status: 409, changeId: change.changeId, syncStatus: "conflict", serverVersion: currentVersion };
     }
     let newVersion = currentVersion === null ? 1 : currentVersion + 1;
     if (change.action === "delete") {
@@ -61,7 +61,7 @@ export async function applyHorseSync(user, change) {
       [user.id,"sync:"+change.action,change.entityId]
     );
     await client.query("COMMIT");
-    return { status: 200, changeId: change.changeId, statusText: "accepted", serverVersion: newVersion };
+    return { status: 200, changeId: change.changeId, syncStatus: "accepted", serverVersion: newVersion };
   } catch (error) {
     try { await client.query("ROLLBACK"); } catch {}
     if (error.code === "23505") return { status: 409, error: "Duplicate record" };
