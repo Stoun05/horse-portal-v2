@@ -1,5 +1,6 @@
 /* Main-process login coordinator. Signed offline grants are required, never fabricated. */
 function createDesktopLoginFlow({loginClient,offlineSessions,getSignedGrant}){
+ getSignedGrant=getSignedGrant??(()=>loginClient.getSignedGrant());
  if(!loginClient?.login||!loginClient?.logout||!offlineSessions?.authorize||!offlineSessions?.logout||typeof getSignedGrant!=="function")throw Error("Invalid desktop login dependencies");
  let busy=false;
  return Object.freeze({
