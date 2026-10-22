@@ -76,3 +76,21 @@ test("destroying authorized Electron window revokes its offline read IPC",async(
  await assert.rejects(()=>saved({sender,senderFrame:frame}),/session closed/);
  cleanup();
 });
+
+test("IPC setup fails closed for already destroyed Electron window",()=>{
+ const handlers=new Map(),sender={isDestroyed:()=>true};
+ const ipcMain={handle:(n,fn)=>handlers.set(n,fn),removeHandler:n=>handlers.delete(n)};
+ const store={listHorses:()=>({}),listPending:()=>[],lastSyncedAt:()=>null};
+ assert.throws(()=>registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444",expectedSender:sender}),/already destroyed/);
+ assert.equal(handlers.size,0);
+});
+test("partial IPC registration failure removes previously added handlers",()=>{
+ const handlers=new Map();
+ const ipcMain={
+  handle:(n,fn)=>{if(n==="offline:horses")throw Error("Registration failed");handlers.set(n,fn);},
+  removeHandler:n=>handlers.delete(n)
+ };
+ const store={listHorses:()=>({}),listPending:()=>[],lastSyncedAt:()=>null};
+ assert.throws(()=>registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444"}),/Registration failed/);
+ assert.equal(handlers.size,0);
+});
