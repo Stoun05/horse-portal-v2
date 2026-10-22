@@ -57,3 +57,6 @@ jobs:
       - name: Test encrypted end-to-end sync
         if: always()
         run: node --test electron/test/sync-encrypted-end-to-end.test.cjs
+      - name: Test authorized encrypted IPC integration
+        if: always()
+        run: node --test electron/test/authorized-ipc-integration.test.cjs
