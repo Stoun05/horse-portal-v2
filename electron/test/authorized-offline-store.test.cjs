@@ -203,3 +203,20 @@ test("offline session status only exposes activity and account identity",()=>{
  controller.logout();
  assert.deepEqual(controller.getSessionStatus(),{active:false,userId:null});
 });
+
+test("logout aborts in-flight sync and new login gets a fresh signal",()=>{
+ const {createOfflineSessionController}=require("../offline-session-controller.cjs");
+ const controller=createOfflineSessionController({attach:()=>()=>{},ipcMain:{},webContents:{},expectedOrigin:"http://127.0.0.1:4444",safeStorage:{},root:"test"});
+ controller.authorize({userId:"one"});
+ const previous=controller.getSyncSignal();
+ assert.equal(previous.aborted,false);
+ controller.logout();
+ assert.equal(previous.aborted,true);
+ assert.throws(()=>controller.getSyncSignal(),/not authorized/);
+ controller.authorize({userId:"two"});
+ const next=controller.getSyncSignal();
+ assert.equal(next.aborted,false);
+ assert.notEqual(previous,next);
+ controller.logout();
+ assert.equal(next.aborted,true);
+});
