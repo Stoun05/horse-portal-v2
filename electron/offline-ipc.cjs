@@ -16,6 +16,14 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     throw new Error("Invalid dependencies");
   if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(expectedOrigin)) throw new Error("Invalid local origin");
   let active=true;
+  const closeOnDestroyed=()=>cleanup();
+  const cleanup=()=>{
+    if(!active)return;
+    active=false;
+    expectedSender?.removeListener?.("destroyed",closeOnDestroyed);
+    IPC_NAMES.forEach(channel=>ipcMain.removeHandler(channel));
+  };
+  expectedSender?.once?.("destroyed",closeOnDestroyed);
   const check = (event) => {
     if(!active) throw new Error("Offline IPC session closed");
     if (expectedSender && event?.sender !== expectedSender) throw new Error("Forbidden IPC window");
@@ -33,10 +41,6 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     check(event);
     return store.listPending().length;
   });
-  return () => {
-    if(!active)return;
-    active=false;
-    IPC_NAMES.forEach(channel => ipcMain.removeHandler(channel));
-  };
+  return cleanup;
 }
 module.exports = { CHANNELS, trustedSender, registerOfflineReadIpc };
