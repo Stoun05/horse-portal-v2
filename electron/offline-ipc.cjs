@@ -11,11 +11,12 @@ function trustedSender(event, expectedOrigin) {
   try { return new URL(event.senderFrame.url).origin === expectedOrigin; }
   catch { return false; }
 }
-function registerOfflineReadIpc({ ipcMain, store, expectedOrigin }) {
+function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender }) {
   if (!ipcMain?.handle || !store?.listHorses || !store?.listPending || !store?.lastSyncedAt)
     throw new Error("Invalid dependencies");
   if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(expectedOrigin)) throw new Error("Invalid local origin");
   const check = (event) => {
+    if (expectedSender && event?.sender !== expectedSender) throw new Error("Forbidden IPC window");
     if (!trustedSender(event, expectedOrigin)) throw new Error("Forbidden IPC sender");
   };
   ipcMain.handle(CHANNELS.status, async (event) => {
