@@ -23,3 +23,17 @@ test("only constrained read-only channels are registered", async () => {
   cleanup();
   assert.equal(handlers.size, 0);
 });
+
+test("pinned offline IPC refuses a different window on the same origin",async()=>{
+ const handlers=new Map();
+ const ipcMain={handle:(name,fn)=>handlers.set(name,fn),removeHandler:name=>handlers.delete(name)};
+ const mainFrame={url:"http://127.0.0.1:4444/atlar"};
+ const expectedSender={mainFrame};
+ const otherFrame={url:"http://127.0.0.1:4444/atlar"};
+ const otherSender={mainFrame:otherFrame};
+ const store={listHorses:()=>({}),listPending:()=>[],lastSyncedAt:()=>null};
+ const cleanup=registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444",expectedSender});
+ assert.deepEqual(await handlers.get("offline:horses")({sender:expectedSender,senderFrame:mainFrame}),{});
+ await assert.rejects(()=>handlers.get("offline:horses")({sender:otherSender,senderFrame:otherFrame}),/Forbidden IPC window/);
+ cleanup();
+});
