@@ -1,14 +1,18 @@
 /* Opt-in session bridge; never authenticates a user or issues a signing grant. */
 const {openAuthorizedOfflineStore}=require("./authorized-offline-store.cjs");
 const {registerOfflineReadIpc}=require("./offline-ipc.cjs");
+const activeIpcSessions=new WeakSet();
 function attachAuthorizedWindow({ipcMain,webContents,expectedOrigin,root,userId,safeStorage,publicKey,grant,signature,platform=process.platform}){
  if(!webContents || webContents.isDestroyed?.() || typeof webContents.on!=="function" || typeof webContents.removeListener!=="function") throw Error("Invalid desktop window");
+ if(activeIpcSessions.has(ipcMain)) throw Error("Offline IPC session already active");
  const store=openAuthorizedOfflineStore({root,userId,safeStorage,publicKey,grant,signature,platform});
  const revokeIpc=registerOfflineReadIpc({ipcMain,store,expectedOrigin,expectedSender:webContents});
+ activeIpcSessions.add(ipcMain);
  let active=true;
  const revoke=()=>{
   if(!active)return;
   active=false;
+  activeIpcSessions.delete(ipcMain);
   webContents.removeListener("did-navigate",revoke);
   webContents.removeListener("did-start-navigation",revoke);
   webContents.removeListener("render-process-gone",revoke);
