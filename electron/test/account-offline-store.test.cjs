@@ -19,7 +19,7 @@ test("encrypted pending edits persist on disk and separate accounts",()=>{
   assert.equal(store.listHorses()["horse-1"].name,"Akyol");
   assert.deepEqual(openAccountOfflineStore({root,userId:b,key:keyB}).listHorses(),{});
   assert.throws(()=>openAccountOfflineStore({root,userId:a,key:keyB}));
-  assert.equal(store.acknowledge(id),true);
+  assert.equal(store.acknowledge(id,{changeId:id,status:"accepted",serverVersion:1}),true);
   assert.equal(openAccountOfflineStore({root,userId:a,key:keyA}).listPending().length,0);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
@@ -70,9 +70,23 @@ test("a second offline edit to the same horse is blocked until first sync",()=>{
   const id=store.addLocalChange({entityId:"horse-1",action:"create",payload:{name:"First"}});
   assert.throws(()=>store.addLocalChange({entityId:"horse-1",action:"update",baseVersion:1,payload:{name:"Second"}}),/Pending change/);
   assert.equal(store.listPending().length,1);
-  assert.equal(store.acknowledge(id),true);
+  assert.equal(store.acknowledge(id,{changeId:id,status:"accepted",serverVersion:1}),true);
   const reopened=openAccountOfflineStore({root,userId:a,key});
   assert.equal(reopened.listPending().length,0);
   assert.equal(reopened.listHorses()["horse-1"].name,"First");
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test("timeout and mismatched acknowledgement never clear offline queue",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-ack-")),key=randomBytes(32);
+ try{
+  const store=openAccountOfflineStore({root,userId:a,key});
+  const id=store.addLocalChange({entityId:"horse-3",action:"create",payload:{name:"Sowgat"}});
+  assert.equal(store.acknowledge(id),false);
+  assert.equal(store.acknowledge(id,{changeId:"different",status:"accepted",serverVersion:1}),false);
+  assert.equal(store.acknowledge(id,{changeId:id,status:"conflict",serverVersion:1}),false);
+  assert.equal(openAccountOfflineStore({root,userId:a,key}).listPending().length,1);
+  assert.equal(store.acknowledge(id,{changeId:id,status:"accepted",serverVersion:1}),true);
+  assert.equal(openAccountOfflineStore({root,userId:a,key}).listPending().length,0);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
