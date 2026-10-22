@@ -19,3 +19,21 @@ test("encrypted offline queue survives reopening with same Windows account key",
   assert.throws(()=>openProtectedOfflineStore({root,userId:user,safeStorage:mock,platform:"win32"}),/recovery required/);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("corrupt wrapped key never causes a new key or vault reset",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"atcylyk-badkey-"));
+ try {
+  const store=openProtectedOfflineStore({root,userId:user,safeStorage:mock,platform:"win32"});
+  store.addLocalChange({entityId:"horse-2",action:"create",payload:{name:"Parasat"}});
+  const filename=keyPath(root,user);
+  fs.writeFileSync(filename,"not-a-valid-protected-key");
+  assert.throws(()=>openProtectedOfflineStore({root,userId:user,safeStorage:mock,platform:"win32"}));
+  assert.equal(fs.readFileSync(filename,"utf8"),"not-a-valid-protected-key");
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+test("Windows store fails closed if OS encryption is disabled",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"atcylyk-disabled-"));
+ try{
+  assert.throws(()=>openProtectedOfflineStore({root,userId:user,safeStorage:{isEncryptionAvailable:()=>false},platform:"win32"}),/unavailable/);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
