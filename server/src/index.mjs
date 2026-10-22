@@ -1,5 +1,7 @@
 import http from "node:http";
 import { pool } from "./db.mjs";
+import { isAuthorized } from "./auth.mjs";
+import { listHorses } from "./horses.mjs";
 import { host, port } from "./config.mjs";
 
 // Initial deployment exposes health checks only. No horse or user records are public.
@@ -26,6 +28,22 @@ const server = http.createServer(async (req, res) => {
     } catch {
       res.writeHead(503);
       res.end(JSON.stringify({ status: "unavailable" }));
+    }
+    return;
+  }
+  if (pathname === "/api/horses") {
+    if (!isAuthorized(req)) {
+      res.writeHead(401);
+      res.end(JSON.stringify({ error: "Unauthorized" }));
+      return;
+    }
+    try {
+      const result = await listHorses(new URL(req.url || "/", "http://localhost"));
+      res.writeHead(200);
+      res.end(JSON.stringify(result));
+    } catch {
+      res.writeHead(503);
+      res.end(JSON.stringify({ error: "Database unavailable" }));
     }
     return;
   }
