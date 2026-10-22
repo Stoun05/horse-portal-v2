@@ -261,3 +261,28 @@ test("disposed desktop controller removes listeners and cannot reauthorize",()=>
  assert.equal(session.getSessionStatus().active,false);
  assert.throws(()=>session.authorize({userId:"next"}),/window closed/);
 });
+
+test("local login client keeps token in memory and revokes on logout",async()=>{
+ const {createLocalLoginClient}=require("../local-login-client.cjs");
+ const token="f".repeat(64);
+ let logouts=0;
+ const client=createLocalLoginClient({fetchImpl:async(url,options)=>{
+  if(url.pathname==="/api/auth/login")return {status:200,json:async()=>({token,user:{id:userId,role:"Operator",username:"staff"}})};
+  if(url.pathname==="/api/auth/logout"){assert.equal(options.headers.Authorization,"Bearer "+token);logouts++;return {status:200};}
+  throw Error("Unexpected request");
+ }});
+ assert.equal(client.getSession(),null);
+ assert.equal((await client.login("staff","test-password")).id,userId);
+ assert.deepEqual(client.getSession().user,{id:userId,role:"Operator",username:"staff"});
+ assert.equal("token" in client.getSession(),false);
+ assert.equal(await client.withToken(value=>value),token);
+ await assert.rejects(()=>client.login("staff","test-password"),/Logout/);
+ await client.logout();
+ assert.equal(logouts,1);
+ assert.equal(client.getSession(),null);
+ await assert.rejects(()=>client.withToken(()=>{}),/Not authenticated/);
+});
+test("local login client refuses untrusted remote URLs",()=>{
+ const {createLocalLoginClient}=require("../local-login-client.cjs");
+ assert.throws(()=>createLocalLoginClient({baseUrl:"https://remote.invalid/"}),/loopback/);
+});
