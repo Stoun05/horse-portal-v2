@@ -109,7 +109,7 @@ test("main process never exposes offline authorization to renderer or BrowserWin
  const source=fs.readFileSync(path.join(__dirname,"..","main.cjs"),"utf8");
  assert.match(source,/attachAuthorizedWindow/);
  assert.match(source,/createOfflineSessionController/);
- assert.match(source,/offlineSessions\.logout\(\)/);
+ assert.match(source,/offlineSessions\.dispose\(\)/);
  assert.doesNotMatch(source,/window\.authorizeOfflineAccount\s*=/);
  assert.doesNotMatch(source,/ipcMain\.handle\(\s*["']offline:authorize/);
 });
