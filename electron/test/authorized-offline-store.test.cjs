@@ -40,3 +40,25 @@ test("expired grant also blocks reads from an already opened store",()=>{
   }finally{Date.now=original;}
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("signed desktop window bridge revokes catalog IPC when window closes",async()=>{
+ const {EventEmitter}=require("node:events");
+ const {attachAuthorizedWindow}=require("../authorized-window.cjs");
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"atcylyk-window-"));
+ try{
+  const grant={userId,expiresAt:Date.now()+60000,permissions:["horses:read"]};
+  const frame={url:"http://127.0.0.1:4444/atlar"};
+  const webContents=new EventEmitter();
+  webContents.mainFrame=frame;
+  const handlers=new Map();
+  const ipcMain={handle:(n,fn)=>handlers.set(n,fn),removeHandler:n=>handlers.delete(n)};
+  const close=attachAuthorizedWindow({ipcMain,webContents,expectedOrigin:"http://127.0.0.1:4444",root,userId,safeStorage,publicKey,grant,signature:signed(grant),platform:"win32"});
+  const event={sender:webContents,senderFrame:frame};
+  const read=handlers.get("offline:horses");
+  assert.deepEqual(await read(event),{});
+  webContents.emit("destroyed");
+  await assert.rejects(()=>read(event),/session closed/);
+  assert.equal(handlers.size,0);
+  close();
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
