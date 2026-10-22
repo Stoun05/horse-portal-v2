@@ -26,11 +26,19 @@ try{
  if(duplicate.code!==200||duplicate.body.status!=="accepted"||duplicate.body.serverVersion!==1)throw Error("Idempotent retry failed");
  const tampered=await post({...change,payload:{...change.payload,name:"Changed retry"}});
  if(tampered.code!==409)throw Error("Reused change ID with different payload not rejected");
+ const update={changeId:randomUUID(),entityId:change.entityId,action:"update",baseVersion:1,payload:{...change.payload,name:"Updated Offline CI Horse"}};
+ const updated=await post(update);
+ if(updated.code!==200||updated.body.status!=="accepted"||updated.body.serverVersion!==2) throw Error("Optimistic version update failed");
+ const stale=await post({changeId:randomUUID(),entityId:change.entityId,action:"update",baseVersion:1,payload:{...change.payload,name:"Stale Update"}});
+ if(stale.code!==409||stale.body.status!=="conflict"||stale.body.serverVersion!==2) throw Error("Stale update was not rejected");
+ const retried=await post(update);
+ if(retried.code!==200||retried.body.status!=="accepted"||retried.body.serverVersion!==2) throw Error("Update retry not idempotent");
  const catalog=await request("/api/horses?limit=100",{headers});
  if(catalog.status!==200)throw Error("Cannot inspect synchronized horse");
  const {horses}=await catalog.json();
  if(horses.filter(h=>h.id===change.entityId).length!==1)throw Error("Horse missing or duplicated");
- console.log("PASS: create, idempotent retry, payload mismatch rejection, single persisted horse");
+ if(horses.find(h=>h.id===change.entityId)?.data?.name!=="Updated Offline CI Horse") throw Error("Stale change replaced current horse data");
+ console.log("PASS: create, duplicate retry, versioned update, stale conflict, persisted newest horse");
 }finally{
  await request("/api/auth/logout",{method:"POST",headers}).catch(()=>{});
 }
