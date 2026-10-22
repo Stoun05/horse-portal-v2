@@ -113,3 +113,12 @@ test("main process never exposes offline authorization to renderer or BrowserWin
  assert.doesNotMatch(source,/window\.authorizeOfflineAccount\s*=/);
  assert.doesNotMatch(source,/ipcMain\.handle\(\s*["']offline:authorize/);
 });
+
+test("main process owns pinned desktop login without a renderer login IPC",()=>{
+ const fs=require("node:fs"),path=require("node:path");
+ const main=fs.readFileSync(path.join(__dirname,"../main.cjs"),"utf8");
+ assert.match(main,/createDesktopLoginFlow/);
+ assert.match(main,/PORTAL_OFFLINE_TRUSTED_PUBLIC_KEY_PEM/);
+ assert.match(main,/desktopLogin\.logout\(\)/);
+ assert.doesNotMatch(main,/ipcMain\.handle\(["'](?:offline:login|auth:login)/);
+});
