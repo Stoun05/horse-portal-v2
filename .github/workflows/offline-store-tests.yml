@@ -1,0 +1,18 @@
+name: Offline store tests
+on:
+  push:
+    branches: [feature/offline-sync]
+  pull_request:
+    paths:
+      - 'electron/offline-store.cjs'
+      - 'electron/test/**'
+      - '.github/workflows/offline-store-tests.yml'
+jobs:
+  offline-tests:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test electron/test/offline-store.test.cjs
