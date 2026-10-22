@@ -220,3 +220,16 @@ test("logout aborts in-flight sync and new login gets a fresh signal",()=>{
  controller.logout();
  assert.equal(next.aborted,true);
 });
+
+test("failed account switch does not leave a usable synchronization signal",()=>{
+ const {createOfflineSessionController}=require("../offline-session-controller.cjs");
+ let called=0,closed=0;
+ const controller=createOfflineSessionController({attach:()=>{called++;if(called===2)throw Error("Login denied");return ()=>{closed++;};},ipcMain:{},webContents:{},expectedOrigin:"http://127.0.0.1:4444",safeStorage:{},root:"test"});
+ controller.authorize({userId:"first"});
+ const initial=controller.getSyncSignal();
+ assert.throws(()=>controller.authorize({userId:"second"}),/Login denied/);
+ assert.equal(initial.aborted,true);
+ assert.equal(closed,1);
+ assert.deepEqual(controller.getSessionStatus(),{active:false,userId:null});
+ assert.throws(()=>controller.getSyncSignal(),/not authorized/);
+});
