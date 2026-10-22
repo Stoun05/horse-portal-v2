@@ -36,3 +36,15 @@ test("conflicted changes remain on disk and cannot be acknowledged automatically
   assert.equal(store.listPending().length,1);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("failed vault write does not alter previously saved data",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-failure-")),key=randomBytes(32);
+ try{
+  const store=openAccountOfflineStore({root,userId:a,key});
+  store.addLocalChange({entityId:"horse-1",action:"create",payload:{name:"Initial"}});
+  assert.throws(()=>store.addLocalChange({entityId:"horse-2",action:"create",payload:{name:"Bad", impossible:BigInt(9)}}));
+  const reopened=openAccountOfflineStore({root,userId:a,key});
+  assert.equal(reopened.listPending().length,1);
+  assert.equal(reopened.listHorses()["horse-1"].name,"Initial");
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
