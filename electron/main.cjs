@@ -100,6 +100,8 @@ async function createWindow() {
     backgroundColor: "#f4f7f5",
     icon: path.join(__dirname, "..", "build", "icon.ico"),
     webPreferences: {
+      // Read-only bridge only; IPC handlers require a separately authorized account session.
+      preload: path.join(__dirname, "offline-preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
