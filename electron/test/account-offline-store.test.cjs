@@ -48,3 +48,17 @@ test("failed vault write does not alter previously saved data",()=>{
   assert.equal(reopened.listHorses()["horse-1"].name,"Initial");
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("tampered encrypted vault must not silently reset or overwrite account data",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-tamper-")),key=randomBytes(32);
+ try {
+  const store=openAccountOfflineStore({root,userId:a,key});
+  store.addLocalChange({entityId:"horse-1",action:"create",payload:{name:"Akyol"}});
+  const filename=accountPath(root,a);
+  const damaged=JSON.parse(fs.readFileSync(filename,"utf8"));
+  damaged.tag=Buffer.alloc(16).toString("base64");
+  fs.writeFileSync(filename,JSON.stringify(damaged));
+  assert.throws(()=>openAccountOfflineStore({root,userId:a,key}));
+  assert.equal(fs.existsSync(filename),true);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
