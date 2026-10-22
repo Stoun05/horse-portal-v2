@@ -2,6 +2,8 @@
 const { app, BrowserWindow, ipcMain, safeStorage } = require("electron");
 const { attachAuthorizedWindow } = require("./authorized-window.cjs");
 const { createOfflineSessionController } = require("./offline-session-controller.cjs");
+const { createLocalLoginClient } = require("./local-login-client.cjs");
+const { createDesktopLoginFlow } = require("./desktop-login-flow.cjs");
 const fs = require("node:fs");
 const http = require("node:http");
 const path = require("node:path");
@@ -117,8 +119,20 @@ async function createWindow() {
     expectedOrigin:`http://127.0.0.1:${port}`,safeStorage,
     root:app.getPath("userData")
   });
-  window.on("closed",()=>offlineSessions.dispose());
-  // Login integration is still pending. No session is authorized here.
+  // Public signing key is provisioned by the desktop deployment, never fetched as a trust anchor.
+  // Missing configuration leaves the encrypted offline store inaccessible.
+  let desktopLogin=null;
+  if(process.env.PORTAL_OFFLINE_TRUSTED_PUBLIC_KEY_PEM){
+    desktopLogin=createDesktopLoginFlow({
+      loginClient:createLocalLoginClient(),offlineSessions,
+      trustedPublicKey:process.env.PORTAL_OFFLINE_TRUSTED_PUBLIC_KEY_PEM.replace(/\\n/g,"\n")
+    });
+  }
+  window.on("closed",()=>{
+    offlineSessions.dispose();
+    if(desktopLogin)void desktopLogin.logout().catch(()=>{});
+  });
+  // UI login initiation remains pending; do not expose grants or tokens to the renderer.
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   window.webContents.on("will-navigate", (event, url) => {
     if (!url.startsWith(`http://127.0.0.1:${port}/`)) event.preventDefault();
