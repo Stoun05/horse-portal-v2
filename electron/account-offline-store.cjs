@@ -30,6 +30,7 @@ function openAccountOfflineStore({root,userId,key}) {
  return {
   listHorses:()=>structuredClone(state.horses),
   listPending:()=>structuredClone(state.pending),
+  lastSyncedAt:()=>state.lastSyncedAt,
   addLocalChange({entityId,action,payload=null,baseVersion=null}) {
    if(typeof entityId!=="string" || !entityId || !["create","update","delete"].includes(action)) throw Error("Invalid change");
    if(action!=="delete" && (!payload || typeof payload!=="object" || Array.isArray(payload))) throw Error("Invalid payload");
