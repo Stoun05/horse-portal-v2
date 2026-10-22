@@ -26,3 +26,8 @@ Migration 003 adds hashed, expiring sessions. Endpoints: POST `/api/auth/login` 
 
 ## Administrator user management groundwork
 `user-management.mjs` adds username/role validation, administrator-only account listing, and disabled account creation. The administrator cannot select or read employee passwords. `004_password_setup.sql` reserves expiring one-use setup tokens. **No first admin provisioning, token issuance, redemption, or protected admin HTTP endpoints exist yet.** Do not expose unfinished account flows on LAN.
+
+## One-use employee password setup (service functions)
+`password-setup.mjs` now implements 15-minute one-use setup tokens, transactionally consumes them when the employee sets a password, activates the user account, and invalidates prior sessions. Only an administrator role can issue setup tokens. The token must be delivered securely to the actual employee; the administrator must never request or receive their chosen password.
+
+**Not yet exposed as HTTP endpoints.** Before deployment, add authenticated administrator HTTP route, safe token handoff, brute-force rate limits, HTTPS for LAN credentials, auditing, first administrator provisioning, and integration tests with a real PostgreSQL instance.
