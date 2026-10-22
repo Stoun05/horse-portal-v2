@@ -22,3 +22,19 @@ test("tampered or expired offline grant is rejected",()=>{
   assert.throws(()=>openAuthorizedOfflineStore({root,userId,safeStorage,publicKey,grant:{...grant,expiresAt:1},signature:signed(grant),platform:"win32"}),/denied/);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("expired grant also blocks reads from an already opened store",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"atcylyk-grant-expiry-"));
+ try{
+  const grant={userId,expiresAt:Date.now()+60000,permissions:["horses:read","horses:create"]};
+  const store=openAuthorizedOfflineStore({root,userId,safeStorage,publicKey,grant,signature:signed(grant),platform:"win32"});
+  assert.deepEqual(store.listHorses(),{});
+  const original=Date.now;
+  Date.now=()=>grant.expiresAt+1;
+  try{
+   assert.throws(()=>store.listHorses(),/expired/);
+   assert.throws(()=>store.listPending(),/expired/);
+   assert.throws(()=>store.addLocalChange({entityId:"h1",action:"create",payload:{name:"Horse"}}),/expired/);
+  }finally{Date.now=original;}
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
