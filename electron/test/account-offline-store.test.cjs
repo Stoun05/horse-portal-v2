@@ -90,3 +90,16 @@ test("timeout and mismatched acknowledgement never clear offline queue",()=>{
   assert.equal(openAccountOfflineStore({root,userId:a,key}).listPending().length,0);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("stale account handle cannot overwrite a newer encrypted write",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-stale-")),key=randomBytes(32);
+ try{
+  const first=openAccountOfflineStore({root,userId:a,key});
+  const stale=openAccountOfflineStore({root,userId:a,key});
+  first.addLocalChange({entityId:"h1",action:"create",payload:{name:"Newest"}});
+  assert.throws(()=>stale.addLocalChange({entityId:"h2",action:"create",payload:{name:"Stale"}}),/changed since opening/);
+  const reopened=openAccountOfflineStore({root,userId:a,key});
+  assert.equal(reopened.listPending().length,1);
+  assert.equal(reopened.listHorses().h1.name,"Newest");
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
