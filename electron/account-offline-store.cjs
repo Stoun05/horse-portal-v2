@@ -1,12 +1,22 @@
-const {randomUUID}=require("node:crypto");
-const {saveVault,loadVault}=require("./offline-vault.cjs");
+const {randomUUID,createHash}=require("node:crypto");
+const fs=require("node:fs");
+const {saveVault,loadVault,accountPath}=require("./offline-vault.cjs");
 const {classifyServerResponse}=require("./sync-planner.cjs");
 // Isolated prototype, not wired into the Electron renderer or plaintext SQLite.
 function openAccountOfflineStore({root,userId,key}) {
  if(typeof root!=="string" || !Buffer.isBuffer(key) || key.length!==32) throw Error("Invalid configuration");
  const state=loadVault(root,userId,key)??{schema:1,horses:{},pending:[],lastSyncedAt:null};
  if(state.schema!==1 || !Array.isArray(state.pending) || typeof state.horses!=="object") throw Error("Invalid state");
- const persist=next=>{saveVault(root,userId,next,key);Object.assign(state,next);};
+ const filename=accountPath(root,userId);
+ const fingerprint=()=>fs.existsSync(filename)?createHash("sha256").update(fs.readFileSync(filename)).digest("hex"):null;
+ let loadedFingerprint=fingerprint();
+ const persist=next=>{
+  // Refuse stale writes from another open handle instead of discarding newer edits.
+  if(fingerprint()!==loadedFingerprint) throw Error("Offline vault changed since opening; reload account data");
+  saveVault(root,userId,next,key);
+  loadedFingerprint=fingerprint();
+  Object.assign(state,next);
+ };
  return {
   listHorses:()=>structuredClone(state.horses),
   listPending:()=>structuredClone(state.pending),
