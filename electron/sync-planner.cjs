@@ -5,8 +5,8 @@ function validateQueuedChange(change) {
   if (typeof change.id !== "string" || !change.id ||
       typeof change.entity_id !== "string" || !change.entity_id ||
       !ALLOWED_ACTIONS.has(change.action)) return false;
-  if (change.base_version !== null &&
-      (!Number.isInteger(change.base_version) || change.base_version < 0)) return false;
+  if (change.action === "create" ? change.base_version !== null :
+      (!Number.isInteger(change.base_version) || change.base_version < 1)) return false;
   if (change.action !== "delete" &&
       (!change.payload || typeof change.payload !== "object" || Array.isArray(change.payload))) return false;
   return true;
