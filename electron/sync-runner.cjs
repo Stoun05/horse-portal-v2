@@ -1,7 +1,11 @@
 /* Opt-in sequential sync engine. No networking or renderer access: caller supplies send(). */
 const {planSync,classifyServerResponse}=require("./sync-planner.cjs");
+const activeStores=new WeakSet();
 async function flushPending({store,send}){
  if(!store?.listPending||!store?.acknowledge||!store?.markConflict||typeof send!=="function") throw Error("Invalid sync dependencies");
+ if(activeStores.has(store)) return {state:"busy",acknowledged:0,conflicted:0};
+ activeStores.add(store);
+ try {
  let acknowledged=0,conflicted=0;
  for(const change of store.listPending()){
   if(change.status==="conflict") return {state:"conflict",acknowledged,conflicted};
@@ -23,5 +27,6 @@ async function flushPending({store,send}){
   }
  }
  return {state:"complete",acknowledged,conflicted};
+ } finally { activeStores.delete(store); }
 }
 module.exports={flushPending};
