@@ -38,3 +38,6 @@ Migration 005 adds horse version and a durable sync operation ledger. `server/sr
 
 ## Phase 8: Windows-protected key adapter
 `electron/offline-key-store.cjs` adds opt-in per-account AES key wrapping with Electron safeStorage, refusing unsupported Windows encryption and overwrites. Tests use a mock adapter only; actual Windows DPAPI, multiuser OS profiles, file ACLs, backup/key recovery, process isolation, and migration from plaintext SQLite have **not** been tested. The key adapter and encrypted JSON vault are not connected to the active local SQLite store or Electron window.
+
+## Phase 9: account-scoped encrypted outbox prototype
+`electron/account-offline-store.cjs` builds on the AES-GCM JSON vault, storing per-account horse snapshots and pending mutations atomically through encrypted file replacement. The test exercises persistence across reopening, account separation and acknowledgment. This is **not** yet wired into the Electron runtime, server API or the original SQLite cache. Multi-process locking, durable fsync, operation ordering/conflicts, recovery and migration must be solved before production. The standalone SQLite prototype remains unencrypted and must not be used for sensitive data.
