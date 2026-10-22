@@ -122,3 +122,20 @@ test("main process owns pinned desktop login without a renderer login IPC",()=>{
  assert.match(main,/desktopLogin\.logout\(\)/);
  assert.doesNotMatch(main,/ipcMain\.handle\(["'](?:offline:login|auth:login)/);
 });
+
+test("desktop authentication IPC accepts only original main frame and returns no token",async()=>{
+ const {EventEmitter}=require("node:events");
+ const {registerDesktopAuthIpc}=require("../desktop-auth-ipc.cjs");
+ const sender=new EventEmitter(),frame={url:"http://127.0.0.1:4444/atlar"};
+ sender.mainFrame=frame;
+ const event={sender,senderFrame:frame},handlers=new Map();
+ const ipcMain={handle:(n,fn)=>handlers.set(n,fn),removeHandler:n=>handlers.delete(n)};
+ const flow={login:async()=>({id:"staff",username:"staff",role:"Operator",token:"SECRET"}),logout:async()=>{}};
+ const close=registerDesktopAuthIpc({ipcMain,webContents:sender,expectedOrigin:"http://127.0.0.1:4444",loginFlow:flow,getSession:()=>({user:{id:"staff",role:"Operator"}})});
+ const result=await handlers.get("desktop-auth:login")(event,{username:"staff",password:"p"});
+ assert.deepEqual(result,{id:"staff",username:"staff",role:"Operator"});
+ await assert.rejects(()=>handlers.get("desktop-auth:login")({sender:{mainFrame:frame},senderFrame:frame},{username:"staff",password:"p"}),/Forbidden/);
+ await assert.rejects(()=>handlers.get("desktop-auth:login")(event,{username:"staff",password:"p",token:"fake"}),/Invalid credentials/);
+ close();
+ assert.equal(handlers.size,0);
+});
