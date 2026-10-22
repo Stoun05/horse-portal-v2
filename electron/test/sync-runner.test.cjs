@@ -51,3 +51,21 @@ test("simultaneous flush calls cannot send same operation twice",async()=>{
  assert.equal(calls,1);
  assert.equal(pending.length,0);
 });
+
+test("logout during in-flight sync preserves encrypted queue for later retry",async()=>{
+ const controller=new AbortController();
+ let release;
+ const gate=new Promise(resolve=>{release=resolve;});
+ const pending=[{id:"b8b646bd-7d54-4edb-9d14-4587afebca99",entity_id:"horse-1",action:"create",base_version:null,payload:{name:"Akyol",code:"AT-1"}}];
+ let acknowledgements=0;
+ const store={listPending:()=>pending.map(x=>({...x})),acknowledge:()=>{acknowledgements++;return true;},markConflict:()=>false};
+ let started;
+ const sent=new Promise(resolve=>{started=resolve;});
+ const result=flushPending({store,send:async()=>{started();await gate;return {changeId:pending[0].id,status:"accepted",serverVersion:1};},signal:controller.signal});
+ await sent;
+ controller.abort();
+ release();
+ assert.equal((await result).state,"cancelled");
+ assert.equal(acknowledgements,0);
+ assert.equal(pending.length,1);
+});
