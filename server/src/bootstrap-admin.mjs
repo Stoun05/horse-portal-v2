@@ -12,13 +12,13 @@ function readSecret(prompt) {
     const wasRaw = input.isRaw;
     input.setRawMode(true);
     input.resume();
-    function cleanup() { input.off("data", onData); input.setRawMode(Boolean(wasRaw)); output.write("\\n"); }
+    function cleanup() { input.off("data", onData); input.setRawMode(Boolean(wasRaw)); output.write("\n"); }
     function onData(buffer) {
       const chunk = buffer.toString("utf8");
-      if (chunk === "\\u0003") { cleanup(); reject(new Error("Input cancelled")); return; }
-      if (chunk === "\\r" || chunk === "\\n") { cleanup(); resolve(secret); return; }
-      if (chunk === "\\u007f" || chunk === "\\b") { secret = secret.slice(0, -1); return; }
-      if (!/[\\u0000-\\u001f]/.test(chunk) && Buffer.byteLength(secret + chunk, "utf8") <= 1024) secret += chunk;
+      if (chunk === "\u0003") { cleanup(); reject(new Error("Input cancelled")); return; }
+      if (chunk === "\r" || chunk === "\n") { cleanup(); resolve(secret); return; }
+      if (chunk === "\u007f" || chunk === "\b") { secret = secret.slice(0, -1); return; }
+      if (!/[\u0000-\u001f]/.test(chunk) && Buffer.byteLength(secret + chunk, "utf8") <= 1024) secret += chunk;
     }
     input.on("data", onData);
   });
