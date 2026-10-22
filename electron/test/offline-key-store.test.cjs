@@ -5,7 +5,7 @@ const os=require("node:os");
 const path=require("node:path");
 const {createWindowsKeyStore,keyPath}=require("../offline-key-store.cjs");
 const user="53a25d93-52be-4cab-8fea-f344f9340c9a";
-const mockSafeStorage={isEncryptionAvailable:()=>true,encryptString:x=>Buffer.from("protected:"+x),decryptString:x=>x.toString().replace(/^protected:/,"")};
+const mockSafeStorage={isEncryptionAvailable:()=>true,encryptString:x=>Buffer.from("mock-wrapped:"+Buffer.from(x,"utf8").toString("base64")),decryptString:x=>Buffer.from(x.toString().replace(/^mock-wrapped:/,""),"base64").toString("utf8")};
 test("key survives reopening and is never written in plaintext",()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),"horse-keys-"));
  try {
