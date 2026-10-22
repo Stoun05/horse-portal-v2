@@ -5,7 +5,7 @@ import { fetchRemoteHorseCatalog, type RemoteHorseResult } from "../../lib/remot
 
 /* Isolated development diagnostic; never writes browser storage or horse data. */
 export default function CatalogConnectionTest() {
-  const [server, setServer] = useState("http://127.0.0.1:3001");
+  const [server, setServer] = useState("http://127.0.0.1:4100");
   const [token, setToken] = useState("");
   const [result, setResult] = useState<RemoteHorseResult | null>(null);
   const [loading, setLoading] = useState(false);
