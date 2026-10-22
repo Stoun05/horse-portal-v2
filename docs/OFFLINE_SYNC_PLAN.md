@@ -32,3 +32,6 @@ Migration 005 adds horse version and a durable sync operation ledger. `server/sr
 
 ## Phase 6: offline permission verification contract
 `electron/offline-access.cjs` verifies short-lived Ed25519 signed permission grants using a public key; the private signing key must remain on the server. Expired, mismatched and tampered grants fail closed. This is not enabled yet: server issuance, public-key rotation, per-user encrypted storage, revocation policy and offline login remain required. Signed grants cannot immediately reflect revocation while disconnected; server must recheck permissions at synchronization.
+
+## Phase 7: prototype encrypted account vault
+`electron/offline-vault.cjs` provides AES-256-GCM authenticated encryption for a JSON object stored in a deterministic hashed account folder, with write-then-rename and isolated vaults. Tests check persistence, ciphertext tampering, and wrong-key rejection. **This is a prototype only.** The existing SQLite offline cache and outbox are still plaintext and not integrated with this vault. Key generation, OS-protected key storage, key rotation, backup/recovery, secure login and user-specific filtering are not implemented. Do not activate the offline cache for sensitive production data yet.
