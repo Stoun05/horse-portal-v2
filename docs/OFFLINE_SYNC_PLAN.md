@@ -41,3 +41,6 @@ Migration 005 adds horse version and a durable sync operation ledger. `server/sr
 
 ## Phase 9: account-scoped encrypted outbox prototype
 `electron/account-offline-store.cjs` builds on the AES-GCM JSON vault, storing per-account horse snapshots and pending mutations atomically through encrypted file replacement. The test exercises persistence across reopening, account separation and acknowledgment. This is **not** yet wired into the Electron runtime, server API or the original SQLite cache. Multi-process locking, durable fsync, operation ordering/conflicts, recovery and migration must be solved before production. The standalone SQLite prototype remains unencrypted and must not be used for sensitive data.
+
+## Phase 10: explicit encrypted backups
+`electron/offline-backup.cjs` exports the existing encrypted envelope only after confirming it decrypts with the supplied account key. Restoring refuses to overwrite an existing vault. Unit tests cover round-trip and wrong-key errors. Manual backup only: no scheduler, retention, access control to backup directories, Windows recovery key escrow, fsync or disaster-recovery procedures. Not wired to Electron and not production-ready.
