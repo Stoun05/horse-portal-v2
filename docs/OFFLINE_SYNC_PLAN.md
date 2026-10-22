@@ -44,3 +44,6 @@ Migration 005 adds horse version and a durable sync operation ledger. `server/sr
 
 ## Phase 10: explicit encrypted backups
 `electron/offline-backup.cjs` exports the existing encrypted envelope only after confirming it decrypts with the supplied account key. Restoring refuses to overwrite an existing vault. Unit tests cover round-trip and wrong-key errors. Manual backup only: no scheduler, retention, access control to backup directories, Windows recovery key escrow, fsync or disaster-recovery procedures. Not wired to Electron and not production-ready.
+
+## Phase 11: guarded encrypted store prototype
+`electron/authorized-offline-store.cjs` gates the encrypted account store behind a verified short-lived offline grant. Read-only grants cannot create edits. This is not a complete authentication mechanism: no local human authentication, signed grant issuance, persisted secure grant, complete permission scope, or connection to the UI. Do not deploy until these constraints and real Windows integration are tested.
