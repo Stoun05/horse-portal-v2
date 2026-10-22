@@ -84,3 +84,23 @@ test("desktop navigation revokes signed offline access and blocks captured IPC",
   revoke();
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("navigation start immediately revokes offline catalog access",async()=>{
+ const {EventEmitter}=require("node:events");
+ const {attachAuthorizedWindow}=require("../authorized-window.cjs");
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"horse-nav-start-"));
+ try {
+  const grant={userId,expiresAt:Date.now()+60000,permissions:["horses:read"]};
+  const webContents=new EventEmitter(),frame={url:"http://127.0.0.1:4444/atlar"};
+  webContents.mainFrame=frame;
+  const handlers=new Map();
+  const ipcMain={handle:(n,h)=>handlers.set(n,h),removeHandler:n=>handlers.delete(n)};
+  const revoke=attachAuthorizedWindow({ipcMain,webContents,expectedOrigin:"http://127.0.0.1:4444",root,userId,safeStorage,publicKey,grant,signature:signed(grant),platform:"win32"});
+  const oldRead=handlers.get("offline:horses");
+  assert.deepEqual(await oldRead({sender:webContents,senderFrame:frame}),{});
+  webContents.emit("did-start-navigation");
+  assert.equal(handlers.size,0);
+  await assert.rejects(()=>oldRead({sender:webContents,senderFrame:frame}),/session closed/);
+  revoke();
+ } finally {fs.rmSync(root,{recursive:true,force:true});}
+});
