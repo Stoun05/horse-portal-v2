@@ -315,3 +315,15 @@ test("desktop login flow clears login if signed offline grant missing",async()=>
  assert.equal(signedIn,false);
  assert.equal(activated,0);
 });
+
+test("desktop login fetches server-signed offline grant through authenticated client",async()=>{
+ const {createDesktopLoginFlow}=require("../desktop-login-flow.cjs");
+ const user={id:"user-001",role:"Operator"};
+ let requested=0,authorized=null;
+ const loginClient={login:async()=>user,logout:async()=>{},getSignedGrant:async()=>{requested++;return {grant:{userId:user.id,expiresAt:Date.now()+1000,permissions:["horses:read"]},signature:"aa",publicKey:"server-public"};},withToken:async cb=>cb("server-token")};
+ const flow=createDesktopLoginFlow({loginClient,offlineSessions:{logout(){},authorize(value){authorized=value;}}});
+ await flow.login("staff","secret");
+ assert.equal(requested,1);
+ assert.equal(authorized.userId,user.id);
+ assert.equal(authorized.publicKey,"server-public");
+});
