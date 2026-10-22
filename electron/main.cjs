@@ -4,6 +4,7 @@ const { attachAuthorizedWindow } = require("./authorized-window.cjs");
 const { createOfflineSessionController } = require("./offline-session-controller.cjs");
 const { createLocalLoginClient } = require("./local-login-client.cjs");
 const { createDesktopLoginFlow } = require("./desktop-login-flow.cjs");
+const { registerDesktopAuthIpc } = require("./desktop-auth-ipc.cjs");
 const fs = require("node:fs");
 const http = require("node:http");
 const path = require("node:path");
@@ -122,13 +123,22 @@ async function createWindow() {
   // Public signing key is provisioned by the desktop deployment, never fetched as a trust anchor.
   // Missing configuration leaves the encrypted offline store inaccessible.
   let desktopLogin=null;
+  let loginClient=null;
+  let disposeAuthIpc=()=>{};
   if(process.env.PORTAL_OFFLINE_TRUSTED_PUBLIC_KEY_PEM){
+    loginClient=createLocalLoginClient();
     desktopLogin=createDesktopLoginFlow({
-      loginClient:createLocalLoginClient(),offlineSessions,
+      loginClient,offlineSessions,
       trustedPublicKey:process.env.PORTAL_OFFLINE_TRUSTED_PUBLIC_KEY_PEM.replace(/\\n/g,"\n")
     });
   }
+  if(desktopLogin){
+    disposeAuthIpc=registerDesktopAuthIpc({ipcMain,webContents:window.webContents,
+      expectedOrigin:`http://127.0.0.1:${port}`,loginFlow:desktopLogin,
+      getSession:()=>loginClient.getSession()});
+  }
   window.on("closed",()=>{
+    disposeAuthIpc();
     offlineSessions.dispose();
     if(desktopLogin)void desktopLogin.logout().catch(()=>{});
   });
