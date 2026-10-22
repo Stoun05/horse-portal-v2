@@ -13,6 +13,9 @@ function openAccountOfflineStore({root,userId,key}) {
    if(typeof entityId!=="string" || !entityId || !["create","update","delete"].includes(action)) throw Error("Invalid change");
    if(action!=="delete" && (!payload || typeof payload!=="object" || Array.isArray(payload))) throw Error("Invalid payload");
    if(action==="create" ? baseVersion!==null : !Number.isInteger(baseVersion)||baseVersion<1) throw Error("Invalid version");
+   // Until the server acknowledges the first edit, its resulting version is unknown.
+   // Never queue a second edit to the same horse with a guessed base version.
+   if(state.pending.some(item=>item.entity_id===entityId)) throw Error("Pending change for this horse must sync or be resolved first");
    const next=structuredClone(state), id=randomUUID();
    next.pending.push({id,entity_id:entityId,action,payload,base_version:baseVersion});
    if(action==="delete") delete next.horses[entityId];
