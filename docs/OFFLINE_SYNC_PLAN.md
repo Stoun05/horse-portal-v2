@@ -20,3 +20,6 @@ SQLite module uses the Node built-in `node:sqlite` API; compatibility with the E
 
 ## Phase 2: pure synchronization planner
 `electron/sync-planner.cjs` validates queued changes, retains ordering and classifies server replies as acknowledged, conflict, forbidden or retry. This module does **not** send requests or delete pending operations. It cannot synchronize without authenticated server sync endpoints, user isolation and resolution of version conflicts. The Windows test workflow runs its tests.
+
+## Phase 3: server-side versioning foundations
+Migration 005 adds horse version and a durable sync operation ledger. `server/src/sync-validation.mjs` verifies change identifiers, base versions and role permissions. No authenticated sync mutation endpoint or transactional apply operation is wired yet. Acknowledgments require server-side authorization, idempotent transaction handling and conflict detection; never upload cached records directly without those checks.
