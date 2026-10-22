@@ -1,9 +1,11 @@
 import { pool } from "./db.mjs";
+import { createHash } from "node:crypto";
 import { validateSyncChange, maySyncHorse } from "./sync-validation.mjs";
 import { parseHorseInput } from "./horse-validation.mjs";
 
 export async function applyHorseSync(user, change) {
   if (!user?.id || !validateSyncChange(change)) return { status: 400, error: "Invalid change" };
+  const digest = createHash("sha256").update(JSON.stringify({ entityId: change.entityId, action: change.action, baseVersion: change.baseVersion, payload: change.payload ?? null })).digest("hex");
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -14,13 +16,13 @@ export async function applyHorseSync(user, change) {
       return { status: 403, changeId: change.changeId, syncStatus: "forbidden", error: "Forbidden" };
     }
     const previous = await client.query(
-      "SELECT actor_id,entity_id,status,server_version FROM sync_operations WHERE change_id=$1",
+      "SELECT actor_id,entity_id,status,server_version,request_digest FROM sync_operations WHERE change_id=$1",
       [change.changeId]
     );
     if (previous.rowCount) {
       await client.query("COMMIT");
       const prior = previous.rows[0];
-      if (prior.actor_id !== user.id || prior.entity_id !== change.entityId)
+      if (prior.actor_id !== user.id || prior.entity_id !== change.entityId || prior.request_digest !== digest)
         return { status: 409, error: "Change ID already used" };
       return { status: 200, changeId: change.changeId, syncStatus: prior.status, serverVersion: prior.server_version };
     }
@@ -53,8 +55,8 @@ export async function applyHorseSync(user, change) {
       }
     }
     await client.query(
-      "INSERT INTO sync_operations(change_id,actor_id,entity_id,status,server_version) VALUES($1,$2,$3,'accepted',$4)",
-      [change.changeId,user.id,change.entityId,newVersion]
+      "INSERT INTO sync_operations(change_id,actor_id,entity_id,status,server_version,request_digest) VALUES($1,$2,$3,'accepted',$4,$5)",
+      [change.changeId,user.id,change.entityId,newVersion,digest]
     );
     await client.query(
       "INSERT INTO audit_log(actor_id,action,entity_type,entity_id) VALUES($1,$2,'horse',$3)",
