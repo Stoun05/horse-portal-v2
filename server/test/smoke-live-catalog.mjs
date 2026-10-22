@@ -27,6 +27,26 @@ try {
  if(catalog.status!==200) throw Error("Catalog returned "+catalog.status);
  const body=await catalog.json();
  if(!Array.isArray(body?.horses)) throw Error("Invalid catalog response");
+ if (process.env.WEB_ORIGIN) {
+   const origin=process.env.WEB_ORIGIN;
+   const preflight=await fetch(endpoint("/api/auth/login"),{
+     method:"OPTIONS",headers:{Origin:origin,"Access-Control-Request-Method":"POST","Access-Control-Request-Headers":"content-type"},
+     signal:AbortSignal.timeout(10000)
+   });
+   if(preflight.status!==204 || preflight.headers.get("access-control-allow-origin")!==origin)
+     throw Error("Trusted browser origin preflight rejected");
+   const webCatalog=await fetch(endpoint("/api/horses?limit=100"),{
+     headers:{...headers,Origin:origin},signal:AbortSignal.timeout(10000)
+   });
+   if(webCatalog.status!==200 || webCatalog.headers.get("access-control-allow-origin")!==origin)
+     throw Error("Trusted Web catalog request failed");
+   const unknownOrigin=await fetch(endpoint("/api/horses"),{
+     method:"OPTIONS",headers:{Origin:"http://untrusted.invalid","Access-Control-Request-Method":"GET"},
+     signal:AbortSignal.timeout(10000)
+   });
+   if(unknownOrigin.status!==403 || unknownOrigin.headers.has("access-control-allow-origin"))
+     throw Error("Untrusted origin preflight was permitted");
+ }
  const forbidden=await fetch(endpoint("/api/horses"),{signal:AbortSignal.timeout(10000)});
  if(forbidden.status!==401) throw Error("Anonymous catalog access was not rejected");
  const logout=await fetch(endpoint("/api/auth/logout"),{method:"POST",headers,signal:AbortSignal.timeout(10000)});
