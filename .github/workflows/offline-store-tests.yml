@@ -48,3 +48,6 @@ jobs:
       - name: Test sync-runner
         if: always()
         run: node --test electron/test/sync-runner.test.cjs
+      - name: Test sync-transport
+        if: always()
+        run: node --test electron/test/sync-transport.test.cjs
