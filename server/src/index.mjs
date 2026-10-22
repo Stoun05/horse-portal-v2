@@ -1,4 +1,6 @@
 import http from "node:http";
+import {createPrivateKey,createPublicKey} from "node:crypto";
+import {issueOfflineGrant} from "./offline-grants.mjs";
 import { pool } from "./db.mjs";
 import { can } from "./permissions.mjs";
 import { listHorses } from "./horses.mjs";
@@ -26,6 +28,20 @@ const server = http.createServer(async (req, res) => {
       const session = await login(body?.username, body?.password);
       sendJson(res, session ? 200 : 401, session || { error: "Invalid credentials" });
     } catch (error) { sendJson(res, error.status || 503, { error: error.status ? error.message : "Request failed" }); }
+    return;
+  }
+  if (pathname === "/api/auth/offline-grant" && req.method === "POST") {
+    try {
+      const user=await getSessionUser(req);
+      if(!user){sendJson(res,401,{error:"Unauthorized"});return;}
+      const pem=process.env.PORTAL_OFFLINE_SIGNING_KEY_PEM;
+      if(!pem){sendJson(res,503,{error:"Offline signing unavailable"});return;}
+      const key=createPrivateKey(pem.replace(/\\n/g,"\n"));
+      if(key.asymmetricKeyType!=="ed25519")throw Error("Invalid signing key");
+      const signed=issueOfflineGrant(user,key);
+      const publicKey=createPublicKey(key).export({type:"spki",format:"pem"});
+      sendJson(res,200,{...signed,publicKey});
+    }catch{sendJson(res,503,{error:"Offline signing unavailable"});}
     return;
   }
   if (pathname === "/api/auth/logout" && req.method === "POST") {
