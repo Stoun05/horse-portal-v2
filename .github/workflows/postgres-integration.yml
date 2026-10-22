@@ -32,6 +32,7 @@ jobs:
       HOST: 127.0.0.1
       PORT: 4100
       PORTAL_URL: http://127.0.0.1:4100
+      PORTAL_INTEGRATION_DISPOSABLE: "YES"
       WEB_ORIGIN: http://localhost:3000
       PORTAL_EXPECT_SEEDED_HORSE: "1"
       PORTAL_TEST_USER: integration_operator
@@ -71,3 +72,4 @@ jobs:
           done
           curl -fsS http://127.0.0.1:4100/ready >/dev/null
           node test/smoke-live-catalog.mjs
+          node test/smoke-live-sync.mjs
