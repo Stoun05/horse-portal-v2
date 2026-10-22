@@ -4,7 +4,7 @@ on:
     branches: [feature/offline-sync]
   pull_request:
     paths:
-      - 'electron/offline-store.cjs'
+      - 'electron/**'
       - 'electron/test/**'
       - '.github/workflows/offline-store-tests.yml'
 jobs:
@@ -15,4 +15,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test electron/test/offline-store.test.cjs
+      - run: node --test electron/test/*.test.cjs
