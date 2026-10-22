@@ -286,3 +286,32 @@ test("local login client refuses untrusted remote URLs",()=>{
  const {createLocalLoginClient}=require("../local-login-client.cjs");
  assert.throws(()=>createLocalLoginClient({baseUrl:"https://remote.invalid/"}),/loopback/);
 });
+
+test("desktop login flow activates offline only with matching signed grant",async()=>{
+ const {createDesktopLoginFlow}=require("../desktop-login-flow.cjs");
+ let signedIn=false,activated=false,closed=0;
+ const loginClient={
+  login:async()=>{signedIn=true;return {id:userId,role:"Operator"};},
+  logout:async()=>{signedIn=false;},
+  withToken:async callback=>callback("token")
+ };
+ const offlineSessions={logout:()=>{closed++;activated=false;},authorize:()=>{activated=true;}};
+ const flow=createDesktopLoginFlow({loginClient,offlineSessions,getSignedGrant:async()=>({grant:{userId},publicKey:"key",signature:"signature"})});
+ await flow.login("operator","password");
+ assert.equal(signedIn,true);
+ assert.equal(activated,true);
+ await flow.logout();
+ assert.equal(signedIn,false);
+ assert.equal(activated,false);
+ assert.ok(closed>=2);
+});
+test("desktop login flow clears login if signed offline grant missing",async()=>{
+ const {createDesktopLoginFlow}=require("../desktop-login-flow.cjs");
+ let signedIn=false,activated=0;
+ const loginClient={login:async()=>{signedIn=true;return {id:userId};},logout:async()=>{signedIn=false;},withToken:async cb=>cb("token")};
+ const offlineSessions={logout:()=>{},authorize:()=>{activated++;}};
+ const flow=createDesktopLoginFlow({loginClient,offlineSessions,getSignedGrant:async()=>null});
+ await assert.rejects(()=>flow.login("u","p"),/Missing signed offline grant/);
+ assert.equal(signedIn,false);
+ assert.equal(activated,0);
+});
