@@ -31,3 +31,6 @@ Migration 003 adds hashed, expiring sessions. Endpoints: POST `/api/auth/login` 
 `password-setup.mjs` now implements 15-minute one-use setup tokens, transactionally consumes them when the employee sets a password, activates the user account, and invalidates prior sessions. Only an administrator role can issue setup tokens. The token must be delivered securely to the actual employee; the administrator must never request or receive their chosen password.
 
 **Not yet exposed as HTTP endpoints.** Before deployment, add authenticated administrator HTTP route, safe token handoff, brute-force rate limits, HTTPS for LAN credentials, auditing, first administrator provisioning, and integration tests with a real PostgreSQL instance.
+
+## Initial administrator (development-only console setup)
+After creating the database schema, run `npm run admin:init` on the academy server's own terminal. This command refuses non-interactive terminals and prevents bootstrap when an Admin already exists. The administrator chooses their own password; passwords are stored as salted scrypt hashes. **Current prompt displays typed passwords on screen; do not use on a shared/recorded console. Masked password entry and security hardening are required before real deployment.** Never run the bootstrap command as a remote API.
