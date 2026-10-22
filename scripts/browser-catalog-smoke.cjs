@@ -2,8 +2,8 @@ const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 (async()=>{
  const browser=await chromium.launch({headless:true});
+ const page=await browser.newPage();
  try{
-  const page=await browser.newPage();
   page.setDefaultTimeout(12000);
   console.log("STAGE: browser started");
   const url="http://127.0.0.1:4173/atlar/";
