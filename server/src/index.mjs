@@ -7,6 +7,7 @@ import { login } from "./login.mjs";
 import { applyHorseSync } from "./sync-apply.mjs";
 import { getSessionUser, revokeSession } from "./sessions.mjs";
 import { readJsonBody, sendJson } from "./http-utils.mjs";
+import { applyWebCors } from "./web-cors.mjs";
 
 // Initial deployment exposes health checks only. No horse or user records are public.
 const server = http.createServer(async (req, res) => {
@@ -14,6 +15,11 @@ const server = http.createServer(async (req, res) => {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Content-Type-Options", "nosniff");
+  const allowedWebOrigin = applyWebCors(req, res);
+  if (req.method === "OPTIONS") {
+    sendJson(res, allowedWebOrigin ? 204 : 403, allowedWebOrigin ? {} : { error: "Forbidden origin" });
+    return;
+  }
   if (pathname === "/api/auth/login" && req.method === "POST") {
     try {
       const body = await readJsonBody(req, 4096);
