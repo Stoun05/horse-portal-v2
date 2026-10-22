@@ -20,3 +20,11 @@ test("invalid queued operations are rejected", () => {
   assert.equal(validateQueuedChange({ ...change, action: "execute" }), false);
   assert.throws(() => planSync([{ ...change, base_version: -1 }]));
 });
+
+test("client queue version rules match server validation", () => {
+ assert.equal(validateQueuedChange({ ...change, action: "create", base_version: null }), true);
+ assert.equal(validateQueuedChange({ ...change, action: "create", base_version: 1 }), false);
+ assert.equal(validateQueuedChange({ ...change, action: "update", base_version: null }), false);
+ assert.equal(validateQueuedChange({ ...change, action: "update", base_version: 0 }), false);
+ assert.equal(classifyServerResponse(change, { changeId: change.id, status: "forbidden" }), "blocked");
+});
