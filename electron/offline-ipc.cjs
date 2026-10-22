@@ -31,6 +31,11 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     check(event);
     return store.listPending().length;
   });
-  return () => IPC_NAMES.forEach(channel => ipcMain.removeHandler(channel));
+  let active=true;
+  return () => {
+    if(!active)return;
+    active=false;
+    IPC_NAMES.forEach(channel => ipcMain.removeHandler(channel));
+  };
 }
 module.exports = { CHANNELS, trustedSender, registerOfflineReadIpc };
