@@ -37,3 +37,13 @@ test("pinned offline IPC refuses a different window on the same origin",async()=
  await assert.rejects(()=>handlers.get("offline:horses")({sender:otherSender,senderFrame:otherFrame}),/Forbidden IPC window/);
  cleanup();
 });
+
+test("offline IPC cleanup can be called repeatedly",()=>{
+ const handlers=new Map();
+ const ipcMain={handle:(name,fn)=>handlers.set(name,fn),removeHandler:name=>handlers.delete(name)};
+ const store={listHorses:()=>({}),listPending:()=>[],lastSyncedAt:()=>null};
+ const close=registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444"});
+ assert.equal(handlers.size,3);
+ close();close();
+ assert.equal(handlers.size,0);
+});
