@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Award,
+  Download,
   Eye,
   Network,
   Pencil,
@@ -163,6 +164,28 @@ export default function AtlarPage() {
     }
   }
 
+  function exportLocalBackup() {
+    try {
+      // Export stored bytes, not the current in-memory fallback, for recovery.
+      const raw = window.localStorage.getItem(HORSE_STORAGE_KEY);
+      if (raw === null) {
+        window.alert("Ýerli saklaýjyda at maglumatlary ýok.");
+        return;
+      }
+      const blob = new Blob([raw], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `atcylyk-atlar-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.alert("Ätiýaçlyk faýly taýýarlamak başa barmady.");
+    }
+  }
+
   function resetFilters() {
     setSearch("");
     setBreed("Ähli tohumlar");
@@ -201,7 +224,10 @@ export default function AtlarPage() {
             </div>
           </section>
 
-          <div className="mb-6 flex justify-end">
+          <div className="mb-6 flex flex-wrap justify-end gap-3">
+            <button type="button" onClick={exportLocalBackup} className="inline-flex items-center gap-2 rounded-xl border border-[#0b5e3c] bg-white px-5 py-3 font-bold text-[#0b5e3c] transition hover:bg-emerald-50">
+              <Download size={19} /> Ätiýaçlyk nusgany al
+            </button>
             <button type="button" onClick={openCreateModal} className="inline-flex items-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white shadow-sm transition hover:bg-[#08462d] focus:outline-none focus:ring-4 focus:ring-emerald-200">
               <Plus size={19} /> Täze at goş
             </button>
