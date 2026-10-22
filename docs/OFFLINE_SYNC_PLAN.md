@@ -29,3 +29,6 @@ Migration 005 adds horse version and a durable sync operation ledger. `server/sr
 
 ## Phase 5: opt-in Electron IPC adapter
 `electron/offline-ipc.cjs` and `electron/offline-preload.cjs` define three read-only channels (status, horses, pending count) and reject senders outside the designated loopback main frame. They are deliberately **not loaded by electron/main.cjs**: local cache data is not yet scoped to authenticated users or encrypted, and exposing it to a renderer would leak records. Once account isolation, authorization and secure storage are implemented and tested, wire main/preload to this adapter. No renderer write or arbitrary SQL IPC is provided.
+
+## Phase 6: offline permission verification contract
+`electron/offline-access.cjs` verifies short-lived Ed25519 signed permission grants using a public key; the private signing key must remain on the server. Expired, mismatched and tampered grants fail closed. This is not enabled yet: server issuance, public-key rotation, per-user encrypted storage, revocation policy and offline login remain required. Signed grants cannot immediately reflect revocation while disconnected; server must recheck permissions at synchronization.
