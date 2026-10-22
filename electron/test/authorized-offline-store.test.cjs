@@ -338,3 +338,13 @@ test("desktop rejects an untrusted offline signing key",async()=>{
  assert.equal(activated,0);
  assert.ok(logoutCount>=2);
 });
+
+test("trusted offline signing key accepts PEM and pre-parsed public KeyObject",()=>{
+ const {createDesktopLoginFlow}=require("../desktop-login-flow.cjs");
+ const loginClient={login:async()=>({id:userId}),logout:async()=>{},withToken:async fn=>fn("token")};
+ const offlineSessions={authorize(){},logout(){}};
+ for(const trustedPublicKey of [publicKey,publicKey.export({type:"spki",format:"pem"})]){
+  const flow=createDesktopLoginFlow({loginClient,offlineSessions,trustedPublicKey,getSignedGrant:async()=>null});
+  assert.equal(typeof flow.login,"function");
+ }
+});
