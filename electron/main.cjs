@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain, safeStorage } = require("electron");
+const { attachAuthorizedWindow } = require("./authorized-window.cjs");
 const fs = require("node:fs");
 const http = require("node:http");
 const path = require("node:path");
@@ -108,6 +109,20 @@ async function createWindow() {
     },
   });
 
+  // No offline access is granted automatically. A future verified login must call
+  // authorizeOfflineAccount with a server-signed grant; never trust renderer claims.
+  let revokeOfflineSession = null;
+  const authorizeOfflineAccount = ({root,userId,publicKey,grant,signature}) => {
+    revokeOfflineSession?.();
+    revokeOfflineSession = null;
+    revokeOfflineSession = attachAuthorizedWindow({
+      ipcMain,webContents:window.webContents,expectedOrigin:`http://127.0.0.1:${port}`,
+      root,userId,safeStorage,publicKey,grant,signature
+    });
+  };
+  // Keep this function bound to the owning window, not exposed through IPC.
+  window.authorizeOfflineAccount = authorizeOfflineAccount;
+  window.on("closed",()=>{revokeOfflineSession?.();revokeOfflineSession=null;});
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   window.webContents.on("will-navigate", (event, url) => {
     if (!url.startsWith(`http://127.0.0.1:${port}/`)) event.preventDefault();
