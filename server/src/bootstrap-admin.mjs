@@ -5,6 +5,25 @@ import { validateUsername } from "./user-management.mjs";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
+function readSecret(prompt) {
+  return new Promise((resolve, reject) => {
+    let secret = "";
+    output.write(prompt);
+    const wasRaw = input.isRaw;
+    input.setRawMode(true);
+    input.resume();
+    function cleanup() { input.off("data", onData); input.setRawMode(Boolean(wasRaw)); output.write("\\n"); }
+    function onData(buffer) {
+      const chunk = buffer.toString("utf8");
+      if (chunk === "\\u0003") { cleanup(); reject(new Error("Input cancelled")); return; }
+      if (chunk === "\\r" || chunk === "\\n") { cleanup(); resolve(secret); return; }
+      if (chunk === "\\u007f" || chunk === "\\b") { secret = secret.slice(0, -1); return; }
+      if (!/[\\u0000-\\u001f]/.test(chunk) && Buffer.byteLength(secret + chunk, "utf8") <= 1024) secret += chunk;
+    }
+    input.on("data", onData);
+  });
+}
+
 // Run interactively on the physical academy server console, not through a web endpoint.
 if (!input.isTTY || !output.isTTY) {
   console.error("Administrator setup requires an interactive server terminal.");
@@ -16,9 +35,9 @@ if (!input.isTTY || !output.isTTY) {
     if (existing.rowCount !== 0) throw new Error("An administrator already exists; bootstrap is disabled.");
     const username = (await cli.question("Initial admin username: ")).trim();
     if (!validateUsername(username)) throw new Error("Username must be 3-64 letters, digits, dots, dashes or underscores.");
-    console.log("Do not enter passwords into shared terminals or recorded sessions.");
-    const password = await cli.question("Initial admin password (visible while typing): ");
-    const confirmation = await cli.question("Confirm admin password: ");
+    cli.close();
+    const password = await readSecret("Initial admin password (hidden): ");
+    const confirmation = await readSecret("Confirm admin password (hidden): ");
     if (password !== confirmation) throw new Error("Passwords do not match.");
     const passwordHash = await hashPassword(password);
     const client = await pool.connect();
