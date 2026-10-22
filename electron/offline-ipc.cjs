@@ -15,7 +15,9 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
   if (!ipcMain?.handle || !store?.listHorses || !store?.listPending || !store?.lastSyncedAt)
     throw new Error("Invalid dependencies");
   if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(expectedOrigin)) throw new Error("Invalid local origin");
+  let active=true;
   const check = (event) => {
+    if(!active) throw new Error("Offline IPC session closed");
     if (expectedSender && event?.sender !== expectedSender) throw new Error("Forbidden IPC window");
     if (!trustedSender(event, expectedOrigin)) throw new Error("Forbidden IPC sender");
   };
@@ -31,7 +33,6 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     check(event);
     return store.listPending().length;
   });
-  let active=true;
   return () => {
     if(!active)return;
     active=false;
