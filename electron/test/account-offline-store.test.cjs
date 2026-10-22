@@ -23,3 +23,16 @@ test("encrypted pending edits persist on disk and separate accounts",()=>{
   assert.equal(openAccountOfflineStore({root,userId:a,key:keyA}).listPending().length,0);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("conflicted changes remain on disk and cannot be acknowledged automatically",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-conflict-")),key=randomBytes(32);
+ try {
+  let store=openAccountOfflineStore({root,userId:a,key});
+  const id=store.addLocalChange({entityId:"horse-1",action:"update",payload:{name:"Updated"},baseVersion:1});
+  assert.equal(store.markConflict(id),true);
+  store=openAccountOfflineStore({root,userId:a,key});
+  assert.equal(store.listPending()[0].status,"conflict");
+  assert.equal(store.acknowledge(id),false);
+  assert.equal(store.listPending().length,1);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
