@@ -4,6 +4,7 @@ import { isAuthorized } from "./auth.mjs";
 import { listHorses } from "./horses.mjs";
 import { host, port } from "./config.mjs";
 import { login } from "./login.mjs";
+import { applyHorseSync } from "./sync-apply.mjs";
 import { getSessionUser, revokeSession } from "./sessions.mjs";
 import { readJsonBody, sendJson } from "./http-utils.mjs";
 
@@ -29,6 +30,19 @@ const server = http.createServer(async (req, res) => {
   if (pathname === "/api/auth/me" && req.method === "GET") {
     try { const user = await getSessionUser(req); sendJson(res, user ? 200 : 401, user || { error: "Unauthorized" }); }
     catch { sendJson(res, 503, { error: "Request failed" }); }
+    return;
+  }
+  if (pathname === "/api/sync/horses" && req.method === "POST") {
+    try {
+      const user = await getSessionUser(req);
+      if (!user) { sendJson(res, 401, { error: "Unauthorized" }); return; }
+      const change = await readJsonBody(req, 65536);
+      const outcome = await applyHorseSync(user, change);
+      const { status: httpStatus, statusText, ...rest } = outcome;
+      sendJson(res, httpStatus, { ...rest, ...(statusText ? { status: statusText } : {}) });
+    } catch (error) {
+      sendJson(res, error.status || 503, { error: error.status ? error.message : "Request failed" });
+    }
     return;
   }
   if (req.method !== "GET") {
