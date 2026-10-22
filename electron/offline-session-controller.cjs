@@ -8,10 +8,13 @@ function createOfflineSessionController({attach,ipcMain,webContents,expectedOrig
   authorize({userId,publicKey,grant,signature}){
    if(webContents.isDestroyed?.()) throw Error("Desktop window closed");
    syncAbort.abort();
+   if(revoke){const closePrevious=revoke;revoke=null;lastIdentity=null;closePrevious();}
    syncAbort=new AbortController();
-   if(revoke){revoke();revoke=null;lastIdentity=null;}
    const close=attach({ipcMain,webContents,expectedOrigin,safeStorage,root,userId,publicKey,grant,signature});
-   if(typeof close!=="function") throw Error("Offline session attach must return cleanup function");
+   if(typeof close!=="function") {
+    syncAbort.abort();
+    throw Error("Offline session attach must return cleanup function");
+   }
    revoke=close;
    lastIdentity=userId;
   },
