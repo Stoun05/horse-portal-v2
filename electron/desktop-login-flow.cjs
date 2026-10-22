@@ -2,7 +2,7 @@
 const {createPublicKey}=require("node:crypto");
 function createDesktopLoginFlow({loginClient,offlineSessions,getSignedGrant,trustedPublicKey}){
  if(!trustedPublicKey)throw Error("Trusted offline public key required");
- const trustedKey=createPublicKey(trustedPublicKey);
+ const trustedKey=trustedPublicKey?.type==="public" ? trustedPublicKey : createPublicKey(trustedPublicKey);
  if(trustedKey.asymmetricKeyType!=="ed25519")throw Error("Trusted signing key must be Ed25519");
  const trustedDer=trustedKey.export({format:"der",type:"spki"}).toString("hex");
  getSignedGrant=getSignedGrant??(()=>loginClient.getSignedGrant());
