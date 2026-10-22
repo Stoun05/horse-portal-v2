@@ -11,7 +11,7 @@ export async function applyHorseSync(user, change) {
     await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [change.changeId]);
     if (!maySyncHorse(user.role, change.action)) {
       await client.query("ROLLBACK");
-      return { status: 403, error: "Forbidden" };
+      return { status: 403, changeId: change.changeId, syncStatus: "forbidden", error: "Forbidden" };
     }
     const previous = await client.query(
       "SELECT actor_id,entity_id,status,server_version FROM sync_operations WHERE change_id=$1",
