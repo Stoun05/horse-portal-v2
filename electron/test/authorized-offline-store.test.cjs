@@ -192,3 +192,14 @@ test("session controller refuses closed Electron window and invalid cleanup",()=
  assert.throws(()=>invalid.authorize({userId:"u"}),/cleanup function/);
  invalid.logout();
 });
+
+test("offline session status only exposes activity and account identity",()=>{
+ const {createOfflineSessionController}=require("../offline-session-controller.cjs");
+ const controller=createOfflineSessionController({attach:()=>()=>{},ipcMain:{},webContents:{},expectedOrigin:"http://127.0.0.1:4444",safeStorage:{},root:"test"});
+ assert.deepEqual(controller.getSessionStatus(),{active:false,userId:null});
+ controller.authorize({userId:"user-1",grant:{secret:"private"},signature:"secret"});
+ assert.deepEqual(controller.getSessionStatus(),{active:true,userId:"user-1"});
+ assert.equal("signature" in controller.getSessionStatus(),false);
+ controller.logout();
+ assert.deepEqual(controller.getSessionStatus(),{active:false,userId:null});
+});
