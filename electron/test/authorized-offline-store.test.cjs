@@ -246,3 +246,18 @@ test("navigation aborts sync signal and clears session controller identity",()=>
  assert.deepEqual(controller.getSessionStatus(),{active:false,userId:null});
  assert.throws(()=>controller.getSyncSignal(),/not authorized/);
 });
+
+test("disposed desktop controller removes listeners and cannot reauthorize",()=>{
+ const {EventEmitter}=require("node:events");
+ const {createOfflineSessionController}=require("../offline-session-controller.cjs");
+ const window=new EventEmitter();
+ const session=createOfflineSessionController({attach:()=>()=>{},ipcMain:{},webContents:window,expectedOrigin:"http://127.0.0.1:4444",safeStorage:{},root:"test"});
+ session.authorize({userId:"horse-user"});
+ assert.equal(window.listenerCount("destroyed"),1);
+ session.dispose();
+ session.dispose();
+ assert.equal(window.listenerCount("destroyed"),0);
+ assert.equal(window.listenerCount("did-start-navigation"),0);
+ assert.equal(session.getSessionStatus().active,false);
+ assert.throws(()=>session.authorize({userId:"next"}),/window closed/);
+});
