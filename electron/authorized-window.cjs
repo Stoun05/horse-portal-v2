@@ -13,11 +13,11 @@ function attachAuthorizedWindow({ipcMain,webContents,expectedOrigin,root,userId,
   if(!active)return;
   active=false;
   activeIpcSessions.delete(ipcMain);
-  webContents.removeListener("did-navigate",revoke);
-  webContents.removeListener("did-start-navigation",revoke);
-  webContents.removeListener("render-process-gone",revoke);
-  webContents.removeListener("destroyed",revoke);
-  revokeIpc();
+  try {
+   for(const event of ["did-navigate","did-start-navigation","render-process-gone","destroyed"]){
+    try { webContents.removeListener(event,revoke); } catch { /* still revoke IPC */ }
+   }
+  } finally { revokeIpc(); }
  };
  // A new document or crashed renderer needs a fresh user authorization.
  try {
