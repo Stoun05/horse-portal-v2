@@ -16,7 +16,8 @@ function classifyServerResponse(change, response) {
   if (!validateQueuedChange(change)) return "invalid";
   if (!response || typeof response !== "object") return "retry";
   if (response.changeId !== change.id) return "retry";
-  if (response.status === "accepted" && Number.isInteger(response.serverVersion) && response.serverVersion >= 1) return "ack";
+  if (response.status === "accepted" && Number.isInteger(response.serverVersion) &&
+      (change.action === "create" ? response.serverVersion === 1 : response.serverVersion > change.base_version)) return "ack";
   if (response.status === "conflict") return "conflict";
   if (response.status === "forbidden") return "blocked";
   return "retry";
