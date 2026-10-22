@@ -233,3 +233,16 @@ test("failed account switch does not leave a usable synchronization signal",()=>
  assert.deepEqual(controller.getSessionStatus(),{active:false,userId:null});
  assert.throws(()=>controller.getSyncSignal(),/not authorized/);
 });
+
+test("navigation aborts sync signal and clears session controller identity",()=>{
+ const {EventEmitter}=require("node:events");
+ const {createOfflineSessionController}=require("../offline-session-controller.cjs");
+ const sender=new EventEmitter();
+ const controller=createOfflineSessionController({attach:()=>()=>{},ipcMain:{},webContents:sender,expectedOrigin:"http://127.0.0.1:4444",safeStorage:{},root:"test"});
+ controller.authorize({userId:"horse-user"});
+ const signal=controller.getSyncSignal();
+ sender.emit("did-start-navigation");
+ assert.equal(signal.aborted,true);
+ assert.deepEqual(controller.getSessionStatus(),{active:false,userId:null});
+ assert.throws(()=>controller.getSyncSignal(),/not authorized/);
+});
