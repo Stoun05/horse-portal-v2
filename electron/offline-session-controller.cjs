@@ -4,11 +4,17 @@ function createOfflineSessionController({attach,ipcMain,webContents,expectedOrig
  let revoke=null;
  let lastIdentity=null;
  let syncAbort=new AbortController();
+ const endSession=()=>{
+  syncAbort.abort();
+  if(revoke){const close=revoke;revoke=null;lastIdentity=null;close();}
+ };
+ for(const event of ["destroyed","did-start-navigation","render-process-gone"]){
+  webContents.on?.(event,endSession);
+ }
  return Object.freeze({
   authorize({userId,publicKey,grant,signature}){
    if(webContents.isDestroyed?.()) throw Error("Desktop window closed");
-   syncAbort.abort();
-   if(revoke){const closePrevious=revoke;revoke=null;lastIdentity=null;closePrevious();}
+   endSession();
    syncAbort=new AbortController();
    const close=attach({ipcMain,webContents,expectedOrigin,safeStorage,root,userId,publicKey,grant,signature});
    if(typeof close!=="function") {
@@ -18,7 +24,7 @@ function createOfflineSessionController({attach,ipcMain,webContents,expectedOrig
    revoke=close;
    lastIdentity=userId;
   },
-  logout(){syncAbort.abort();if(revoke){const close=revoke;revoke=null;lastIdentity=null;close();}},
+  logout(){endSession();},
   getSyncSignal(){if(!revoke) throw Error("Offline session not authorized");return syncAbort.signal;},
   getSessionStatus(){return Object.freeze({active:typeof revoke==="function",userId:lastIdentity});},
  });
