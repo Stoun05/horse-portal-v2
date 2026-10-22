@@ -52,6 +52,7 @@ export default function AtlarPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [horses, setHorses] = useState<Horse[]>(initialHorses);
   const [hydrated, setHydrated] = useState(false);
+  const [storageReadable, setStorageReadable] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<HorseForm>(emptyForm);
@@ -64,17 +65,30 @@ export default function AtlarPage() {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(HORSE_STORAGE_KEY);
-      if (saved) setHorses(mergeHorseDefaults(JSON.parse(saved) as Horse[]));
+      if (saved) {
+        const parsed: unknown = JSON.parse(saved);
+        if (!Array.isArray(parsed) || !parsed.every(item => item && typeof item === "object" && typeof item.id === "string" && typeof item.name === "string")) {
+          throw new Error("Invalid saved horse catalog");
+        }
+        setHorses(mergeHorseDefaults(parsed as Horse[]));
+      }
     } catch {
-      // Nädogry lokal maglumat bolsa başlangyç sanaw ulanylýar.
+      // Malformed data must remain untouched so it can be recovered.
+      setStorageReadable(false);
     } finally {
       setHydrated(true);
     }
   }, []);
 
   useEffect(() => {
-    if (hydrated) window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(horses));
-  }, [horses, hydrated]);
+    if (hydrated && storageReadable) {
+      try {
+        window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(horses));
+      } catch {
+        setStorageReadable(false);
+      }
+    }
+  }, [horses, hydrated, storageReadable]);
 
   const visibleHorses = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("tk");
@@ -104,12 +118,14 @@ export default function AtlarPage() {
   }, [horses, search, breed, sex, color, sort]);
 
   function openCreateModal() {
+    if (!storageReadable) return;
     setEditingId(null);
     setForm({ ...emptyForm, code: `AT-${new Date().getFullYear()}-` });
     setModalOpen(true);
   }
 
   function openEditModal(horse: Horse) {
+    if (!storageReadable) return;
     const { id, ...values } = horse;
     setEditingId(id);
     setForm(values);
@@ -124,6 +140,7 @@ export default function AtlarPage() {
 
   function saveHorse(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!storageReadable) return;
     if (editingId) {
       setHorses((current) =>
         current.map((horse) =>
@@ -140,6 +157,7 @@ export default function AtlarPage() {
   }
 
   function deleteHorse(horse: Horse) {
+    if (!storageReadable) return;
     if (window.confirm(`${horse.name} atly aty sanawdan pozmalymy?`)) {
       setHorses((current) => current.filter((item) => item.id !== horse.id));
     }
@@ -162,6 +180,7 @@ export default function AtlarPage() {
 
         <main className="p-4 sm:p-6 lg:p-8">
           <Breadcrumb />
+          {!storageReadable && <p role="alert" className="my-4 rounded-lg border border-red-500 bg-red-50 p-4 text-red-900">Ýerli at maglumatlaryny okamak ýa-da saklamak başa barmady. Maglumatlaryň üstünden ýazmazlyk üçin üýtgetmek wagtlaýyn ýapyldy. Maglumatlary dikeltmezden brauzeriň saklaýjysyny arassalamaň.</p>}
 
           <section className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-[#052b1f] via-[#0b5e3c] to-[#b58b2a] p-6 text-white shadow-lg sm:p-8">
             <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[36px] border-white/5" />
