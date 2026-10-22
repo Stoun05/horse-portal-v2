@@ -38,8 +38,8 @@ const server = http.createServer(async (req, res) => {
       if (!user) { sendJson(res, 401, { error: "Unauthorized" }); return; }
       const change = await readJsonBody(req, 65536);
       const outcome = await applyHorseSync(user, change);
-      const { status: httpStatus, statusText, ...rest } = outcome;
-      sendJson(res, httpStatus, { ...rest, ...(statusText ? { status: statusText } : {}) });
+      const { status: httpStatus, syncStatus, ...rest } = outcome;
+      sendJson(res, httpStatus, { ...rest, ...(syncStatus ? { status: syncStatus } : {}) });
     } catch (error) {
       sendJson(res, error.status || 503, { error: error.status ? error.message : "Request failed" });
     }
