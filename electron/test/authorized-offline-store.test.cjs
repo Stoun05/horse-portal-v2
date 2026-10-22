@@ -11,6 +11,7 @@ test("read-only grant prevents offline edits",()=>{
   const grant={userId,expiresAt:Date.now()+60000,permissions:["horses:read"]};
   const store=openAuthorizedOfflineStore({root,userId,safeStorage,publicKey,grant,signature:signed(grant),platform:"win32"});
   assert.deepEqual(store.listHorses(),{});
+  assert.equal(store.lastSyncedAt(),null);
   assert.throws(()=>store.addLocalChange({entityId:"horse-1",action:"create",payload:{name:"Akyol"}}),/forbidden/);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
@@ -34,6 +35,7 @@ test("expired grant also blocks reads from an already opened store",()=>{
   try{
    assert.throws(()=>store.listHorses(),/expired/);
    assert.throws(()=>store.listPending(),/expired/);
+   assert.throws(()=>store.lastSyncedAt(),/expired/);
    assert.throws(()=>store.addLocalChange({entityId:"h1",action:"create",payload:{name:"Horse"}}),/expired/);
   }finally{Date.now=original;}
  }finally{fs.rmSync(root,{recursive:true,force:true});}
