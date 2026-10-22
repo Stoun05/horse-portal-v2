@@ -28,3 +28,12 @@ test("client queue version rules match server validation", () => {
  assert.equal(validateQueuedChange({ ...change, action: "update", base_version: 0 }), false);
  assert.equal(classifyServerResponse(change, { changeId: change.id, status: "forbidden" }), "blocked");
 });
+
+test("never acknowledge stale version or suspicious create version", () => {
+ assert.equal(classifyServerResponse(change, {changeId:change.id,status:"accepted",serverVersion:3}), "retry");
+ assert.equal(classifyServerResponse(change, {changeId:change.id,status:"accepted",serverVersion:2}), "retry");
+ assert.equal(classifyServerResponse(change, {changeId:change.id,status:"accepted",serverVersion:4}), "ack");
+ const create={...change,action:"create",base_version:null};
+ assert.equal(classifyServerResponse(create,{changeId:create.id,status:"accepted",serverVersion:2}),"retry");
+ assert.equal(classifyServerResponse(create,{changeId:create.id,status:"accepted",serverVersion:1}),"ack");
+});
