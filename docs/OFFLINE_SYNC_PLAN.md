@@ -23,3 +23,6 @@ SQLite module uses the Node built-in `node:sqlite` API; compatibility with the E
 
 ## Phase 3: server-side versioning foundations
 Migration 005 adds horse version and a durable sync operation ledger. `server/src/sync-validation.mjs` verifies change identifiers, base versions and role permissions. No authenticated sync mutation endpoint or transactional apply operation is wired yet. Acknowledgments require server-side authorization, idempotent transaction handling and conflict detection; never upload cached records directly without those checks.
+
+## Phase 4: initial authenticated sync endpoint
+`POST /api/sync/horses` requires a valid staff session. Transactional apply checks user role, record version and a durable change ID; only accepted changes should be acknowledged by clients. This is a preliminary endpoint, **not production ready**: no real PostgreSQL integration test yet, no offline authorization grants, no rate limiting, no LAN TLS, no multiuser cache isolation, no conflict resolution UI, and no safe online migration of previous browser localStorage records. An authorized user might have offline edits rejected when a role is revoked. The desktop application has not been wired to this endpoint.
