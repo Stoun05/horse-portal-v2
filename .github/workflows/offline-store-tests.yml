@@ -16,22 +16,32 @@ jobs:
         with:
           node-version: '22'
       - name: Test account-offline-store
+        if: always()
         run: node --test electron/test/account-offline-store.test.cjs
       - name: Test authorized-offline-store
+        if: always()
         run: node --test electron/test/authorized-offline-store.test.cjs
       - name: Test offline-access
+        if: always()
         run: node --test electron/test/offline-access.test.cjs
       - name: Test offline-backup
+        if: always()
         run: node --test electron/test/offline-backup.test.cjs
       - name: Test offline-ipc
+        if: always()
         run: node --test electron/test/offline-ipc.test.cjs
       - name: Test offline-key-store
+        if: always()
         run: node --test electron/test/offline-key-store.test.cjs
       - name: Test offline-store
+        if: always()
         run: node --test electron/test/offline-store.test.cjs
       - name: Test offline-vault
+        if: always()
         run: node --test electron/test/offline-vault.test.cjs
       - name: Test protected-offline-store
+        if: always()
         run: node --test electron/test/protected-offline-store.test.cjs
       - name: Test sync-planner
+        if: always()
         run: node --test electron/test/sync-planner.test.cjs
