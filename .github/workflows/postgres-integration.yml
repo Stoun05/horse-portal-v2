@@ -33,6 +33,7 @@ jobs:
       PORT: 4100
       PORTAL_URL: http://127.0.0.1:4100
       WEB_ORIGIN: http://localhost:3000
+      PORTAL_EXPECT_SEEDED_HORSE: "1"
       PORTAL_TEST_USER: integration_operator
       PORTAL_TEST_PASSWORD: integration_test_password_12345
     steps:
