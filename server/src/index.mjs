@@ -1,6 +1,6 @@
 import http from "node:http";
 import { pool } from "./db.mjs";
-import { isAuthorized } from "./auth.mjs";
+import { can } from "./permissions.mjs";
 import { listHorses } from "./horses.mjs";
 import { host, port } from "./config.mjs";
 import { login } from "./login.mjs";
@@ -67,12 +67,10 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   if (pathname === "/api/horses") {
-    if (!isAuthorized(req)) {
-      res.writeHead(401);
-      res.end(JSON.stringify({ error: "Unauthorized" }));
-      return;
-    }
     try {
+      const user = await getSessionUser(req);
+      if (!user) { sendJson(res, 401, { error: "Unauthorized" }); return; }
+      if (!can(user.role, "horses:read")) { sendJson(res, 403, { error: "Forbidden" }); return; }
       const result = await listHorses(new URL(req.url || "/", "http://localhost"));
       res.writeHead(200);
       res.end(JSON.stringify(result));
