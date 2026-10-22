@@ -62,3 +62,17 @@ test("tampered encrypted vault must not silently reset or overwrite account data
   assert.equal(fs.existsSync(filename),true);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("a second offline edit to the same horse is blocked until first sync",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-order-")),key=randomBytes(32);
+ try {
+  const store=openAccountOfflineStore({root,userId:a,key});
+  const id=store.addLocalChange({entityId:"horse-1",action:"create",payload:{name:"First"}});
+  assert.throws(()=>store.addLocalChange({entityId:"horse-1",action:"update",baseVersion:1,payload:{name:"Second"}}),/Pending change/);
+  assert.equal(store.listPending().length,1);
+  assert.equal(store.acknowledge(id),true);
+  const reopened=openAccountOfflineStore({root,userId:a,key});
+  assert.equal(reopened.listPending().length,0);
+  assert.equal(reopened.listHorses()["horse-1"].name,"First");
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
