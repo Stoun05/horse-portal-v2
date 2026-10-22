@@ -59,3 +59,20 @@ test("captured IPC handler denies reads after session is closed",async()=>{
  close();
  await assert.rejects(()=>heldHandler(event),/session closed/);
 });
+
+test("destroying authorized Electron window revokes its offline read IPC",async()=>{
+ const {EventEmitter}=require("node:events");
+ const sender=new EventEmitter();
+ const frame={url:"http://127.0.0.1:4444/atlar"};
+ sender.mainFrame=frame;
+ const handlers=new Map();
+ const ipcMain={handle:(name,fn)=>handlers.set(name,fn),removeHandler:name=>handlers.delete(name)};
+ const store={listHorses:()=>({horse:{name:"Akýol"}}),listPending:()=>[],lastSyncedAt:()=>null};
+ const cleanup=registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444",expectedSender:sender});
+ const saved=handlers.get("offline:horses");
+ assert.equal((await saved({sender,senderFrame:frame})).horse.name,"Akýol");
+ sender.emit("destroyed");
+ assert.equal(handlers.size,0);
+ await assert.rejects(()=>saved({sender,senderFrame:frame}),/session closed/);
+ cleanup();
+});
