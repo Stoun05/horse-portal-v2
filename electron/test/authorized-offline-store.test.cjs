@@ -126,3 +126,25 @@ test("second desktop session cannot steal active global offline IPC handlers",as
   closeTwo();
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("failed lifecycle listener setup releases offline IPC for next login",()=>{
+ const {EventEmitter}=require("node:events");
+ const {attachAuthorizedWindow}=require("../authorized-window.cjs");
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"atcylyk-lifecycle-fail-"));
+ try{
+  const grant={userId,expiresAt:Date.now()+60000,permissions:["horses:read"]};
+  const frame={url:"http://127.0.0.1:4444/atlar"};
+  const broken=new EventEmitter();broken.mainFrame=frame;
+  const original=broken.on.bind(broken);
+  broken.on=(event,listener)=>{if(event==="render-process-gone")throw Error("Listener setup failed");return original(event,listener);};
+  const handlers=new Map();
+  const ipcMain={handle:(name,handler)=>handlers.set(name,handler),removeHandler:name=>handlers.delete(name)};
+  const opts={ipcMain,expectedOrigin:"http://127.0.0.1:4444",root,userId,safeStorage,publicKey,grant,signature:signed(grant),platform:"win32"};
+  assert.throws(()=>attachAuthorizedWindow({...opts,webContents:broken}),/Listener setup failed/);
+  assert.equal(handlers.size,0);
+  const healthy=new EventEmitter();healthy.mainFrame=frame;
+  const close=attachAuthorizedWindow({...opts,webContents:healthy});
+  assert.equal(handlers.size,3);
+  close();
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
