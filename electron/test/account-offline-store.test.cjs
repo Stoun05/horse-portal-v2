@@ -28,6 +28,8 @@ test("conflicted changes remain on disk and cannot be acknowledged automatically
  const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-conflict-")),key=randomBytes(32);
  try {
   let store=openAccountOfflineStore({root,userId:a,key});
+  const first=store.addLocalChange({entityId:"horse-1",action:"create",payload:{name:"Initial"}});
+  assert.equal(store.acknowledge(first,{changeId:first,status:"accepted",serverVersion:1}),true);
   const id=store.addLocalChange({entityId:"horse-1",action:"update",payload:{name:"Updated"},baseVersion:1});
   assert.equal(store.markConflict(id),true);
   store=openAccountOfflineStore({root,userId:a,key});
@@ -146,5 +148,21 @@ test("a stale vault writer never deletes another process's lock",()=>{
   const filename=accountPath(root,a);
   assert.equal(fs.existsSync(filename+".lock"),false);
   assert.equal(openAccountOfflineStore({root,userId:a,key}).listPending().length,1);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test("encrypted server versions persist and stale offline edits are blocked",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-version-")),key=randomBytes(32);
+ try{
+  let store=openAccountOfflineStore({root,userId:a,key});
+  const id=store.addLocalChange({entityId:"horse-1",action:"create",payload:{name:"First"}});
+  assert.equal(store.listHorseVersions()["horse-1"],undefined);
+  assert.equal(store.acknowledge(id,{changeId:id,status:"accepted",serverVersion:1}),true);
+  store=openAccountOfflineStore({root,userId:a,key});
+  assert.equal(store.listHorseVersions()["horse-1"],1);
+  assert.throws(()=>store.addLocalChange({entityId:"horse-1",action:"update",baseVersion:2,payload:{name:"Bad"}}),/stale/);
+  const edit=store.addLocalChange({entityId:"horse-1",action:"update",baseVersion:1,payload:{name:"New"}});
+  assert.equal(store.acknowledge(edit,{changeId:edit,status:"accepted",serverVersion:2}),true);
+  assert.equal(openAccountOfflineStore({root,userId:a,key}).listHorseVersions()["horse-1"],2);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
