@@ -200,3 +200,18 @@ test("incomplete server catalog never deletes confirmed cached horse or unsent l
   assert.equal(reopened.listPending()[0].id,change);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("only explicit deleted IDs remove cached horses and never pending edits",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"horse-tombstones-")),key=randomBytes(32);
+ try{
+  const store=openAccountOfflineStore({root,userId:a,key});
+  store.importServerHorses([{id:"a",version:1,data:{name:"A",code:"A-1"}},{id:"b",version:1,data:{name:"B",code:"B-1"}}]);
+  const change=store.addLocalChange({entityId:"b",action:"update",baseVersion:1,payload:{name:"Edited",code:"B-1"}});
+  assert.deepEqual(store.applyServerDeletions(["a","b"]),{removed:1});
+  const recovered=openAccountOfflineStore({root,userId:a,key});
+  assert.equal(recovered.listHorses().a,undefined);
+  assert.equal(recovered.listHorses().b.name,"Edited");
+  assert.equal(recovered.listPending()[0].id,change);
+  assert.deepEqual(recovered.applyServerDeletions(["missing"]),{removed:0});
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
