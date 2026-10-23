@@ -382,3 +382,30 @@ test("same-origin navigation can restore offline grant without re-entering passw
  assert.equal(authorized,2);
  assert.ok(revoked>=2);
 });
+
+test("logout while signed grant refresh is in flight cannot revive offline access",async()=>{
+ const {createDesktopLoginFlow}=require("../desktop-login-flow.cjs");
+ let release,requested;
+ const pending=new Promise(resolve=>{release=resolve;});
+ const started=new Promise(resolve=>{requested=resolve;});
+ let authorized=0,revoked=0;
+ const client={
+  login:async()=>({id:userId,role:"Operator"}),
+  logout:async()=>{},
+  getSession:()=>({user:{id:userId,role:"Operator"}}),
+  withToken:async cb=>cb("token")
+ };
+ const flow=createDesktopLoginFlow({
+  loginClient:client,
+  offlineSessions:{authorize(){authorized++;},logout(){revoked++;}},
+  trustedPublicKey:publicKey,
+  getSignedGrant:async()=>{requested();await pending;return {grant:{userId,expiresAt:Date.now()+60000,permissions:["horses:read"]},signature:"aa",publicKey:publicKey.export({format:"pem",type:"spki"})};}
+ });
+ const refresh=flow.refreshOfflineAccess();
+ await started;
+ await flow.logout();
+ release();
+ await assert.rejects(refresh,/Authentication cancelled/);
+ assert.equal(authorized,0);
+ assert.ok(revoked>=2);
+});
