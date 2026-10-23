@@ -1,5 +1,5 @@
 /* Main-process-only lifecycle. Authentication and grant issuance are not implemented here. */
-function createOfflineSessionController({attach,ipcMain,webContents,expectedOrigin,safeStorage,root,sendSync,fetchServerHorses}){
+function createOfflineSessionController({attach,ipcMain,webContents,expectedOrigin,safeStorage,root,sendSync,fetchServerHorses,fetchServerDeletions}){
  if(typeof attach!=="function"||!ipcMain||!webContents||typeof expectedOrigin!=="string"||typeof root!=="string")throw Error("Invalid offline session dependencies");
  let revoke=null;
  let lastIdentity=null;
@@ -17,7 +17,7 @@ function createOfflineSessionController({attach,ipcMain,webContents,expectedOrig
    if(disposed || webContents.isDestroyed?.()) throw Error("Desktop window closed");
    endSession();
    syncAbort=new AbortController();
-   const close=attach({ipcMain,webContents,expectedOrigin,safeStorage,root,userId,publicKey,grant,signature,sendSync,fetchServerHorses,getSyncSignal:()=>syncAbort.signal});
+   const close=attach({ipcMain,webContents,expectedOrigin,safeStorage,root,userId,publicKey,grant,signature,sendSync,fetchServerHorses,fetchServerDeletions,getSyncSignal:()=>syncAbort.signal});
    if(typeof close!=="function") {
     syncAbort.abort();
     throw Error("Offline session attach must return cleanup function");
