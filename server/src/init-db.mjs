@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pool } from "./db.mjs";
 try {
-  for (const filename of ["001_initial.sql", "002_horse_fields.sql", "003_sessions.sql", "004_password_setup.sql", "005_sync_versions.sql", "006_sync_request_digest.sql"]) {
+  for (const filename of ["001_initial.sql", "002_horse_fields.sql", "003_sessions.sql", "004_password_setup.sql", "005_sync_versions.sql", "006_sync_request_digest.sql", "007_horse_deletions.sql"]) {
     const sql = readFileSync(resolve(import.meta.dirname, "..", "sql", filename), "utf8");
     await pool.query(sql);
   }
