@@ -5,6 +5,7 @@ const { createOfflineSessionController } = require("./offline-session-controller
 const { createLocalLoginClient } = require("./local-login-client.cjs");
 const { createDesktopLoginFlow } = require("./desktop-login-flow.cjs");
 const { registerDesktopAuthIpc } = require("./desktop-auth-ipc.cjs");
+const { createHorseSyncSender } = require("./sync-transport.cjs");
 const fs = require("node:fs");
 const http = require("node:http");
 const path = require("node:path");
@@ -113,17 +114,18 @@ async function createWindow() {
     },
   });
 
+  let loginClient=null;
   // No access on launch: a verified main-process login must eventually supply
   // a server-signed grant. Never accept a renderer-provided grant or user ID.
   const offlineSessions=createOfflineSessionController({
     attach:attachAuthorizedWindow,ipcMain,webContents:window.webContents,
     expectedOrigin:`http://127.0.0.1:${port}`,safeStorage,
-    root:app.getPath("userData")
+    root:app.getPath("userData"),
+    sendSync:change=>loginClient.withToken(token=>createHorseSyncSender({token})(change))
   });
   // Public signing key is provisioned by the desktop deployment, never fetched as a trust anchor.
   // Missing configuration leaves the encrypted offline store inaccessible.
   let desktopLogin=null;
-  let loginClient=null;
   let disposeAuthIpc=()=>{};
   if(process.env.PORTAL_OFFLINE_TRUSTED_PUBLIC_KEY_PEM){
     loginClient=createLocalLoginClient();
