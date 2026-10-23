@@ -5,7 +5,7 @@ const {classifyServerResponse}=require("./sync-planner.cjs");
 // Isolated prototype, not wired into the Electron renderer or plaintext SQLite.
 function openAccountOfflineStore({root,userId,key}) {
  if(typeof root!=="string" || !Buffer.isBuffer(key) || key.length!==32) throw Error("Invalid configuration");
- const state=loadVault(root,userId,key)??{schema:1,horses:{},pending:[],lastSyncedAt:null};
+ const state=loadVault(root,userId,key)??{schema:1,horses:{},pending:[],lastSyncedAt:null,versions:{}};
  if(state.schema!==1 || !Array.isArray(state.pending) || typeof state.horses!=="object") throw Error("Invalid state");
  const filename=accountPath(root,userId);
  const fingerprint=()=>fs.existsSync(filename)?createHash("sha256").update(fs.readFileSync(filename)).digest("hex"):null;
@@ -29,6 +29,7 @@ function openAccountOfflineStore({root,userId,key}) {
  };
  return {
   listHorses:()=>structuredClone(state.horses),
+  listHorseVersions:()=>structuredClone(state.versions??{}),
   listPending:()=>structuredClone(state.pending),
   lastSyncedAt:()=>state.lastSyncedAt,
   addLocalChange({entityId,action,payload=null,baseVersion=null}) {
@@ -38,6 +39,8 @@ function openAccountOfflineStore({root,userId,key}) {
    // Until the server acknowledges the first edit, its resulting version is unknown.
    // Never queue a second edit to the same horse with a guessed base version.
    if(state.pending.some(item=>item.entity_id===entityId)) throw Error("Pending change for this horse must sync or be resolved first");
+   if(action!=="create" && (state.versions??{})[entityId]!==baseVersion) throw Error("Horse server version unavailable or stale");
+   if(action==="create" && Object.hasOwn(state.horses,entityId)) throw Error("Horse already exists");
    const next=structuredClone(state), id=randomUUID();
    next.pending.push({id,entity_id:entityId,action,payload,base_version:baseVersion});
    if(action==="delete") delete next.horses[entityId];
@@ -56,6 +59,9 @@ function openAccountOfflineStore({root,userId,key}) {
    if(!item || item.status==="conflict" || classifyServerResponse(item,response)!=="ack") return false;
    const next=structuredClone(state);
    next.pending=next.pending.filter(x=>x.id!==id);
+   next.versions??={};
+   if(item.action==="delete")delete next.versions[item.entity_id];
+   else next.versions[item.entity_id]=response.serverVersion;
    persist(next);return true;
   }
  };
