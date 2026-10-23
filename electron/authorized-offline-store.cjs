@@ -13,6 +13,7 @@ function openAuthorizedOfflineStore({root,userId,safeStorage,publicKey,grant,sig
   listHorses:()=>{ensureActive("horses:read");return store.listHorses();},
   listHorseVersions:()=>{ensureActive("horses:read");return store.listHorseVersions();},
   importServerHorses:records=>{ensureActive("horses:read");return store.importServerHorses(records);},
+  applyServerDeletions:ids=>{ensureActive("horses:read");return store.applyServerDeletions(ids);},
   listPending:()=>{ensureActive("horses:read");return store.listPending();},
   lastSyncedAt:()=>{ensureActive("horses:read");return store.lastSyncedAt();},
   acknowledge:(id,response)=>{ensureActive("horses:read");return store.acknowledge(id,response);},
