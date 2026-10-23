@@ -409,3 +409,20 @@ test("logout while signed grant refresh is in flight cannot revive offline acces
  assert.equal(authorized,0);
  assert.ok(revoked>=2);
 });
+
+test("late login result after logout never enables offline access",async()=>{
+ const {createDesktopLoginFlow}=require("../desktop-login-flow.cjs");
+ let release,started;
+ const gate=new Promise(resolve=>{release=resolve;});
+ const entered=new Promise(resolve=>{started=resolve;});
+ let authorized=0,logoutCount=0;
+ const client={login:async()=>{started();await gate;return {id:userId,role:"Operator"};},logout:async()=>{logoutCount++;},withToken:async()=>{throw Error("Must not fetch grant");}};
+ const flow=createDesktopLoginFlow({loginClient:client,offlineSessions:{authorize(){authorized++;},logout(){}},trustedPublicKey:publicKey,getSignedGrant:async()=>{throw Error("Unexpected grant");}});
+ const attempt=flow.login("operator","password");
+ await entered;
+ await flow.logout();
+ release();
+ await assert.rejects(attempt,/Authentication cancelled/);
+ assert.equal(authorized,0);
+ assert.ok(logoutCount>=3);
+});
