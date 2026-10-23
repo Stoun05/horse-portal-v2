@@ -35,11 +35,14 @@ function openAccountOfflineStore({root,userId,key}) {
    const next=structuredClone(state);
    next.versions??={};
    const pending=new Set(next.pending.map(item=>item.entity_id));
-   let imported=0,skipped=0;
+   let imported=0,skipped=0,removed=0;
+   const serverIds=new Set();
    for(const row of records){
     if(!row||typeof row.id!=="string"||!row.id||!Number.isSafeInteger(row.version)||row.version<1||
        !row.data||typeof row.data!=="object"||Array.isArray(row.data)||
        typeof row.data.name!=="string"||typeof row.data.code!=="string")throw Error("Invalid server horse");
+    if(serverIds.has(row.id))throw Error("Duplicate server horse ID");
+    serverIds.add(row.id);
     if(pending.has(row.id)){skipped++;continue;}
     const current=next.versions[row.id]??0;
     if(row.version<=current){skipped++;continue;}
@@ -47,8 +50,17 @@ function openAccountOfflineStore({root,userId,key}) {
     next.versions[row.id]=row.version;
     imported++;
    }
-   if(imported)persist(next);
-   return {imported,skipped};
+   // Only records previously confirmed by the server can be removed here.
+   // Unsent local edits and horses without a confirmed server version remain untouched.
+   for(const id of Object.keys(next.versions)){
+    if(!serverIds.has(id) && !pending.has(id)){
+     delete next.horses[id];
+     delete next.versions[id];
+     removed++;
+    }
+   }
+   if(imported||removed)persist(next);
+   return {imported,skipped,removed};
   },
 
   listPending:()=>structuredClone(state.pending),
