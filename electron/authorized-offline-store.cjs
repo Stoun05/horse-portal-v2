@@ -14,6 +14,8 @@ function openAuthorizedOfflineStore({root,userId,safeStorage,publicKey,grant,sig
   listHorseVersions:()=>{ensureActive("horses:read");return store.listHorseVersions();},
   listPending:()=>{ensureActive("horses:read");return store.listPending();},
   lastSyncedAt:()=>{ensureActive("horses:read");return store.lastSyncedAt();},
+  acknowledge:(id,response)=>{ensureActive("horses:read");return store.acknowledge(id,response);},
+  markConflict:id=>{ensureActive("horses:read");return store.markConflict(id);},
   addLocalChange:change=>{
    const permission={create:"horses:create",update:"horses:update",delete:"horses:delete"}[change?.action];
    if(!permission) throw Error("Offline edit forbidden");
