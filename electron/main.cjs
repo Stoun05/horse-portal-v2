@@ -145,6 +145,16 @@ async function createWindow() {
     if(desktopLogin)void desktopLogin.logout().catch(()=>{});
   });
   // UI login initiation remains pending; do not expose grants or tokens to the renderer.
+  // A new same-origin document revokes the previous IPC grant. Restore it only
+  // after main-process authentication and a fresh server-signed grant are checked.
+  window.webContents.on("did-finish-load",async()=>{
+    if(!desktopLogin || !loginClient?.getSession()?.user)return;
+    try{
+      const loaded=new URL(window.webContents.getURL());
+      if(loaded.origin!==`http://127.0.0.1:${port}`)return;
+      await desktopLogin.refreshOfflineAccess();
+    }catch(error){console.error("Offline session refresh failed",error);}
+  });
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   window.webContents.on("will-navigate", (event, url) => {
     if (!url.startsWith(`http://127.0.0.1:${port}/`)) event.preventDefault();
