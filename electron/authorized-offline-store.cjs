@@ -12,6 +12,7 @@ function openAuthorizedOfflineStore({root,userId,safeStorage,publicKey,grant,sig
  return Object.freeze({
   listHorses:()=>{ensureActive("horses:read");return store.listHorses();},
   listHorseVersions:()=>{ensureActive("horses:read");return store.listHorseVersions();},
+  importServerHorses:records=>{ensureActive("horses:read");return store.importServerHorses(records);},
   listPending:()=>{ensureActive("horses:read");return store.listPending();},
   lastSyncedAt:()=>{ensureActive("horses:read");return store.lastSyncedAt();},
   acknowledge:(id,response)=>{ensureActive("horses:read");return store.acknowledge(id,response);},
