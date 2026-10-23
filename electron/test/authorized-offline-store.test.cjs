@@ -363,3 +363,22 @@ test("authorized encrypted store can acknowledge sync only under valid signed gr
   assert.equal(typeof changeId,"string");
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("same-origin navigation can restore offline grant without re-entering password",async()=>{
+ const {createDesktopLoginFlow}=require("../desktop-login-flow.cjs");
+ let loginCount=0,grantCount=0,authorized=0,revoked=0;
+ const loginClient={
+  login:async()=>{loginCount++;return {id:userId,role:"Operator"};},
+  logout:async()=>{},
+  getSession:()=>({user:{id:userId,role:"Operator"}}),
+  withToken:async cb=>cb("token"),
+  getSignedGrant:async()=>{grantCount++;return {grant:{userId,expiresAt:Date.now()+60000,permissions:["horses:read"]},signature:"aa",publicKey:publicKey.export({format:"pem",type:"spki"})};}
+ };
+ const flow=createDesktopLoginFlow({loginClient,offlineSessions:{logout(){revoked++;},authorize(){authorized++;}},trustedPublicKey:publicKey});
+ await flow.login("operator","password");
+ await flow.refreshOfflineAccess();
+ assert.equal(loginCount,1);
+ assert.equal(grantCount,2);
+ assert.equal(authorized,2);
+ assert.ok(revoked>=2);
+});
