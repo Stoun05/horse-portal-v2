@@ -4,6 +4,8 @@ const CHANNELS = Object.freeze({
   horses: "offline:horses",
   pendingCount: "offline:pending-count",
   createHorse: "offline:create-horse",
+  updateHorse: "offline:update-horse",
+  deleteHorse: "offline:delete-horse",
 });
 const IPC_NAMES = Object.freeze(Object.values(CHANNELS));
 function trustedSender(event, expectedOrigin) {
@@ -52,6 +54,22 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     if(!payload||typeof payload!=="object"||Array.isArray(payload)||Object.keys(payload).sort().join(",")!=="code,name"||typeof payload.name!=="string"||!payload.name.trim()||payload.name.length>160||typeof payload.code!=="string"||payload.code.length>80)throw Error("Invalid horse data");
     return {changeId:store.addLocalChange({entityId,action:"create",payload,baseVersion:null})};
   });
+  if(typeof store.addLocalChange==="function"){
+   const validId=id=>typeof id==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+   const validVersion=v=>Number.isSafeInteger(v)&&v>=1;
+   ipcMain.handle(CHANNELS.updateHorse,async(event,input)=>{
+    check(event);
+    if(!input||typeof input!=="object"||Array.isArray(input)||Object.keys(input).sort().join(",")!=="baseVersion,entityId,payload"||!validId(input.entityId)||!validVersion(input.baseVersion))throw Error("Invalid horse update request");
+    const payload=input.payload;
+    if(!payload||typeof payload!=="object"||Array.isArray(payload)||Object.keys(payload).sort().join(",")!=="code,name"||typeof payload.name!=="string"||!payload.name.trim()||payload.name.length>160||typeof payload.code!=="string"||payload.code.length>80)throw Error("Invalid horse data");
+    return {changeId:store.addLocalChange({entityId:input.entityId,action:"update",payload,baseVersion:input.baseVersion})};
+   });
+   ipcMain.handle(CHANNELS.deleteHorse,async(event,input)=>{
+    check(event);
+    if(!input||typeof input!=="object"||Array.isArray(input)||Object.keys(input).sort().join(",")!=="baseVersion,entityId"||!validId(input.entityId)||!validVersion(input.baseVersion))throw Error("Invalid horse delete request");
+    return {changeId:store.addLocalChange({entityId:input.entityId,action:"delete",payload:null,baseVersion:input.baseVersion})};
+   });
+  }
   } catch(error) { cleanup(); throw error; }
   return cleanup;
 }
