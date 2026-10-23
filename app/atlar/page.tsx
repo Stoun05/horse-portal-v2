@@ -21,6 +21,7 @@ import { assetPath } from "../../lib/assetPath";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
 import RemoteHorsePanel from "../../components/RemoteHorsePanel";
+import DesktopOfflineHorses from "../../components/DesktopOfflineHorses";
 import {
   HORSE_STORAGE_KEY,
   initialHorses,
@@ -204,6 +205,7 @@ export default function AtlarPage() {
 
         <main className="p-4 sm:p-6 lg:p-8">
           <Breadcrumb />
+          <DesktopOfflineHorses />
           <RemoteHorsePanel />
           {!storageReadable && <p role="alert" className="my-4 rounded-lg border border-red-500 bg-red-50 p-4 text-red-900">Ýerli at maglumatlaryny okamak ýa-da saklamak başa barmady. Maglumatlaryň üstünden ýazmazlyk üçin üýtgetmek wagtlaýyn ýapyldy. Maglumatlary dikeltmezden brauzeriň saklaýjysyny arassalamaň.</p>}
 
