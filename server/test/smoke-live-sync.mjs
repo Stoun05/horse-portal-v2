@@ -38,8 +38,15 @@ try{
  const {horses}=await catalog.json();
  if(horses.filter(h=>h.id===change.entityId).length!==1)throw Error("Horse missing or duplicated");
  if(horses.find(h=>h.id===change.entityId)?.data?.name!=="Updated Offline CI Horse") throw Error("Stale change replaced current horse data");
+ const adminLogin=await request("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:process.env.PORTAL_TEST_ADMIN,password:process.env.PORTAL_TEST_ADMIN_PASSWORD})});
+ if(adminLogin.status!==200)throw Error("Test Admin login failed");
+ const adminToken=(await adminLogin.json()).token;
+ const adminHeaders={...headers,Authorization:"Bearer "+adminToken};
+ const operatorDelete=await post({changeId:randomUUID(),entityId:change.entityId,action:"delete",baseVersion:2,payload:null});
+ if(operatorDelete.code!==403)throw Error("Operator must not delete horses");
  const deletion={changeId:randomUUID(),entityId:change.entityId,action:"delete",baseVersion:2,payload:null};
- const deleted=await post(deletion);
+ const deletionResponse=await request("/api/sync/horses",{method:"POST",headers:adminHeaders,body:JSON.stringify(deletion)});
+ const deleted={code:deletionResponse.status,body:await deletionResponse.json()};
  if(deleted.code!==200||deleted.body.status!=="accepted"||deleted.body.serverVersion!==3)throw Error("Horse deletion not accepted");
  const deletionList=await request("/api/horses/deletions",{headers});
  if(deletionList.status!==200)throw Error("Cannot fetch deleted horse IDs");
