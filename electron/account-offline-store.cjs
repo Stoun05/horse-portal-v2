@@ -57,6 +57,17 @@ function openAccountOfflineStore({root,userId,key}) {
    return {imported,skipped,removed};
   },
 
+  applyServerDeletions(ids){
+   if(!Array.isArray(ids)||ids.length>1000||ids.some(id=>typeof id!=="string"||!id))throw Error("Invalid deletion list");
+   const next=structuredClone(state),pending=new Set(next.pending.map(c=>c.entity_id));
+   let removed=0;
+   for(const id of new Set(ids)){
+    if(pending.has(id)||!Object.hasOwn(next.versions??{},id))continue;
+    delete next.horses[id];delete next.versions[id];removed++;
+   }
+   if(removed)persist(next);
+   return {removed};
+  },
   listPending:()=>structuredClone(state.pending),
   lastSyncedAt:()=>state.lastSyncedAt,
   addLocalChange({entityId,action,payload=null,baseVersion=null}) {
