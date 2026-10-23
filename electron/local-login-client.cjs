@@ -17,6 +17,14 @@ function createLocalLoginClient({baseUrl="http://127.0.0.1:4100",fetchImpl=fetch
    return session.user;
   },
   getSession(){return session?Object.freeze({user:session.user}):null;},
+  async listServerHorses(){
+   if(!session)throw Error("Not authenticated");
+   const response=await request("/api/horses?limit=100",{method:"GET",headers:{Authorization:"Bearer "+session.token}});
+   if(response.status!==200)throw Error("Horse catalog unavailable");
+   const body=await response.json();
+   if(!Array.isArray(body?.horses))throw Error("Invalid horse catalog");
+   return body.horses;
+  },
   async getSignedGrant(){
    if(!session)throw Error("Not authenticated");
    const response=await request("/api/auth/offline-grant",{method:"POST",headers:{Authorization:"Bearer "+session.token}});
