@@ -19,11 +19,19 @@ function createLocalLoginClient({baseUrl="http://127.0.0.1:4100",fetchImpl=fetch
   getSession(){return session?Object.freeze({user:session.user}):null;},
   async listServerHorses(){
    if(!session)throw Error("Not authenticated");
-   const response=await request("/api/horses?limit=100",{method:"GET",headers:{Authorization:"Bearer "+session.token}});
-   if(response.status!==200)throw Error("Horse catalog unavailable");
-   const body=await response.json();
-   if(!Array.isArray(body?.horses))throw Error("Invalid horse catalog");
-   return body.horses;
+   const token=session.token;
+   const horses=[];
+   for(let offset=0;offset<=1000;offset+=100){
+    if(!session||session.token!==token)throw Error("Horse catalog session changed");
+    const response=await request("/api/horses?limit=100&offset="+offset,{method:"GET",headers:{Authorization:"Bearer "+token}});
+    if(response.status!==200)throw Error("Horse catalog unavailable");
+    const body=await response.json();
+    if(!Array.isArray(body?.horses)||body.horses.length>100)throw Error("Invalid horse catalog");
+    if(offset===1000){if(body.horses.length)throw Error("Horse catalog exceeds safe import limit");return horses;}
+    horses.push(...body.horses);
+    if(body.horses.length<100)return horses;
+   }
+   throw Error("Horse catalog import incomplete");
   },
   async getSignedGrant(){
    if(!session)throw Error("Not authenticated");
