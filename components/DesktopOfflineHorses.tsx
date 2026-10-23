@@ -1,6 +1,6 @@
 "use client";
 import {useCallback,useEffect,useState,type FormEvent} from "react";
-type OfflineBridge={importHorses:()=>Promise<{imported:number;skipped:number}>;syncNow:()=>Promise<{state:string;acknowledged:number;conflicted:number}>;getStatus:()=>Promise<{lastSyncedAt:string|null;pendingCount:number}>;listHorses:()=>Promise<Record<string,unknown>>;listHorseVersions:()=>Promise<Record<string,number>>;createHorse:(id:string,payload:{name:string;code:string})=>Promise<{changeId:string}>;updateHorse:(id:string,baseVersion:number,payload:{name:string;code:string})=>Promise<{changeId:string}>;deleteHorse:(id:string,baseVersion:number)=>Promise<{changeId:string}>};
+type OfflineBridge={importHorses:()=>Promise<{imported:number;skipped:number;removed:number}>;syncNow:()=>Promise<{state:string;acknowledged:number;conflicted:number}>;getStatus:()=>Promise<{lastSyncedAt:string|null;pendingCount:number}>;listHorses:()=>Promise<Record<string,unknown>>;listHorseVersions:()=>Promise<Record<string,number>>;createHorse:(id:string,payload:{name:string;code:string})=>Promise<{changeId:string}>;updateHorse:(id:string,baseVersion:number,payload:{name:string;code:string})=>Promise<{changeId:string}>;deleteHorse:(id:string,baseVersion:number)=>Promise<{changeId:string}>};
 declare global {interface Window{atcylykOffline?:OfflineBridge}}
 export default function DesktopOfflineHorses(){
  const [present,setPresent]=useState(false),[error,setError]=useState("");
@@ -47,7 +47,7 @@ export default function DesktopOfflineHorses(){
   finally{setBusyCreate(false);}
  }
  async function syncNow(){const bridge=window.atcylykOffline;if(!bridge||loading)return;setLoading(true);setSyncMessage("");try{const result=await bridge.syncNow();setSyncMessage(`Sync: ${result.state} · Tassyklanan: ${result.acknowledged} · Konflikt: ${result.conflicted}`);await refresh();}catch{setError("Sinhronlaşdyrmak başartmady. Giriş we serwer ýagdaýyny barlaň.");}finally{setLoading(false);}}
- async function importFromServer(){const bridge=window.atcylykOffline;if(!bridge||loading)return;setLoading(true);setSyncMessage("");try{const result=await bridge.importHorses();setSyncMessage(`Serwerden getirildi: ${result.imported} · Geçirilmän goýlan: ${result.skipped}`);await refresh();}catch{setError("Serwerdäki atlary almak başartmady. Login we serwer ýagdaýyny barlaň.");}finally{setLoading(false);}}
+ async function importFromServer(){const bridge=window.atcylykOffline;if(!bridge||loading)return;setLoading(true);setSyncMessage("");try{const result=await bridge.importHorses();setSyncMessage(`Serwerden getirildi: ${result.imported} · Geçirilmän goýlan: ${result.skipped} · Serwerden pozulan: ${result.removed}`);await refresh();}catch{setError("Serwerdäki atlary almak başartmady. Login we serwer ýagdaýyny barlaň.");}finally{setLoading(false);}}
  if(!present)return null;
  return <section className="mb-6 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
   <div className="flex flex-wrap items-center justify-between gap-3">
