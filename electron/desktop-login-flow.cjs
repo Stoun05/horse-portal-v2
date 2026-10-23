@@ -8,16 +8,19 @@ function createDesktopLoginFlow({loginClient,offlineSessions,getSignedGrant,trus
  getSignedGrant=getSignedGrant??(()=>loginClient.getSignedGrant());
  if(!loginClient?.login||!loginClient?.logout||!offlineSessions?.authorize||!offlineSessions?.logout||typeof getSignedGrant!=="function")throw Error("Invalid desktop login dependencies");
  let busy=false;
+ let generation=0;
  return Object.freeze({
   async login(username,password){
    if(busy)throw Error("Login already in progress");
    busy=true;
+   const current=++generation;
    try{
     offlineSessions.logout();
     await loginClient.logout();
     const user=await loginClient.login(username,password);
     try{
      const signed=await loginClient.withToken((token)=>getSignedGrant({token,user}));
+     if(current!==generation)throw Error("Authentication cancelled");
      if(!signed||signed.grant?.userId!==user.id||!signed.publicKey||!signed.signature)throw Error("Missing signed offline grant");
      const received=createPublicKey(signed.publicKey);
      if(received.asymmetricKeyType!=="ed25519"||received.export({format:"der",type:"spki"}).toString("hex")!==trustedDer)throw Error("Offline signing key mismatch");
@@ -35,10 +38,12 @@ function createDesktopLoginFlow({loginClient,offlineSessions,getSignedGrant,trus
    const session=loginClient.getSession?.();
    if(!session?.user)throw Error("Not authenticated");
    busy=true;
+   const current=++generation;
    try{
     offlineSessions.logout();
     const user=session.user;
     const signed=await loginClient.withToken(token=>getSignedGrant({token,user}));
+    if(current!==generation)throw Error("Authentication cancelled");
     if(!signed||signed.grant?.userId!==user.id||!signed.publicKey||!signed.signature)throw Error("Missing signed offline grant");
     const received=createPublicKey(signed.publicKey);
     if(received.asymmetricKeyType!=="ed25519"||received.export({format:"der",type:"spki"}).toString("hex")!==trustedDer)throw Error("Offline signing key mismatch");
@@ -47,7 +52,7 @@ function createDesktopLoginFlow({loginClient,offlineSessions,getSignedGrant,trus
    }catch(error){offlineSessions.logout();throw error;}
    finally{busy=false;}
   },
-  async logout(){offlineSessions.logout();await loginClient.logout();}
+  async logout(){generation++;offlineSessions.logout();await loginClient.logout();}
  });
 }
 module.exports={createDesktopLoginFlow};
