@@ -11,3 +11,9 @@ export async function listHorses(url) {
   );
   return { horses: result.rows, count: result.rowCount };
 }
+
+export async function listHorseDeletions(){
+ const result=await pool.query("SELECT horse_id FROM horse_deletions ORDER BY horse_id LIMIT 1001");
+ if(result.rows.length>1000)throw Error("Deletion list exceeds safe limit");
+ return {deletedHorseIds:result.rows.map(row=>row.horse_id)};
+}
