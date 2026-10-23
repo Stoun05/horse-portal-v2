@@ -3,6 +3,7 @@ const CHANNELS = Object.freeze({
   status: "offline:status",
   horses: "offline:horses",
   versions: "offline:horse-versions",
+  sync: "offline:sync",
   pendingCount: "offline:pending-count",
   createHorse: "offline:create-horse",
   updateHorse: "offline:update-horse",
@@ -15,7 +16,7 @@ function trustedSender(event, expectedOrigin) {
   try { return new URL(event.senderFrame.url).origin === expectedOrigin; }
   catch { return false; }
 }
-function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender }) {
+function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender, sync }) {
   if (!ipcMain?.handle || !store?.listHorses || !store?.listPending || !store?.lastSyncedAt)
     throw new Error("Invalid dependencies");
   if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(expectedOrigin)) throw new Error("Invalid local origin");
@@ -50,6 +51,7 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     check(event);
     return store.listPending().length;
   });
+  if(typeof sync==="function")ipcMain.handle(CHANNELS.sync,async(event)=>{check(event);return sync();});
   if(typeof store.addLocalChange==="function") ipcMain.handle(CHANNELS.createHorse,async(event,input)=>{
     check(event);
     if(!input||typeof input!=="object"||Array.isArray(input)||Object.keys(input).sort().join(",")!=="entityId,payload")throw Error("Invalid horse create request");
