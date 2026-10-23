@@ -3,7 +3,7 @@ import {createPrivateKey,createPublicKey} from "node:crypto";
 import {issueOfflineGrant} from "./offline-grants.mjs";
 import { pool } from "./db.mjs";
 import { can } from "./permissions.mjs";
-import { listHorses } from "./horses.mjs";
+import { listHorses, listHorseDeletions } from "./horses.mjs";
 import { host, port } from "./config.mjs";
 import { login } from "./login.mjs";
 import { applyHorseSync } from "./sync-apply.mjs";
@@ -86,6 +86,15 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(503);
       res.end(JSON.stringify({ status: "unavailable" }));
     }
+    return;
+  }
+  if(pathname==="/api/horses/deletions"){
+    try{
+      const user=await getSessionUser(req);
+      if(!user){sendJson(res,401,{error:"Unauthorized"});return;}
+      if(!can(user.role,"horses:read")){sendJson(res,403,{error:"Forbidden"});return;}
+      sendJson(res,200,await listHorseDeletions());
+    }catch{sendJson(res,503,{error:"Deletion list unavailable"});}
     return;
   }
   if (pathname === "/api/horses") {
