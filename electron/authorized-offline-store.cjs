@@ -11,6 +11,7 @@ function openAuthorizedOfflineStore({root,userId,safeStorage,publicKey,grant,sig
  };
  return Object.freeze({
   listHorses:()=>{ensureActive("horses:read");return store.listHorses();},
+  listHorseVersions:()=>{ensureActive("horses:read");return store.listHorseVersions();},
   listPending:()=>{ensureActive("horses:read");return store.listPending();},
   lastSyncedAt:()=>{ensureActive("horses:read");return store.lastSyncedAt();},
   addLocalChange:change=>{
