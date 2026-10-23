@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld("atcylykOffline", Object.freeze({
   listHorseVersions: () => ipcRenderer.invoke("offline:horse-versions"),
   getPendingCount: () => ipcRenderer.invoke(CHANNELS.pendingCount),
   syncNow: () => ipcRenderer.invoke("offline:sync"),
+  importHorses: () => ipcRenderer.invoke("offline:import-horses"),
   createHorse: (entityId,payload) => ipcRenderer.invoke("offline:create-horse",{entityId,payload}),
   updateHorse: (entityId,baseVersion,payload) => ipcRenderer.invoke("offline:update-horse",{entityId,baseVersion,payload}),
   deleteHorse: (entityId,baseVersion) => ipcRenderer.invoke("offline:delete-horse",{entityId,baseVersion}),
