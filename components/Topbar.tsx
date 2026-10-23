@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu } from "lucide-react";
+import Link from "next/link";
 import { usePortalSettings } from "../lib/usePortalSettings";
 import { assetPath } from "../lib/assetPath";
 
@@ -31,8 +32,9 @@ export default function Topbar({ setOpen }: TopbarProps) {
         </div>
       </div>
 
-      <div className="hidden items-center gap-3 sm:flex">
-        <input type="text" placeholder="At gözle..." className="rounded-lg border px-4 py-2 text-sm text-slate-950 placeholder:text-slate-400" />
+      <div className="flex items-center gap-3">
+        <Link href="/login" className="rounded-lg border border-emerald-800 px-3 py-2 text-sm text-emerald-900">Giriş</Link>
+        <input type="text" placeholder="At gözle..." className="hidden rounded-lg border px-4 py-2 text-sm text-slate-950 placeholder:text-slate-400 sm:block" />
         <div style={{ backgroundColor: settings.primaryColor }} className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white">A</div>
       </div>
     </header>
