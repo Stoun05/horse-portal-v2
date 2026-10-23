@@ -52,13 +52,24 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     return store.listPending().length;
   });
   if(typeof sync==="function")ipcMain.handle(CHANNELS.sync,async(event)=>{check(event);return sync();});
+  const normalizeHorse=payload=>{
+    if(!payload||typeof payload!=="object"||Array.isArray(payload)||Object.keys(payload).sort().join(",")!=="code,name"||typeof payload.name!=="string"||typeof payload.code!=="string")throw Error("Invalid horse data");
+    const name=payload.name.trim(),code=payload.code.trim();
+    if(!name||name.length>150||!code||code.length>64)throw Error("Invalid horse data");
+    return {name,code};
+  };
+  const ensureUniqueCode=(code,exceptId)=>{
+    const existing=store.listHorses();
+    if(Object.entries(existing).some(([id,horse])=>id!==exceptId&&typeof horse?.code==="string"&&horse.code.trim().toLocaleLowerCase("tk")===code.toLocaleLowerCase("tk")))throw Error("Horse code already exists");
+  };
   if(typeof store.addLocalChange==="function") ipcMain.handle(CHANNELS.createHorse,async(event,input)=>{
     check(event);
     if(!input||typeof input!=="object"||Array.isArray(input)||Object.keys(input).sort().join(",")!=="entityId,payload")throw Error("Invalid horse create request");
     const {entityId,payload}=input;
     if(typeof entityId!=="string"||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(entityId))throw Error("Invalid horse ID");
-    if(!payload||typeof payload!=="object"||Array.isArray(payload)||Object.keys(payload).sort().join(",")!=="code,name"||typeof payload.name!=="string"||!payload.name.trim()||payload.name.length>160||typeof payload.code!=="string"||payload.code.length>80)throw Error("Invalid horse data");
-    return {changeId:store.addLocalChange({entityId,action:"create",payload,baseVersion:null})};
+    const normalized=normalizeHorse(payload);
+    ensureUniqueCode(normalized.code);
+    return {changeId:store.addLocalChange({entityId,action:"create",payload:normalized,baseVersion:null})};
   });
   if(typeof store.addLocalChange==="function"){
    const validId=id=>typeof id==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
@@ -67,8 +78,9 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     check(event);
     if(!input||typeof input!=="object"||Array.isArray(input)||Object.keys(input).sort().join(",")!=="baseVersion,entityId,payload"||!validId(input.entityId)||!validVersion(input.baseVersion))throw Error("Invalid horse update request");
     const payload=input.payload;
-    if(!payload||typeof payload!=="object"||Array.isArray(payload)||Object.keys(payload).sort().join(",")!=="code,name"||typeof payload.name!=="string"||!payload.name.trim()||payload.name.length>160||typeof payload.code!=="string"||payload.code.length>80)throw Error("Invalid horse data");
-    return {changeId:store.addLocalChange({entityId:input.entityId,action:"update",payload,baseVersion:input.baseVersion})};
+    const normalized=normalizeHorse(payload);
+    ensureUniqueCode(normalized.code,input.entityId);
+    return {changeId:store.addLocalChange({entityId:input.entityId,action:"update",payload:normalized,baseVersion:input.baseVersion})};
    });
    ipcMain.handle(CHANNELS.deleteHorse,async(event,input)=>{
     check(event);
