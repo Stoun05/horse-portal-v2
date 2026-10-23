@@ -35,6 +35,8 @@ test("server conflict cannot erase encrypted local horse edits",async()=>{
  const key=randomBytes(32),userId="53a25d93-52be-4cab-8fea-f344f9340c9a",token="b".repeat(64);
  try{
   const store=openAccountOfflineStore({root,userId,key});
+  const created=store.addLocalChange({entityId:"horse-2",action:"create",payload:{name:"Original horse",code:"AT-2"}});
+  assert.equal(store.acknowledge(created,{changeId:created,status:"accepted",serverVersion:1}),true);
   const id=store.addLocalChange({entityId:"horse-2",action:"update",baseVersion:1,payload:{name:"New local horse",code:"AT-2"}});
   const send=createHorseSyncSender({token,fetchImpl:async()=>({status:409,json:async()=>({changeId:id,status:"conflict",serverVersion:2})})});
   assert.equal((await flushPending({store,send})).state,"conflict");
