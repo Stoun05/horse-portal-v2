@@ -174,3 +174,19 @@ test("offline update and delete require known server version and pinned sender",
  close();
  assert.equal(handlers.size,0);
 });
+
+test("offline horse codes are unique and use server field lengths",async()=>{
+ const {randomUUID}=require("node:crypto");
+ const frame={url:"http://127.0.0.1:4444/atlar"},sender={mainFrame:frame},event={sender,senderFrame:frame},handlers=new Map();
+ const horses={"existing":{name:"Akýol",code:"AT-001"}};
+ const store={listHorses:()=>horses,listPending:()=>[],lastSyncedAt:()=>null,addLocalChange:()=>randomUUID()};
+ const ipcMain={handle:(n,fn)=>handlers.set(n,fn),removeHandler:n=>handlers.delete(n)};
+ const close=registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444",expectedSender:sender});
+ const create=handlers.get("offline:create-horse"),id=randomUUID();
+ await assert.rejects(()=>create(event,{entityId:id,payload:{name:"Different",code:" at-001 "}}),/code already exists/);
+ await assert.rejects(()=>create(event,{entityId:id,payload:{name:"A",code:""}}),/Invalid horse data/);
+ await assert.rejects(()=>create(event,{entityId:id,payload:{name:"A".repeat(151),code:"AT-9"}}),/Invalid horse data/);
+ const result=await create(event,{entityId:id,payload:{name:" Akýol ",code:" AT-009 "}});
+ assert.equal(typeof result.changeId,"string");
+ close();
+});
