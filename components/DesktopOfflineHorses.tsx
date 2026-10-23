@@ -1,11 +1,13 @@
 "use client";
-import {useCallback,useEffect,useState} from "react";
-type OfflineBridge={getStatus:()=>Promise<{lastSyncedAt:string|null;pendingCount:number}>;listHorses:()=>Promise<Record<string,unknown>>};
+import {useCallback,useEffect,useState,type FormEvent} from "react";
+type OfflineBridge={getStatus:()=>Promise<{lastSyncedAt:string|null;pendingCount:number}>;listHorses:()=>Promise<Record<string,unknown>>;createHorse:(id:string,payload:{name:string;code:string})=>Promise<{changeId:string}>};
 declare global {interface Window{atcylykOffline?:OfflineBridge}}
 export default function DesktopOfflineHorses(){
  const [present,setPresent]=useState(false),[error,setError]=useState("");
+ const [name,setName]=useState(""),[code,setCode]=useState("");
  const [items,setItems]=useState<Array<{id:string;name:string;code:string}>>([]);
  const [pending,setPending]=useState<number|null>(null),[loading,setLoading]=useState(false);
+ const [busyCreate,setBusyCreate]=useState(false);
  const refresh=useCallback(async()=>{
   const bridge=window.atcylykOffline;
   if(!bridge)return;
@@ -22,13 +24,26 @@ export default function DesktopOfflineHorses(){
   finally{setLoading(false);}
  },[]);
  useEffect(()=>{setPresent(Boolean(window.atcylykOffline));},[]);
+ async function createHorse(event:FormEvent<HTMLFormElement>){
+  event.preventDefault();const bridge=window.atcylykOffline;
+  if(!bridge||!name.trim()||busyCreate)return;
+  setBusyCreate(true);setError("");
+  try{await bridge.createHorse(crypto.randomUUID(),{name:name.trim(),code:code.trim()});setName("");setCode("");await refresh();}
+  catch{setError("At döretmek başartmady. Rugsatlary we giriş sessiýasyny barlaň.");}
+  finally{setBusyCreate(false);}
+ }
  if(!present)return null;
  return <section className="mb-6 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
   <div className="flex flex-wrap items-center justify-between gap-3">
    <div><h2 className="text-lg font-semibold text-emerald-950">Şifrlenen offline atlar</h2>
-    <p className="text-sm text-gray-600">Diňe okamak üçin. Aşakdaky ýerli brauzer katalogy bilen garyşdyrylmaýar.</p></div>
+    <p className="text-sm text-gray-600">Şifrlenen ammar. Üýtgeşmeler nobata ýazylýar; aşakdaky brauzer katalogyndan aýratyn saklanýar.</p></div>
    <button type="button" disabled={loading} onClick={refresh} className="rounded-lg bg-emerald-800 px-4 py-2 text-sm text-white disabled:opacity-50">{loading?"Okalýar…":"Offline maglumatlary görkez"}</button>
   </div>
+  <form onSubmit={createHorse} className="mt-4 flex flex-wrap items-end gap-2">
+   <label className="text-sm">Atyň ady<input required maxLength={160} value={name} onChange={event=>setName(event.target.value)} className="mt-1 block rounded-lg border p-2"/></label>
+   <label className="text-sm">Belgisi<input maxLength={80} value={code} onChange={event=>setCode(event.target.value)} className="mt-1 block rounded-lg border p-2"/></label>
+   <button type="submit" disabled={busyCreate} className="rounded-lg bg-emerald-800 px-4 py-2 text-white disabled:opacity-50">Offline at goş</button>
+  </form>
   {error&&<p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
   {pending!==null&&<><p className="mt-3 text-sm text-gray-700">Atlar: {items.length} · Sinhronlaşmaga garaşýan üýtgeşmeler: {pending}</p>
    <ul className="mt-3 divide-y">{items.map(item=><li key={item.id} className="py-2 text-sm"><strong>{item.name}</strong>{item.code? <span className="ml-2 text-gray-600">{item.code}</span>:null}</li>)}</ul>
