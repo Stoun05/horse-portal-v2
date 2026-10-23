@@ -144,7 +144,7 @@ test("failed lifecycle listener setup releases offline IPC for next login",()=>{
   assert.equal(handlers.size,0);
   const healthy=new EventEmitter();healthy.mainFrame=frame;
   const close=attachAuthorizedWindow({...opts,webContents:healthy});
-  assert.equal(handlers.size,6);
+  assert.equal(handlers.size,7);
   close();
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
