@@ -122,7 +122,8 @@ async function createWindow() {
     expectedOrigin:`http://127.0.0.1:${port}`,safeStorage,
     root:app.getPath("userData"),
     sendSync:change=>loginClient.withToken(token=>createHorseSyncSender({token})(change)),
-    fetchServerHorses:()=>loginClient.listServerHorses()
+    fetchServerHorses:()=>loginClient.listServerHorses(),
+    fetchServerDeletions:()=>loginClient.listServerDeletions()
   });
   // Public signing key is provisioned by the desktop deployment, never fetched as a trust anchor.
   // Missing configuration leaves the encrypted offline store inaccessible.
