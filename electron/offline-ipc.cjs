@@ -2,6 +2,7 @@
 const CHANNELS = Object.freeze({
   status: "offline:status",
   horses: "offline:horses",
+  versions: "offline:horse-versions",
   pendingCount: "offline:pending-count",
   createHorse: "offline:create-horse",
   updateHorse: "offline:update-horse",
@@ -41,6 +42,9 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
   ipcMain.handle(CHANNELS.horses, async (event) => {
     check(event);
     return store.listHorses();
+  });
+  if(typeof store.listHorseVersions==="function") ipcMain.handle(CHANNELS.versions, async (event)=>{
+    check(event);return store.listHorseVersions();
   });
   ipcMain.handle(CHANNELS.pendingCount, async (event) => {
     check(event);
