@@ -348,3 +348,18 @@ test("trusted offline signing key accepts PEM and pre-parsed public KeyObject",(
   assert.equal(typeof flow.login,"function");
  }
 });
+
+test("authorized encrypted store can acknowledge sync only under valid signed grant",async()=>{
+ const {flushPending}=require("../sync-runner.cjs");
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"atcylyk-authorized-sync-"));
+ try{
+  const grant={userId,expiresAt:Date.now()+60000,permissions:["horses:read","horses:create"]};
+  const store=openAuthorizedOfflineStore({root,userId,safeStorage,publicKey,grant,signature:signed(grant),platform:"win32"});
+  const changeId=store.addLocalChange({entityId:"horse-sync-test",action:"create",payload:{name:"Akýol",code:"AT-1"}});
+  const result=await flushPending({store,send:async change=>({changeId:change.changeId,status:"accepted",serverVersion:1})});
+  assert.deepEqual(result,{state:"complete",acknowledged:1,conflicted:0});
+  assert.equal(store.listPending().length,0);
+  assert.equal(store.listHorseVersions()["horse-sync-test"],1);
+  assert.equal(typeof changeId,"string");
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
