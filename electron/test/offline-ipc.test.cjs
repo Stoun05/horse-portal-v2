@@ -139,3 +139,19 @@ test("desktop authentication IPC accepts only original main frame and returns no
  close();
  assert.equal(handlers.size,0);
 });
+
+test("offline horse creation validates input and delegates permission checks to store",async()=>{
+ const {randomUUID}=require("node:crypto");
+ const handlers=new Map(),frame={url:"http://127.0.0.1:4444/atlar"};
+ const sender={mainFrame:frame},event={sender,senderFrame:frame};
+ const ipcMain={handle:(name,fn)=>handlers.set(name,fn),removeHandler:name=>handlers.delete(name)};
+ let saved=null;
+ const store={listHorses:()=>({}),listPending:()=>[],lastSyncedAt:()=>null,addLocalChange:change=>{saved=change;return "pending-1";}};
+ const close=registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444",expectedSender:sender});
+ const id=randomUUID();
+ assert.deepEqual(await handlers.get("offline:create-horse")(event,{entityId:id,payload:{name:"Akyol"}}),{changeId:"pending-1"});
+ assert.deepEqual(saved,{entityId:id,action:"create",payload:{name:"Akyol"},baseVersion:null});
+ await assert.rejects(()=>handlers.get("offline:create-horse")(event,{entityId:id,payload:{name:""}}),/Invalid horse data/);
+ await assert.rejects(()=>handlers.get("offline:create-horse")({sender:{mainFrame:frame},senderFrame:frame},{entityId:id,payload:{name:"Akyol"}}),/Forbidden IPC window/);
+ close();assert.equal(handlers.size,0);
+});
