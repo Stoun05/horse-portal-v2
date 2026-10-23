@@ -4,6 +4,7 @@ const CHANNELS = Object.freeze({
   horses: "offline:horses",
   versions: "offline:horse-versions",
   sync: "offline:sync",
+  importHorses: "offline:import-horses",
   pendingCount: "offline:pending-count",
   createHorse: "offline:create-horse",
   updateHorse: "offline:update-horse",
@@ -16,7 +17,7 @@ function trustedSender(event, expectedOrigin) {
   try { return new URL(event.senderFrame.url).origin === expectedOrigin; }
   catch { return false; }
 }
-function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender, sync }) {
+function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender, sync, importHorses }) {
   if (!ipcMain?.handle || !store?.listHorses || !store?.listPending || !store?.lastSyncedAt)
     throw new Error("Invalid dependencies");
   if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(expectedOrigin)) throw new Error("Invalid local origin");
@@ -52,6 +53,7 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     return store.listPending().length;
   });
   if(typeof sync==="function")ipcMain.handle(CHANNELS.sync,async(event)=>{check(event);return sync();});
+  if(typeof importHorses==="function")ipcMain.handle(CHANNELS.importHorses,async(event)=>{check(event);return importHorses();});
   const normalizeHorse=payload=>{
     if(!payload||typeof payload!=="object"||Array.isArray(payload)||Object.keys(payload).sort().join(",")!=="code,name"||typeof payload.name!=="string"||typeof payload.code!=="string")throw Error("Invalid horse data");
     const name=payload.name.trim(),code=payload.code.trim();
