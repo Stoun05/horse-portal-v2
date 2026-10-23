@@ -190,3 +190,17 @@ test("offline horse codes are unique and use server field lengths",async()=>{
  assert.equal(typeof result.changeId,"string");
  close();
 });
+
+test("server horse import is limited to the authenticated desktop window",async()=>{
+ const handlers=new Map(),frame={url:"http://127.0.0.1:4444/atlar"},sender={mainFrame:frame};
+ const ipcMain={handle:(n,fn)=>handlers.set(n,fn),removeHandler:n=>handlers.delete(n)};
+ let calls=0;
+ const store={listHorses:()=>({}),listPending:()=>[],lastSyncedAt:()=>null};
+ const close=registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444",expectedSender:sender,importHorses:async()=>{calls++;return {imported:2,skipped:1};}});
+ const handler=handlers.get("offline:import-horses");
+ assert.deepEqual(await handler({sender,senderFrame:frame}),{imported:2,skipped:1});
+ await assert.rejects(()=>handler({sender:{mainFrame:frame},senderFrame:frame}),/Forbidden IPC window/);
+ assert.equal(calls,1);
+ close();
+ await assert.rejects(()=>handler({sender,senderFrame:frame}),/session closed/);
+});
