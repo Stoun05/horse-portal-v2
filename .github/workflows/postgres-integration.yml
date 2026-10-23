@@ -37,6 +37,8 @@ jobs:
       PORTAL_EXPECT_SEEDED_HORSE: "1"
       PORTAL_TEST_USER: integration_operator
       PORTAL_TEST_PASSWORD: integration_test_password_12345
+      PORTAL_TEST_ADMIN: integration_admin
+      PORTAL_TEST_ADMIN_PASSWORD: integration_admin_password_12345
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -58,6 +60,10 @@ jobs:
           await pool.query(
             "INSERT INTO horses(id,name,code,breed,year,sex,data,version) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,1)",
             ["ci-horse-001","CI Test Aty","CI-001","Ahalteke",2020,"At",JSON.stringify({name:"CI Test Aty",code:"CI-001",breed:"Ahalteke",sex:"At",year:2020,color:"Mele",champion:false})]
+          );
+          await pool.query(
+            "INSERT INTO portal_users(id,username,password_hash,role,active) VALUES($1,$2,$3,'Admin',true)",
+            [randomUUID(),process.env.PORTAL_TEST_ADMIN,await hashPassword(process.env.PORTAL_TEST_ADMIN_PASSWORD)]
           );
           await pool.end();
           NODE
