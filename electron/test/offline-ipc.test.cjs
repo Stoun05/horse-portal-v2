@@ -149,9 +149,10 @@ test("offline horse creation validates input and delegates permission checks to 
  const store={listHorses:()=>({}),listPending:()=>[],lastSyncedAt:()=>null,addLocalChange:change=>{saved=change;return "pending-1";}};
  const close=registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444",expectedSender:sender});
  const id=randomUUID();
- assert.deepEqual(await handlers.get("offline:create-horse")(event,{entityId:id,payload:{name:"Akyol"}}),{changeId:"pending-1"});
- assert.deepEqual(saved,{entityId:id,action:"create",payload:{name:"Akyol"},baseVersion:null});
- await assert.rejects(()=>handlers.get("offline:create-horse")(event,{entityId:id,payload:{name:""}}),/Invalid horse data/);
- await assert.rejects(()=>handlers.get("offline:create-horse")({sender:{mainFrame:frame},senderFrame:frame},{entityId:id,payload:{name:"Akyol"}}),/Forbidden IPC window/);
+ assert.deepEqual(await handlers.get("offline:create-horse")(event,{entityId:id,payload:{name:"Akyol",code:"AT-1"}}),{changeId:"pending-1"});
+ assert.deepEqual(saved,{entityId:id,action:"create",payload:{name:"Akyol",code:"AT-1"},baseVersion:null});
+ await assert.rejects(()=>handlers.get("offline:create-horse")(event,{entityId:id,payload:{name:"Akyol",code:"AT-1",admin:true}}),/Invalid horse data/);
+ await assert.rejects(()=>handlers.get("offline:create-horse")(event,{entityId:id,payload:{name:"",code:"AT-1"}}),/Invalid horse data/);
+ await assert.rejects(()=>handlers.get("offline:create-horse")({sender:{mainFrame:frame},senderFrame:frame},{entityId:id,payload:{name:"Akyol",code:"AT-1"}}),/Forbidden IPC window/);
  close();assert.equal(handlers.size,0);
 });
