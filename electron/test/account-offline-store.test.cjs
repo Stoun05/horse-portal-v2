@@ -176,13 +176,27 @@ test("server horse import keeps unsent edits and ignores stale versions",()=>{
    {id:"local-1",version:1,data:{name:"Server copy",code:"L-1"}},
    {id:"remote-1",version:2,data:{name:"Remote",code:"R-1"}}
   ]);
-  assert.deepEqual(result,{imported:1,skipped:1});
+  assert.deepEqual(result,{imported:1,skipped:1,removed:0});
   store=openAccountOfflineStore({root,userId:a,key});
   assert.equal(store.listHorses()["local-1"].name,"Local");
   assert.equal(store.listHorses()["remote-1"].name,"Remote");
   assert.equal(store.listHorseVersions()["remote-1"],2);
   assert.equal(store.listPending()[0].id,local);
-  assert.deepEqual(store.importServerHorses([{id:"remote-1",version:1,data:{name:"Old",code:"R-1"}}]),{imported:0,skipped:1});
+  assert.deepEqual(store.importServerHorses([{id:"remote-1",version:1,data:{name:"Old",code:"R-1"}}]),{imported:0,skipped:1,removed:0});
   assert.equal(store.listHorses()["remote-1"].name,"Remote");
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test("server deletion removes confirmed cached horse but retains unsent local edit",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-remove-")),key=randomBytes(32);
+ try{
+  const store=openAccountOfflineStore({root,userId:a,key});
+  store.importServerHorses([{id:"removed",version:1,data:{name:"Old",code:"OLD"}},{id:"edited",version:1,data:{name:"Edit",code:"EDIT"}}]);
+  const change=store.addLocalChange({entityId:"edited",action:"update",baseVersion:1,payload:{name:"Local edit",code:"EDIT"}});
+  assert.deepEqual(store.importServerHorses([]),{imported:0,skipped:0,removed:1});
+  const reopened=openAccountOfflineStore({root,userId:a,key});
+  assert.equal(reopened.listHorses().removed,undefined);
+  assert.equal(reopened.listHorses().edited.name,"Local edit");
+  assert.equal(reopened.listPending()[0].id,change);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
