@@ -156,3 +156,21 @@ test("offline horse creation validates input and delegates permission checks to 
  await assert.rejects(()=>handlers.get("offline:create-horse")({sender:{mainFrame:frame},senderFrame:frame},{entityId:id,payload:{name:"Akyol",code:"AT-1"}}),/Forbidden IPC window/);
  close();assert.equal(handlers.size,0);
 });
+
+test("offline update and delete require known server version and pinned sender",async()=>{
+ const {randomUUID}=require("node:crypto");
+ const handlers=new Map(),frame={url:"http://127.0.0.1:4444/atlar"},sender={mainFrame:frame};
+ const event={sender,senderFrame:frame},changes=[];
+ const ipcMain={handle:(n,fn)=>handlers.set(n,fn),removeHandler:n=>handlers.delete(n)};
+ const store={listHorses:()=>({}),listPending:()=>[],lastSyncedAt:()=>null,addLocalChange:c=>{changes.push(c);return "queued";}};
+ const close=registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444",expectedSender:sender});
+ const entityId=randomUUID();
+ await assert.rejects(()=>handlers.get("offline:update-horse")(event,{entityId,baseVersion:0,payload:{name:"Akyol",code:"AT-1"}}),/Invalid horse update/);
+ await assert.rejects(()=>handlers.get("offline:delete-horse")(event,{entityId,baseVersion:null}),/Invalid horse delete/);
+ await assert.rejects(()=>handlers.get("offline:delete-horse")({sender:{mainFrame:frame},senderFrame:frame},{entityId,baseVersion:1}),/Forbidden IPC window/);
+ await handlers.get("offline:update-horse")(event,{entityId,baseVersion:2,payload:{name:"Akyol",code:"AT-1"}});
+ await handlers.get("offline:delete-horse")(event,{entityId,baseVersion:3});
+ assert.deepEqual(changes.map(c=>[c.action,c.baseVersion]),[["update",2],["delete",3]]);
+ close();
+ assert.equal(handlers.size,0);
+});
