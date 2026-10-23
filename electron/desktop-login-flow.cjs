@@ -18,6 +18,7 @@ function createDesktopLoginFlow({loginClient,offlineSessions,getSignedGrant,trus
     offlineSessions.logout();
     await loginClient.logout();
     const user=await loginClient.login(username,password);
+    if(current!==generation){await loginClient.logout();throw Error("Authentication cancelled");}
     try{
      const signed=await loginClient.withToken((token)=>getSignedGrant({token,user}));
      if(current!==generation)throw Error("Authentication cancelled");
@@ -27,8 +28,7 @@ function createDesktopLoginFlow({loginClient,offlineSessions,getSignedGrant,trus
      offlineSessions.authorize({userId:user.id,...signed,publicKey:trustedKey});
      return user;
     }catch(error){
-     offlineSessions.logout();
-     await loginClient.logout();
+     if(current===generation){offlineSessions.logout();await loginClient.logout();}
      throw error;
     }
    }finally{busy=false;}
@@ -49,7 +49,7 @@ function createDesktopLoginFlow({loginClient,offlineSessions,getSignedGrant,trus
     if(received.asymmetricKeyType!=="ed25519"||received.export({format:"der",type:"spki"}).toString("hex")!==trustedDer)throw Error("Offline signing key mismatch");
     offlineSessions.authorize({userId:user.id,...signed,publicKey:trustedKey});
     return user;
-   }catch(error){offlineSessions.logout();throw error;}
+   }catch(error){if(current===generation)offlineSessions.logout();throw error;}
    finally{busy=false;}
   },
   async logout(){generation++;offlineSessions.logout();await loginClient.logout();}
