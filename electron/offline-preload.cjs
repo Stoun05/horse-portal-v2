@@ -8,6 +8,7 @@ const CHANNELS = Object.freeze({
 contextBridge.exposeInMainWorld("atcylykOffline", Object.freeze({
   getStatus: () => ipcRenderer.invoke(CHANNELS.status),
   listHorses: () => ipcRenderer.invoke(CHANNELS.horses),
+  listHorseVersions: () => ipcRenderer.invoke("offline:horse-versions"),
   getPendingCount: () => ipcRenderer.invoke(CHANNELS.pendingCount),
   createHorse: (entityId,payload) => ipcRenderer.invoke("offline:create-horse",{entityId,payload}),
   updateHorse: (entityId,baseVersion,payload) => ipcRenderer.invoke("offline:update-horse",{entityId,baseVersion,payload}),
