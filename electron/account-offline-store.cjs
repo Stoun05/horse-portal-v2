@@ -50,15 +50,9 @@ function openAccountOfflineStore({root,userId,key}) {
     next.versions[row.id]=row.version;
     imported++;
    }
-   // Only records previously confirmed by the server can be removed here.
-   // Unsent local edits and horses without a confirmed server version remain untouched.
-   for(const id of Object.keys(next.versions)){
-    if(!serverIds.has(id) && !pending.has(id)){
-     delete next.horses[id];
-     delete next.versions[id];
-     removed++;
-    }
-   }
+   // A paginated list is not a deletion certificate: concurrent inserts can
+   // shift offsets and omit valid horses. Preserve missing cached records until
+   // the server provides explicit versioned deletion tombstones.
    if(imported||removed)persist(next);
    return {imported,skipped,removed};
   },
