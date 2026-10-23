@@ -3,13 +3,13 @@ const {openAuthorizedOfflineStore}=require("./authorized-offline-store.cjs");
 const {registerOfflineReadIpc}=require("./offline-ipc.cjs");
 const activeIpcSessions=new WeakSet();
 const {flushPending}=require("./sync-runner.cjs");
-function attachAuthorizedWindow({ipcMain,webContents,expectedOrigin,root,userId,safeStorage,publicKey,grant,signature,sendSync,getSyncSignal,fetchServerHorses,platform=process.platform}){
+function attachAuthorizedWindow({ipcMain,webContents,expectedOrigin,root,userId,safeStorage,publicKey,grant,signature,sendSync,getSyncSignal,fetchServerHorses,fetchServerDeletions,platform=process.platform}){
  if(!webContents || webContents.isDestroyed?.() || typeof webContents.on!=="function" || typeof webContents.removeListener!=="function") throw Error("Invalid desktop window");
  if(activeIpcSessions.has(ipcMain)) throw Error("Offline IPC session already active");
  const store=openAuthorizedOfflineStore({root,userId,safeStorage,publicKey,grant,signature,platform});
  const sync=typeof sendSync==="function" && typeof getSyncSignal==="function"
   ?()=>flushPending({store,send:sendSync,signal:getSyncSignal()}) : undefined;
- const importHorses=typeof fetchServerHorses==="function" ? async()=>store.importServerHorses(await fetchServerHorses()) : undefined;
+ const importHorses=typeof fetchServerHorses==="function" ? async()=>{const horses=await fetchServerHorses();const deleted=typeof fetchServerDeletions==="function"?await fetchServerDeletions():[];const imported=store.importServerHorses(horses);const {removed}=store.applyServerDeletions(deleted);return {...imported,removed};} : undefined;
  const revokeIpc=registerOfflineReadIpc({ipcMain,store,expectedOrigin,expectedSender:webContents,sync,importHorses});
  activeIpcSessions.add(ipcMain);
  let active=true;
