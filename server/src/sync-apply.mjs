@@ -36,6 +36,7 @@ export async function applyHorseSync(user, change) {
     let newVersion = currentVersion === null ? 1 : currentVersion + 1;
     if (change.action === "delete") {
       await client.query("DELETE FROM horses WHERE id=$1", [change.entityId]);
+      await client.query("INSERT INTO horse_deletions(horse_id) VALUES($1) ON CONFLICT(horse_id) DO UPDATE SET deleted_at=now()", [change.entityId]);
     } else {
       const horse = parseHorseInput(change.payload);
       if (!horse) {
@@ -43,6 +44,7 @@ export async function applyHorseSync(user, change) {
         return { status: 400, error: "Invalid horse payload" };
       }
       if (change.action === "create") {
+        await client.query("DELETE FROM horse_deletions WHERE horse_id=$1", [change.entityId]);
         await client.query(
           "INSERT INTO horses(id,name,code,breed,year,sex,data,version) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,1)",
           [change.entityId,horse.name,horse.code,horse.breed,horse.year,horse.sex,JSON.stringify(change.payload)]
