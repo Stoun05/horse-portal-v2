@@ -4,11 +4,12 @@ const CHANNELS = Object.freeze({
   horses: "offline:horses",
   pendingCount: "offline:pending-count",
 });
-// Narrow read-only API: no arbitrary SQL, IPC channels, filesystem or writable access.
+// Narrow fixed-method API: no arbitrary SQL, generic IPC, or filesystem access.
 contextBridge.exposeInMainWorld("atcylykOffline", Object.freeze({
   getStatus: () => ipcRenderer.invoke(CHANNELS.status),
   listHorses: () => ipcRenderer.invoke(CHANNELS.horses),
   getPendingCount: () => ipcRenderer.invoke(CHANNELS.pendingCount),
+  createHorse: (entityId,payload) => ipcRenderer.invoke("offline:create-horse",{entityId,payload}),
 }));
 
 /* Fixed credential-only desktop authentication bridge. No token or grant access. */
