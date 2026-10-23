@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld("atcylykOffline", Object.freeze({
   listHorses: () => ipcRenderer.invoke(CHANNELS.horses),
   getPendingCount: () => ipcRenderer.invoke(CHANNELS.pendingCount),
   createHorse: (entityId,payload) => ipcRenderer.invoke("offline:create-horse",{entityId,payload}),
+  updateHorse: (entityId,baseVersion,payload) => ipcRenderer.invoke("offline:update-horse",{entityId,baseVersion,payload}),
+  deleteHorse: (entityId,baseVersion) => ipcRenderer.invoke("offline:delete-horse",{entityId,baseVersion}),
 }));
 
 /* Fixed credential-only desktop authentication bridge. No token or grant access. */
