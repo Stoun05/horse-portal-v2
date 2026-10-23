@@ -38,7 +38,16 @@ try{
  const {horses}=await catalog.json();
  if(horses.filter(h=>h.id===change.entityId).length!==1)throw Error("Horse missing or duplicated");
  if(horses.find(h=>h.id===change.entityId)?.data?.name!=="Updated Offline CI Horse") throw Error("Stale change replaced current horse data");
- console.log("PASS: create, duplicate retry, versioned update, stale conflict, persisted newest horse");
+ const deletion={changeId:randomUUID(),entityId:change.entityId,action:"delete",baseVersion:2,payload:null};
+ const deleted=await post(deletion);
+ if(deleted.code!==200||deleted.body.status!=="accepted"||deleted.body.serverVersion!==3)throw Error("Horse deletion not accepted");
+ const deletionList=await request("/api/horses/deletions",{headers});
+ if(deletionList.status!==200)throw Error("Cannot fetch deleted horse IDs");
+ const deletionBody=await deletionList.json();
+ if(!deletionBody.deletedHorseIds?.includes(change.entityId))throw Error("Deletion not recorded for PC");
+ const afterDelete=await request("/api/horses?limit=100",{headers});
+ if(afterDelete.status!==200||(await afterDelete.json()).horses.some(h=>h.id===change.entityId))throw Error("Deleted horse remains in catalog");
+ console.log("PASS: create, retry, update, conflict, explicit deletion and PC deletion feed");
 }finally{
  await request("/api/auth/logout",{method:"POST",headers}).catch(()=>{});
 }
