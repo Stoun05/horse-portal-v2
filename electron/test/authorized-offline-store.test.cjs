@@ -426,3 +426,22 @@ test("late login result after logout never enables offline access",async()=>{
  assert.equal(authorized,0);
  assert.ok(logoutCount>=3);
 });
+
+test("desktop horse catalog fetches multiple pages without truncating at 100",async()=>{
+ const {createLocalLoginClient}=require("../local-login-client.cjs");
+ const token="f".repeat(64);
+ const offsets=[];
+ const client=createLocalLoginClient({fetchImpl:async(url)=>{
+  if(url.pathname==="/api/auth/login")return {status:200,json:async()=>({token,user:{id:userId,role:"Operator"}})};
+  if(url.pathname==="/api/horses"){
+   const offset=Number(url.searchParams.get("offset"));offsets.push(offset);
+   const count=offset===0?100:2;
+   return {status:200,json:async()=>({horses:Array.from({length:count},(_,i)=>({id:String(offset+i),name:"Horse"}))})};
+  }
+  return {status:200};
+ }});
+ await client.login("staff","pass");
+ const records=await client.listServerHorses();
+ assert.equal(records.length,102);
+ assert.deepEqual(offsets,[0,100]);
+});
