@@ -69,3 +69,23 @@ test("logout during in-flight sync preserves encrypted queue for later retry",as
  assert.equal(acknowledgements,0);
  assert.equal(pending.length,1);
 });
+
+test("partial sync acknowledges first horse but preserves later change across restart",()=>withStore(async(store,reload)=>{
+ const first=store.addLocalChange({entityId:"partial-1",action:"create",payload:{name:"First"}});
+ const second=store.addLocalChange({entityId:"partial-2",action:"create",payload:{name:"Second"}});
+ let count=0;
+ const result=await flushPending({store,send:async change=>{
+  count++;
+  if(count===2)throw Error("Network interrupted");
+  return {changeId:change.changeId,status:"accepted",serverVersion:1};
+ }});
+ assert.deepEqual(result,{state:"retry",acknowledged:1,conflicted:0});
+ const recovered=reload();
+ assert.deepEqual(recovered.listPending().map(x=>x.id),[second]);
+ assert.equal(recovered.listHorseVersions()["partial-1"],1);
+ const finish=await flushPending({store:recovered,send:async change=>({changeId:change.changeId,status:"accepted",serverVersion:1})});
+ assert.deepEqual(finish,{state:"complete",acknowledged:1,conflicted:0});
+ assert.equal(reload().listPending().length,0);
+ assert.equal(reload().listHorseVersions()["partial-2"],1);
+ assert.notEqual(first,second);
+}));
