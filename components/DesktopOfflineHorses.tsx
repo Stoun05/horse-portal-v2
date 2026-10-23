@@ -28,6 +28,9 @@ export default function DesktopOfflineHorses(){
  async function createHorse(event:FormEvent<HTMLFormElement>){
   event.preventDefault();const bridge=window.atcylykOffline;
   if(!bridge||!name.trim()||busyCreate)return;
+  const normalizedName=name.trim().toLocaleLowerCase("tk");
+  const similar=items.filter(item=>item.name.trim().toLocaleLowerCase("tk")===normalizedName);
+  if(similar.length && !window.confirm(`"${name.trim()}" atly ${similar.length} at eýýäm offline sanawda bar. Başga belgi bilen täze at goşmalymy?`))return;
   setBusyCreate(true);setError("");
   try{await bridge.createHorse(crypto.randomUUID(),{name:name.trim(),code:code.trim()});setName("");setCode("");await refresh();}
   catch{setError("At döretmek başartmady. Rugsatlary we giriş sessiýasyny barlaň.");}
@@ -53,8 +56,8 @@ export default function DesktopOfflineHorses(){
    <button type="button" disabled={loading} onClick={refresh} className="rounded-lg bg-emerald-800 px-4 py-2 text-sm text-white disabled:opacity-50">{loading?"Okalýar…":"Offline maglumatlary görkez"}</button>
   </div>
   <form onSubmit={createHorse} className="mt-4 flex flex-wrap items-end gap-2">
-   <label className="text-sm">Atyň ady<input required maxLength={160} value={name} onChange={event=>setName(event.target.value)} className="mt-1 block rounded-lg border p-2"/></label>
-   <label className="text-sm">Belgisi<input maxLength={80} value={code} onChange={event=>setCode(event.target.value)} className="mt-1 block rounded-lg border p-2"/></label>
+   <label className="text-sm">Atyň ady<input required maxLength={150} value={name} onChange={event=>setName(event.target.value)} className="mt-1 block rounded-lg border p-2"/></label>
+   <label className="text-sm">Belgisi<input required maxLength={64} value={code} onChange={event=>setCode(event.target.value)} className="mt-1 block rounded-lg border p-2"/></label>
    <button type="submit" disabled={busyCreate} className="rounded-lg bg-emerald-800 px-4 py-2 text-white disabled:opacity-50">Offline at goş</button>
   </form>
   {syncMessage&&<p role="status" className="mt-3 text-sm text-emerald-900">{syncMessage}</p>}
