@@ -30,6 +30,27 @@ function openAccountOfflineStore({root,userId,key}) {
  return {
   listHorses:()=>structuredClone(state.horses),
   listHorseVersions:()=>structuredClone(state.versions??{}),
+  importServerHorses(records) {
+   if(!Array.isArray(records)||records.length>1000)throw Error("Invalid server horse list");
+   const next=structuredClone(state);
+   next.versions??={};
+   const pending=new Set(next.pending.map(item=>item.entity_id));
+   let imported=0,skipped=0;
+   for(const row of records){
+    if(!row||typeof row.id!=="string"||!row.id||!Number.isSafeInteger(row.version)||row.version<1||
+       !row.data||typeof row.data!=="object"||Array.isArray(row.data)||
+       typeof row.data.name!=="string"||typeof row.data.code!=="string")throw Error("Invalid server horse");
+    if(pending.has(row.id)){skipped++;continue;}
+    const current=next.versions[row.id]??0;
+    if(row.version<=current){skipped++;continue;}
+    next.horses[row.id]=structuredClone(row.data);
+    next.versions[row.id]=row.version;
+    imported++;
+   }
+   if(imported)persist(next);
+   return {imported,skipped};
+  },
+
   listPending:()=>structuredClone(state.pending),
   lastSyncedAt:()=>state.lastSyncedAt,
   addLocalChange({entityId,action,payload=null,baseVersion=null}) {
