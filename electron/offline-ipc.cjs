@@ -49,7 +49,7 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     if(!input||typeof input!=="object"||Array.isArray(input)||Object.keys(input).sort().join(",")!=="entityId,payload")throw Error("Invalid horse create request");
     const {entityId,payload}=input;
     if(typeof entityId!=="string"||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(entityId))throw Error("Invalid horse ID");
-    if(!payload||typeof payload!=="object"||Array.isArray(payload)||typeof payload.name!=="string"||!payload.name.trim()||payload.name.length>160||JSON.stringify(payload).length>16000)throw Error("Invalid horse data");
+    if(!payload||typeof payload!=="object"||Array.isArray(payload)||Object.keys(payload).sort().join(",")!=="code,name"||typeof payload.name!=="string"||!payload.name.trim()||payload.name.length>160||typeof payload.code!=="string"||payload.code.length>80)throw Error("Invalid horse data");
     return {changeId:store.addLocalChange({entityId,action:"create",payload,baseVersion:null})};
   });
   } catch(error) { cleanup(); throw error; }
