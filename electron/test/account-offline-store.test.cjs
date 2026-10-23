@@ -166,3 +166,23 @@ test("encrypted server versions persist and stale offline edits are blocked",()=
   assert.equal(openAccountOfflineStore({root,userId:a,key}).listHorseVersions()["horse-1"],2);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("server horse import keeps unsent edits and ignores stale versions",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"account-import-")),key=randomBytes(32);
+ try{
+  let store=openAccountOfflineStore({root,userId:a,key});
+  const local=store.addLocalChange({entityId:"local-1",action:"create",payload:{name:"Local",code:"L-1"}});
+  const result=store.importServerHorses([
+   {id:"local-1",version:1,data:{name:"Server copy",code:"L-1"}},
+   {id:"remote-1",version:2,data:{name:"Remote",code:"R-1"}}
+  ]);
+  assert.deepEqual(result,{imported:1,skipped:1});
+  store=openAccountOfflineStore({root,userId:a,key});
+  assert.equal(store.listHorses()["local-1"].name,"Local");
+  assert.equal(store.listHorses()["remote-1"].name,"Remote");
+  assert.equal(store.listHorseVersions()["remote-1"],2);
+  assert.equal(store.listPending()[0].id,local);
+  assert.deepEqual(store.importServerHorses([{id:"remote-1",version:1,data:{name:"Old",code:"R-1"}}]),{imported:0,skipped:1});
+  assert.equal(store.listHorses()["remote-1"].name,"Remote");
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
