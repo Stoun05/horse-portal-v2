@@ -1,6 +1,6 @@
 "use client";
 import {useCallback,useEffect,useState,type FormEvent} from "react";
-type OfflineBridge={syncNow:()=>Promise<{state:string;acknowledged:number;conflicted:number}>;getStatus:()=>Promise<{lastSyncedAt:string|null;pendingCount:number}>;listHorses:()=>Promise<Record<string,unknown>>;listHorseVersions:()=>Promise<Record<string,number>>;createHorse:(id:string,payload:{name:string;code:string})=>Promise<{changeId:string}>;updateHorse:(id:string,baseVersion:number,payload:{name:string;code:string})=>Promise<{changeId:string}>;deleteHorse:(id:string,baseVersion:number)=>Promise<{changeId:string}>};
+type OfflineBridge={importHorses:()=>Promise<{imported:number;skipped:number}>;syncNow:()=>Promise<{state:string;acknowledged:number;conflicted:number}>;getStatus:()=>Promise<{lastSyncedAt:string|null;pendingCount:number}>;listHorses:()=>Promise<Record<string,unknown>>;listHorseVersions:()=>Promise<Record<string,number>>;createHorse:(id:string,payload:{name:string;code:string})=>Promise<{changeId:string}>;updateHorse:(id:string,baseVersion:number,payload:{name:string;code:string})=>Promise<{changeId:string}>;deleteHorse:(id:string,baseVersion:number)=>Promise<{changeId:string}>};
 declare global {interface Window{atcylykOffline?:OfflineBridge}}
 export default function DesktopOfflineHorses(){
  const [present,setPresent]=useState(false),[error,setError]=useState("");
@@ -47,11 +47,13 @@ export default function DesktopOfflineHorses(){
   finally{setBusyCreate(false);}
  }
  async function syncNow(){const bridge=window.atcylykOffline;if(!bridge||loading)return;setLoading(true);setSyncMessage("");try{const result=await bridge.syncNow();setSyncMessage(`Sync: ${result.state} · Tassyklanan: ${result.acknowledged} · Konflikt: ${result.conflicted}`);await refresh();}catch{setError("Sinhronlaşdyrmak başartmady. Giriş we serwer ýagdaýyny barlaň.");}finally{setLoading(false);}}
+ async function importFromServer(){const bridge=window.atcylykOffline;if(!bridge||loading)return;setLoading(true);setSyncMessage("");try{const result=await bridge.importHorses();setSyncMessage(`Serwerden getirildi: ${result.imported} · Geçirilmän goýlan: ${result.skipped}`);await refresh();}catch{setError("Serwerdäki atlary almak başartmady. Login we serwer ýagdaýyny barlaň.");}finally{setLoading(false);}}
  if(!present)return null;
  return <section className="mb-6 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
   <div className="flex flex-wrap items-center justify-between gap-3">
    <div><h2 className="text-lg font-semibold text-emerald-950">Şifrlenen offline atlar</h2>
     <p className="text-sm text-gray-600">Şifrlenen ammar. Üýtgeşmeler nobata ýazylýar; aşakdaky brauzer katalogyndan aýratyn saklanýar.</p></div>
+   <button type="button" disabled={loading} onClick={importFromServer} className="rounded-lg border border-emerald-800 px-4 py-2 text-sm text-emerald-900 disabled:opacity-50">Serwerden atlary al</button>
    <button type="button" disabled={loading} onClick={syncNow} className="rounded-lg border border-emerald-800 px-4 py-2 text-sm text-emerald-900 disabled:opacity-50">Serwer bilen sinhronlaşdyr</button>
    <button type="button" disabled={loading} onClick={refresh} className="rounded-lg bg-emerald-800 px-4 py-2 text-sm text-white disabled:opacity-50">{loading?"Okalýar…":"Offline maglumatlary görkez"}</button>
   </div>
