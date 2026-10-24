@@ -1,5 +1,6 @@
 name: PostgreSQL integration smoke
 on:
+  workflow_dispatch:
   push:
     branches: [feature/offline-sync]
     paths:
