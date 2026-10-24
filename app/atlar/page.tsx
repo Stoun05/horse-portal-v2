@@ -60,6 +60,8 @@ export default function AtlarPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<HorseForm>(emptyForm);
   const [search, setSearch] = useState("");
+  const [collection, setCollection] = useState("Ähli atlar");
+  const [side, setSide] = useState("Ähli taraplar");
   const [breed, setBreed] = useState("Ähli tohumlar");
   const [sex, setSex] = useState("Ähli jynslar");
   const [color, setColor] = useState("Ähli reňkler");
@@ -108,7 +110,9 @@ export default function AtlarPage() {
         matchesSearch &&
         (breed === "Ähli tohumlar" || horse.breed === breed) &&
         (sex === "Ähli jynslar" || horse.sex === sex) &&
-        (color === "Ähli reňkler" || horse.color === color)
+        (color === "Ähli reňkler" || horse.color === color) &&
+        (collection === "Ähli atlar" || (collection === "Gözellik bäsleşiginiň ýeňijileri" ? horse.champion && Boolean(horse.sourceSide && horse.sourceNumber) : Boolean(horse.sourceSide && horse.sourceNumber))) &&
+        (side === "Ähli taraplar" || horse.sourceSide === side)
       );
     });
 
@@ -118,7 +122,7 @@ export default function AtlarPage() {
       if (sort === "breed") return a.breed.localeCompare(b.breed, "tk");
       return a.name.localeCompare(b.name, "tk");
     });
-  }, [horses, search, breed, sex, color, sort]);
+  }, [horses, search, breed, sex, color, collection, side, sort]);
 
   function openCreateModal() {
     if (!storageReadable) return;
@@ -189,6 +193,8 @@ export default function AtlarPage() {
   }
 
   function resetFilters() {
+    setCollection("Ähli atlar");
+    setSide("Ähli taraplar");
     setSearch("");
     setBreed("Ähli tohumlar");
     setSex("Ähli jynslar");
@@ -241,6 +247,8 @@ export default function AtlarPage() {
             <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-6">
               <h2 className="mb-6 text-xl font-black text-[#082f24]">Filtrler</h2>
               <div className="space-y-5">
+                <FilterSelect label="Atlaryň topary" value={collection} onChange={setCollection} options={["Ähli atlar", "Gözellik bäsleşiginiň ýeňijileri", "Arkadag şäheriniň 24 aty"]} />
+                {collection === "Arkadag şäheriniň 24 aty" && <FilterSelect label="Sanawdaky tarapy" value={side} onChange={setSide} options={["Ähli taraplar", "Gündogar", "Günbatar"]} />}
                 <FilterSelect label="Tohum" value={breed} onChange={setBreed} options={["Ähli tohumlar", ...Array.from(new Set(horses.map((horse) => horse.breed)))]} />
                 <FilterSelect label="Görnüşi" value={sex} onChange={setSex} options={["Ähli jynslar", ...Array.from(new Set(horses.map((horse) => horse.sex)))]} />
                 <FilterSelect label="Reňk" value={color} onChange={setColor} options={["Ähli reňkler", ...Array.from(new Set(horses.map((horse) => horse.color)))]} />
