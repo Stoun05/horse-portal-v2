@@ -43,30 +43,30 @@ jobs:
             "out/index.html",
             "out/login/index.html",
             "out/atlar/index.html",
-            "release/Atcylyk-Portal-Setup-1.0.0.exe"
+            "release/Atcylyk-Portal-Setup-1.1.0-beta.1.exe"
           )
           foreach ($file in $required) {
             if (-not (Test-Path -LiteralPath $file -PathType Leaf)) {
               throw "Missing desktop build artifact: $file"
             }
           }
-          $installer = Get-Item -LiteralPath "release/Atcylyk-Portal-Setup-1.0.0.exe"
+          $installer = Get-Item -LiteralPath "release/Atcylyk-Portal-Setup-1.1.0-beta.1.exe"
           if ($installer.Length -le 0) { throw "Installer is empty" }
 
       - name: Generate installer SHA-256 checksum
         shell: pwsh
         run: |
-          $installer = "release/Atcylyk-Portal-Setup-1.0.0.exe"
+          $installer = "release/Atcylyk-Portal-Setup-1.1.0-beta.1.exe"
           $hash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  Atcylyk-Portal-Setup-1.0.0.exe" | Set-Content -LiteralPath "release/Atcylyk-Portal-Setup-1.0.0.sha256" -Encoding ascii
+          "$hash  Atcylyk-Portal-Setup-1.1.0-beta.1.exe" | Set-Content -LiteralPath "release/Atcylyk-Portal-Setup-1.1.0-beta.1.sha256" -Encoding ascii
           Write-Output "Installer SHA256: $hash"
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: Atcylyk-Portal-Setup-1.0.0
+          name: Atcylyk-Portal-Setup-1.1.0-beta.1
           path: |
-            release/Atcylyk-Portal-Setup-1.0.0.exe
-            release/Atcylyk-Portal-Setup-1.0.0.sha256
+            release/Atcylyk-Portal-Setup-1.1.0-beta.1.exe
+            release/Atcylyk-Portal-Setup-1.1.0-beta.1.sha256
           if-no-files-found: error
 
