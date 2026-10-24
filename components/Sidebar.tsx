@@ -62,9 +62,9 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
         <div className="mb-8 flex justify-center">
           <div className="isolate flex h-52 w-52 items-center justify-center overflow-hidden bg-[#052b1f]">
             <img
-              src={assetPath("/logo.jpg")}
+              src={assetPath("/sidebar-emblem.svg")}
               alt="Aba Annaýew adyndaky Halkara atçylyk akademiýasynyň nyşany"
-              className="block h-full w-full object-contain mix-blend-multiply"
+              className="block h-full w-full object-contain"
             />
           </div>
         </div>
