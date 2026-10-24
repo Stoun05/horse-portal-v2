@@ -60,11 +60,11 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
         </button>
 
         <div className="mb-8 flex justify-center">
-          <div className="flex h-52 w-52 items-center justify-center overflow-hidden rounded-2xl bg-[#052b1f]">
+          <div className="isolate flex h-52 w-52 items-center justify-center overflow-hidden bg-[#052b1f]">
             <img
               src={assetPath("/logo.jpg")}
               alt="Aba Annaýew adyndaky Halkara atçylyk akademiýasynyň nyşany"
-              className="h-full w-full object-contain mix-blend-multiply"
+              className="block h-full w-full object-contain mix-blend-multiply"
             />
           </div>
         </div>
