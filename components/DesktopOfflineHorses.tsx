@@ -1,11 +1,12 @@
 "use client";
 import {useCallback,useEffect,useState,type FormEvent} from "react";
-type OfflineBridge={importHorses:()=>Promise<{imported:number;skipped:number;removed:number}>;syncNow:()=>Promise<{state:string;acknowledged:number;conflicted:number}>;getStatus:()=>Promise<{lastSyncedAt:string|null;pendingCount:number}>;listHorses:()=>Promise<Record<string,unknown>>;listHorseVersions:()=>Promise<Record<string,number>>;createHorse:(id:string,payload:{name:string;code:string})=>Promise<{changeId:string}>;updateHorse:(id:string,baseVersion:number,payload:{name:string;code:string})=>Promise<{changeId:string}>;deleteHorse:(id:string,baseVersion:number)=>Promise<{changeId:string}>};
+type HorsePayload={name:string;code:string;breed?:string;sex?:string;year?:number;color?:string;father?:string;mother?:string;description?:string};
+type OfflineBridge={importHorses:()=>Promise<{imported:number;skipped:number;removed:number}>;syncNow:()=>Promise<{state:string;acknowledged:number;conflicted:number}>;getStatus:()=>Promise<{lastSyncedAt:string|null;pendingCount:number}>;listHorses:()=>Promise<Record<string,unknown>>;listHorseVersions:()=>Promise<Record<string,number>>;createHorse:(id:string,payload:HorsePayload)=>Promise<{changeId:string}>;updateHorse:(id:string,baseVersion:number,payload:HorsePayload)=>Promise<{changeId:string}>;deleteHorse:(id:string,baseVersion:number)=>Promise<{changeId:string}>};
 declare global {interface Window{atcylykOffline?:OfflineBridge}}
 export default function DesktopOfflineHorses(){
  const [present,setPresent]=useState(false),[error,setError]=useState("");
- const [name,setName]=useState(""),[code,setCode]=useState("");
- const [items,setItems]=useState<Array<{id:string;name:string;code:string;version?:number}>>([]);
+ const [name,setName]=useState(""),[code,setCode]=useState(""),[breed,setBreed]=useState(""),[sex,setSex]=useState(""),[year,setYear]=useState(""),[color,setColor]=useState("");
+ const [items,setItems]=useState<Array<{id:string;name:string;code:string;version?:number;payload:HorsePayload}>>([]);
  const [pending,setPending]=useState<number|null>(null),[loading,setLoading]=useState(false);
  const [busyCreate,setBusyCreate]=useState(false);
  const [syncMessage,setSyncMessage]=useState("");
@@ -18,7 +19,7 @@ export default function DesktopOfflineHorses(){
    if(!horses||typeof horses!=="object"||Array.isArray(horses))throw Error("Invalid offline catalog");
    setItems(Object.entries(horses).map(([id,horse])=>{
     const record=horse&&typeof horse==="object"&&!Array.isArray(horse)?horse as Record<string,unknown>:{};
-    return {id,name:typeof record.name==="string"?record.name:id,code:typeof record.code==="string"?record.code:"",version:Number.isSafeInteger(versions[id])?versions[id]:undefined};
+    return {id,name:typeof record.name==="string"?record.name:id,code:typeof record.code==="string"?record.code:"",version:Number.isSafeInteger(versions[id])?versions[id]:undefined,payload:{...record,name:typeof record.name==="string"?record.name:id,code:typeof record.code==="string"?record.code:""} as HorsePayload};
    }));
    setPending(state.pendingCount);
   }catch{setItems([]);setPending(null);setError("Offline ammary açmak başartmady. Ilki Windows girişini barlaň.");}
@@ -32,7 +33,7 @@ export default function DesktopOfflineHorses(){
   const similar=items.filter(item=>item.name.trim().toLocaleLowerCase("tk")===normalizedName);
   if(similar.length && !window.confirm(`"${name.trim()}" atly ${similar.length} at eýýäm offline sanawda bar. Başga belgi bilen täze at goşmalymy?`))return;
   setBusyCreate(true);setError("");
-  try{await bridge.createHorse(crypto.randomUUID(),{name:name.trim(),code:code.trim()});setName("");setCode("");await refresh();}
+  try{await bridge.createHorse(crypto.randomUUID(),{name:name.trim(),code:code.trim(),...(breed.trim()?{breed:breed.trim()}:{}),...(sex.trim()?{sex:sex.trim()}:{}),...(year?{year:Number(year)}:{}),...(color.trim()?{color:color.trim()}:{})});setName("");setCode("");setBreed("");setSex("");setYear("");setColor("");await refresh();}
   catch{setError("At döretmek başartmady. Rugsatlary we giriş sessiýasyny barlaň.");}
   finally{setBusyCreate(false);}
  }
@@ -42,7 +43,7 @@ export default function DesktopOfflineHorses(){
   if(action==="update"){const answer=window.prompt("Atyň täze ady",item.name);if(answer===null||!answer.trim())return;name=answer.trim();}
   else if(!window.confirm(`"${item.name}" atly aty pozmalymy?`))return;
   setBusyCreate(true);setError("");
-  try{if(action==="update")await bridge.updateHorse(item.id,item.version,{name,code:item.code});else await bridge.deleteHorse(item.id,item.version);await refresh();}
+  try{if(action==="update")await bridge.updateHorse(item.id,item.version,{name,...item.payload,name,code:item.code});else await bridge.deleteHorse(item.id,item.version);await refresh();}
   catch{setError("Üýtgeşme başartmady. Serwer wersiýasyny we garaşýan üýtgeşmeleri barlaň.");}
   finally{setBusyCreate(false);}
  }
@@ -60,6 +61,10 @@ export default function DesktopOfflineHorses(){
   <form onSubmit={createHorse} className="mt-4 flex flex-wrap items-end gap-2">
    <label className="text-sm">Atyň ady<input required maxLength={150} value={name} onChange={event=>setName(event.target.value)} className="mt-1 block rounded-lg border p-2"/></label>
    <label className="text-sm">Belgisi<input required maxLength={64} value={code} onChange={event=>setCode(event.target.value)} className="mt-1 block rounded-lg border p-2"/></label>
+   <label className="text-sm">Tohumy<input maxLength={100} value={breed} onChange={e=>setBreed(e.target.value)} className="mt-1 block rounded-lg border p-2"/></label>
+   <label className="text-sm">Jynsy<input maxLength={40} value={sex} onChange={e=>setSex(e.target.value)} className="mt-1 block rounded-lg border p-2"/></label>
+   <label className="text-sm">Doglan ýyly<input type="number" min={1800} max={2200} value={year} onChange={e=>setYear(e.target.value)} className="mt-1 block rounded-lg border p-2"/></label>
+   <label className="text-sm">Reňki<input maxLength={100} value={color} onChange={e=>setColor(e.target.value)} className="mt-1 block rounded-lg border p-2"/></label>
    <button type="submit" disabled={busyCreate} className="rounded-lg bg-emerald-800 px-4 py-2 text-white disabled:opacity-50">Offline at goş</button>
   </form>
   {syncMessage&&<p role="status" className="mt-3 text-sm text-emerald-900">{syncMessage}</p>}
