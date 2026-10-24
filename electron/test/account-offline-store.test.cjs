@@ -215,3 +215,22 @@ test("only explicit deleted IDs remove cached horses and never pending edits",()
   assert.deepEqual(recovered.applyServerDeletions(["missing"]),{removed:0});
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("PC horse lifecycle preserves pending edit against newer Web version and deletion",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"horse-lifecycle-")),key=randomBytes(32);
+ try{
+  const store=openAccountOfflineStore({root,userId:a,key});
+  const changeId=store.addLocalChange({entityId:"horse-main",action:"create",payload:{name:"Akyol",code:"AT-01"}});
+  assert.equal(store.listPending().length,1);
+  assert.equal(store.acknowledge(changeId,{changeId,status:"accepted",serverVersion:1}),true);
+  assert.deepEqual(store.importServerHorses([{id:"horse-main",version:2,data:{name:"Updated on Web",code:"AT-01"}}]),{imported:1,skipped:0,removed:0});
+  assert.equal(store.listHorses()["horse-main"].name,"Updated on Web");
+  store.addLocalChange({entityId:"horse-main",action:"update",baseVersion:2,payload:{name:"Local offline edit",code:"AT-01"}});
+  assert.deepEqual(store.importServerHorses([{id:"horse-main",version:3,data:{name:"Newer Web edit",code:"AT-01"}}]),{imported:0,skipped:1,removed:0});
+  assert.deepEqual(store.applyServerDeletions(["horse-main"]),{removed:0});
+  const reopened=openAccountOfflineStore({root,userId:a,key});
+  assert.equal(reopened.listHorses()["horse-main"].name,"Local offline edit");
+  assert.equal(reopened.listPending().length,1);
+  assert.equal(reopened.listHorseVersions()["horse-main"],2);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
