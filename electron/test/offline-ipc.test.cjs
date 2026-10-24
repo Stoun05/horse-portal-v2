@@ -24,6 +24,37 @@ test("only constrained read-only channels are registered", async () => {
   assert.equal(handlers.size, 0);
 });
 
+
+test("optional horse IPC channels are registered only when capabilities exist",async()=>{
+ const handlers=new Map(),frame={url:"http://127.0.0.1:4444/atlar"},sender={mainFrame:frame};
+ const event={sender,senderFrame:frame};
+ const ipcMain={handle:(name,handler)=>handlers.set(name,handler),removeHandler:name=>handlers.delete(name)};
+ const versions={horseA:2};
+ const store={
+  listHorses:()=>({}),listPending:()=>[],lastSyncedAt:()=>null,
+  listHorseVersions:()=>versions,addLocalChange:()=> "queued"
+ };
+ let syncCalls=0,importCalls=0;
+ const close=registerOfflineReadIpc({
+  ipcMain,store,expectedOrigin:"http://127.0.0.1:4444",expectedSender:sender,
+  sync:async()=>{syncCalls++;return {accepted:1};},
+  importHorses:async()=>{importCalls++;return {imported:1};}
+ });
+ assert.deepEqual([...handlers.keys()].sort(),[
+  "offline:status","offline:horses","offline:horse-versions","offline:sync",
+  "offline:import-horses","offline:pending-count","offline:create-horse",
+  "offline:update-horse","offline:delete-horse"
+ ].sort());
+ assert.deepEqual(await handlers.get("offline:horse-versions")(event),versions);
+ assert.deepEqual(await handlers.get("offline:sync")(event),{accepted:1});
+ assert.deepEqual(await handlers.get("offline:import-horses")(event),{imported:1});
+ await assert.rejects(()=>handlers.get("offline:sync")({sender:{mainFrame:frame},senderFrame:frame}),/Forbidden IPC window/);
+ assert.equal(syncCalls,1);
+ assert.equal(importCalls,1);
+ close();
+ assert.equal(handlers.size,0);
+});
+
 test("pinned offline IPC refuses a different window on the same origin",async()=>{
  const handlers=new Map();
  const ipcMain={handle:(name,fn)=>handlers.set(name,fn),removeHandler:name=>handlers.delete(name)};
