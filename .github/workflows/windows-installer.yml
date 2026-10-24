@@ -24,8 +24,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Test encrypted offline synchronization
-        run: node --test electron/test/sync-encrypted-end-to-end.test.cjs
+      - name: Test encrypted offline sync, backup and IPC
+        run: node --test electron/test/sync-encrypted-end-to-end.test.cjs electron/test/offline-backup.test.cjs electron/test/offline-ipc.test.cjs
 
       - name: Build Windows installer
         run: npm run dist:win
