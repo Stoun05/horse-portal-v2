@@ -55,10 +55,23 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
   if(typeof sync==="function")ipcMain.handle(CHANNELS.sync,async(event)=>{check(event);return sync();});
   if(typeof importHorses==="function")ipcMain.handle(CHANNELS.importHorses,async(event)=>{check(event);return importHorses();});
   const normalizeHorse=payload=>{
-    if(!payload||typeof payload!=="object"||Array.isArray(payload)||Object.keys(payload).sort().join(",")!=="code,name"||typeof payload.name!=="string"||typeof payload.code!=="string")throw Error("Invalid horse data");
+    if(!payload||typeof payload!=="object"||Array.isArray(payload))throw Error("Invalid horse data");
+    const allowed=new Set(["name","code","breed","sex","year","color","father","mother","description"]);
+    if(Object.keys(payload).some(key=>!allowed.has(key)))throw Error("Invalid horse data");
+    if(typeof payload.name!=="string"||typeof payload.code!=="string")throw Error("Invalid horse data");
     const name=payload.name.trim(),code=payload.code.trim();
     if(!name||name.length>150||!code||code.length>64)throw Error("Invalid horse data");
-    return {name,code};
+    const normalized={name,code};
+    for(const [key,max] of [["breed",100],["sex",40],["color",100],["father",150],["mother",150],["description",2000]]){
+      if(payload[key]===undefined)continue;
+      if(typeof payload[key]!=="string"||payload[key].length>max)throw Error("Invalid horse data");
+      normalized[key]=payload[key].trim();
+    }
+    if(payload.year!==undefined){
+      if(!Number.isInteger(payload.year)||payload.year<1800||payload.year>2200)throw Error("Invalid horse data");
+      normalized.year=payload.year;
+    }
+    return normalized;
   };
   const ensureUniqueCode=(code,exceptId)=>{
     const existing=store.listHorses();
