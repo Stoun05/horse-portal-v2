@@ -25,7 +25,12 @@ jobs:
         run: npm ci
 
       - name: Test all offline Electron modules
-        run: node --test electron/test
+        shell: pwsh
+        run: |
+          $tests = @(Get-ChildItem -Path "electron/test" -Filter "*.test.cjs" -File | Sort-Object Name | ForEach-Object { $_.FullName })
+          if ($tests.Count -eq 0) { throw "No Electron offline tests found" }
+          & node --test @tests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 
       - name: Build Windows installer
