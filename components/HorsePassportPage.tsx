@@ -322,7 +322,6 @@ function HorseProfile({
               )}
             </div>
           </div>
-        </div>
       </section>
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <StatusCard icon={<HeartPulse />} title="Beden ölçegleri" value={horse.bodyMeasurements ?? "Girizilmedik"} detail="Çeşme: iberilen resmi sanaw" color="green" />
