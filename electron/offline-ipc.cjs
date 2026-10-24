@@ -22,12 +22,14 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     throw new Error("Invalid dependencies");
   if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(expectedOrigin)) throw new Error("Invalid local origin");
   let active=true;
+  const registered=[];
+  const register=(channel,handler)=>{ipcMain.handle(channel,handler);registered.push(channel);};
   const closeOnDestroyed=()=>cleanup();
   const cleanup=()=>{
     if(!active)return;
     active=false;
     expectedSender?.removeListener?.("destroyed",closeOnDestroyed);
-    IPC_NAMES.forEach(channel=>ipcMain.removeHandler(channel));
+    registered.forEach(channel=>ipcMain.removeHandler(channel));
   };
   if(expectedSender?.isDestroyed?.()) throw new Error("Offline IPC window already destroyed");
   expectedSender?.once?.("destroyed",closeOnDestroyed);
@@ -37,23 +39,23 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     if (!trustedSender(event, expectedOrigin)) throw new Error("Forbidden IPC sender");
   };
   try {
-  ipcMain.handle(CHANNELS.status, async (event) => {
+  register(CHANNELS.status, async (event) => {
     check(event);
     return { lastSyncedAt: store.lastSyncedAt(), pendingCount: store.listPending().length };
   });
-  ipcMain.handle(CHANNELS.horses, async (event) => {
+  register(CHANNELS.horses, async (event) => {
     check(event);
     return store.listHorses();
   });
-  if(typeof store.listHorseVersions==="function") ipcMain.handle(CHANNELS.versions, async (event)=>{
+  if(typeof store.listHorseVersions==="function") register(CHANNELS.versions, async (event)=>{
     check(event);return store.listHorseVersions();
   });
-  ipcMain.handle(CHANNELS.pendingCount, async (event) => {
+  register(CHANNELS.pendingCount, async (event) => {
     check(event);
     return store.listPending().length;
   });
-  if(typeof sync==="function")ipcMain.handle(CHANNELS.sync,async(event)=>{check(event);return sync();});
-  if(typeof importHorses==="function")ipcMain.handle(CHANNELS.importHorses,async(event)=>{check(event);return importHorses();});
+  if(typeof sync==="function")register(CHANNELS.sync,async(event)=>{check(event);return sync();});
+  if(typeof importHorses==="function")register(CHANNELS.importHorses,async(event)=>{check(event);return importHorses();});
   const normalizeHorse=payload=>{
     if(!payload||typeof payload!=="object"||Array.isArray(payload))throw Error("Invalid horse data");
     const allowed=new Set(["name","code","breed","sex","year","color","father","mother","description"]);
@@ -77,7 +79,7 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     const existing=store.listHorses();
     if(Object.entries(existing).some(([id,horse])=>id!==exceptId&&typeof horse?.code==="string"&&horse.code.trim().toLocaleLowerCase("tk")===code.toLocaleLowerCase("tk")))throw Error("Horse code already exists");
   };
-  if(typeof store.addLocalChange==="function") ipcMain.handle(CHANNELS.createHorse,async(event,input)=>{
+  if(typeof store.addLocalChange==="function") register(CHANNELS.createHorse,async(event,input)=>{
     check(event);
     if(!input||typeof input!=="object"||Array.isArray(input)||Object.keys(input).sort().join(",")!=="entityId,payload")throw Error("Invalid horse create request");
     const {entityId,payload}=input;
@@ -89,7 +91,7 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
   if(typeof store.addLocalChange==="function"){
    const validId=id=>typeof id==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
    const validVersion=v=>Number.isSafeInteger(v)&&v>=1;
-   ipcMain.handle(CHANNELS.updateHorse,async(event,input)=>{
+   register(CHANNELS.updateHorse,async(event,input)=>{
     check(event);
     if(!input||typeof input!=="object"||Array.isArray(input)||Object.keys(input).sort().join(",")!=="baseVersion,entityId,payload"||!validId(input.entityId)||!validVersion(input.baseVersion))throw Error("Invalid horse update request");
     const payload=input.payload;
@@ -97,7 +99,7 @@ function registerOfflineReadIpc({ ipcMain, store, expectedOrigin, expectedSender
     ensureUniqueCode(normalized.code,input.entityId);
     return {changeId:store.addLocalChange({entityId:input.entityId,action:"update",payload:normalized,baseVersion:input.baseVersion})};
    });
-   ipcMain.handle(CHANNELS.deleteHorse,async(event,input)=>{
+   register(CHANNELS.deleteHorse,async(event,input)=>{
     check(event);
     if(!input||typeof input!=="object"||Array.isArray(input)||Object.keys(input).sort().join(",")!=="baseVersion,entityId"||!validId(input.entityId)||!validVersion(input.baseVersion))throw Error("Invalid horse delete request");
     return {changeId:store.addLocalChange({entityId:input.entityId,action:"delete",payload:null,baseVersion:input.baseVersion})};
