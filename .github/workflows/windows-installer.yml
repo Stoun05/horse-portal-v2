@@ -30,6 +30,23 @@ jobs:
       - name: Build Windows installer
         run: npm run dist:win
 
+      - name: Verify exported desktop pages and installer
+        shell: pwsh
+        run: |
+          $required = @(
+            "out/index.html",
+            "out/login/index.html",
+            "out/atlar/index.html",
+            "release/Atcylyk-Portal-Setup-1.0.0.exe"
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path -LiteralPath $file -PathType Leaf)) {
+              throw "Missing desktop build artifact: $file"
+            }
+          }
+          $installer = Get-Item -LiteralPath "release/Atcylyk-Portal-Setup-1.0.0.exe"
+          if ($installer.Length -le 0) { throw "Installer is empty" }
+
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
