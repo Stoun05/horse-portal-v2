@@ -234,3 +234,38 @@ test("PC horse lifecycle preserves pending edit against newer Web version and de
   assert.equal(reopened.listHorseVersions()["horse-main"],2);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("invalid server batch does not partially overwrite encrypted horse cache",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"horse-invalid-batch-")),key=randomBytes(32);
+ try{
+  const store=openAccountOfflineStore({root,userId:a,key});
+  store.importServerHorses([{id:"original",version:2,data:{name:"Saved",code:"AT-1"}}]);
+  const before=store.listHorses();
+  const versions=store.listHorseVersions();
+  assert.throws(()=>store.importServerHorses([
+   {id:"original",version:3,data:{name:"Overwrite attempt",code:"AT-1"}},
+   {id:"bad",version:0,data:{name:"Invalid",code:"AT-2"}}
+  ]),/Invalid server horse/);
+  assert.deepEqual(store.listHorses(),before);
+  assert.deepEqual(store.listHorseVersions(),versions);
+  const reopened=openAccountOfflineStore({root,userId:a,key});
+  assert.deepEqual(reopened.listHorses(),before);
+  assert.deepEqual(reopened.listHorseVersions(),versions);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test("duplicate server horse IDs reject the whole import and preserve local edits",()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"horse-duplicate-batch-")),key=randomBytes(32);
+ try{
+  const store=openAccountOfflineStore({root,userId:a,key});
+  const id=store.addLocalChange({entityId:"local",action:"create",payload:{name:"Local",code:"L-1"}});
+  assert.throws(()=>store.importServerHorses([
+   {id:"remote",version:1,data:{name:"First",code:"R-1"}},
+   {id:"remote",version:2,data:{name:"Second",code:"R-1"}}
+  ]),/Duplicate server horse ID/);
+  const reopened=openAccountOfflineStore({root,userId:a,key});
+  assert.equal(reopened.listHorses().remote,undefined);
+  assert.equal(reopened.listHorses().local.name,"Local");
+  assert.equal(reopened.listPending()[0].id,id);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
