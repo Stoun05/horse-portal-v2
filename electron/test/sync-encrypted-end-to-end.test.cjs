@@ -96,3 +96,29 @@ test("encrypted horse create update delete lifecycle survives desktop restarts",
   assert.deepEqual(requests.map(r=>[r.action,r.baseVersion]),[["create",null],["update",1],["delete",2]]);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("lost server acknowledgement retries same change ID without duplicating horse",async()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"horse-sync-lost-ack-"));
+ const key=randomBytes(32),userId="53a25d93-52be-4cab-8fea-f344f9340c9a",token="d".repeat(64);
+ const committed=new Map(),received=[];
+ try{
+  let store=openAccountOfflineStore({root,userId,key});
+  const id=store.addLocalChange({entityId:"retry-horse",action:"create",payload:{name:"Akýol",code:"AT-9"}});
+  const send=createHorseSyncSender({token,fetchImpl:async(_url,options)=>{
+   const change=JSON.parse(options.body);
+   received.push(change.changeId);
+   if(!committed.has(change.changeId))committed.set(change.changeId,{changeId:change.changeId,status:"accepted",serverVersion:1});
+   if(received.length===1)throw Error("Response lost after server committed");
+   return {status:200,json:async()=>committed.get(change.changeId)};
+  }});
+  assert.equal((await flushPending({store,send})).state,"retry");
+  assert.equal(store.listPending()[0].id,id);
+  store=openAccountOfflineStore({root,userId,key});
+  assert.equal((await flushPending({store,send})).state,"complete");
+  const recovered=openAccountOfflineStore({root,userId,key});
+  assert.deepEqual(received,[id,id]);
+  assert.equal(committed.size,1);
+  assert.equal(recovered.listPending().length,0);
+  assert.equal(recovered.listHorseVersions()["retry-horse"],1);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
