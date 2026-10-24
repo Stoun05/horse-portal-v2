@@ -37,13 +37,13 @@ export default function DesktopOfflineHorses(){
   catch{setError("At döretmek başartmady. Rugsatlary we giriş sessiýasyny barlaň.");}
   finally{setBusyCreate(false);}
  }
- async function editOrDelete(item:{id:string;name:string;code:string;version?:number},action:"update"|"delete"){
+ async function editOrDelete(item:{id:string;name:string;code:string;version?:number;payload:HorsePayload},action:"update"|"delete"){
   const bridge=window.atcylykOffline;if(!bridge||!item.version||busyCreate)return;
   let name=item.name;
   if(action==="update"){const answer=window.prompt("Atyň täze ady",item.name);if(answer===null||!answer.trim())return;name=answer.trim();}
   else if(!window.confirm(`"${item.name}" atly aty pozmalymy?`))return;
   setBusyCreate(true);setError("");
-  try{if(action==="update")await bridge.updateHorse(item.id,item.version,{name,name,code:item.code,...Object.fromEntries(["breed","sex","year","color","father","mother","description"].filter(key=>item.payload[key as keyof HorsePayload]!==undefined).map(key=>[key,item.payload[key as keyof HorsePayload]]))});else await bridge.deleteHorse(item.id,item.version);await refresh();}
+  try{if(action==="update")await bridge.updateHorse(item.id,item.version,{name,code:item.code,...Object.fromEntries(["breed","sex","year","color","father","mother","description"].filter(key=>item.payload[key as keyof HorsePayload]!==undefined).map(key=>[key,item.payload[key as keyof HorsePayload]]))});else await bridge.deleteHorse(item.id,item.version);await refresh();}
   catch{setError("Üýtgeşme başartmady. Serwer wersiýasyny we garaşýan üýtgeşmeleri barlaň.");}
   finally{setBusyCreate(false);}
  }
