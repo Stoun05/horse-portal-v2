@@ -216,18 +216,21 @@ function HorseProfile({
       </div>
 
       <section className="space-y-4">
-        <div className="relative isolate h-[360px] overflow-hidden rounded-3xl bg-gradient-to-br from-[#092d23] via-[#0b5e3c] to-[#aa852e] sm:h-[440px] lg:h-[520px]">
+        <div className="relative isolate aspect-video w-full overflow-hidden rounded-3xl bg-gradient-to-br from-[#092d23] via-[#0b5e3c] to-[#aa852e] sm:h-[440px] lg:h-[520px]">
           {horse.image ? (
-            <Image src={assetPath(horse.image)} alt={horse.name} fill priority sizes="100vw" className="object-cover object-center" />
+            <>
+              <Image src={assetPath(horse.image)} alt="" fill sizes="100vw" className="object-cover opacity-50 blur-2xl scale-110" aria-hidden="true" />
+              <Image src={assetPath(horse.image)} alt={horse.name} fill priority sizes="100vw" className="object-contain object-center" />
+            </>
           ) : (
             <div className="flex h-full items-center justify-center text-[11rem] font-black text-white/15 sm:text-[16rem]">{horse.name.slice(0, 1)}</div>
           )}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#052b1f]/90 via-[#052b1f]/35 to-transparent" />
-          <div className="absolute inset-x-0 top-0 z-10 p-6 text-white sm:p-9">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#052b1f]/85 via-[#052b1f]/20 to-transparent" />
+          <div className="absolute left-0 top-0 z-10 max-w-[85%] p-4 text-white sm:max-w-md sm:p-9">
             <p className="text-sm font-bold uppercase tracking-[0.19em] text-amber-200">{horse.code}</p>
-            <h2 className="mt-2 text-4xl font-black sm:text-6xl">{horse.name}</h2>
+            <h2 className="mt-2 text-3xl font-black sm:text-6xl">{horse.name}</h2>
             <p className="mt-2 inline-block rounded-full bg-emerald-700/85 px-4 py-1.5 text-sm font-bold">{horse.breed}</p>
-            <div className="mt-5 grid max-w-xs grid-cols-2 gap-3 text-sm font-semibold text-white/90">
+            <div className="mt-4 hidden max-w-xs grid-cols-2 gap-3 text-sm font-semibold text-white/90 sm:grid">
               <span>Jynsy: {horse.sex}</span>
               <span>Ýyly: {horse.year}</span>
               <span>Reňki: {horse.color}</span>
@@ -334,13 +337,6 @@ function HorseProfile({
             </div>
           </div>
       </section>
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <StatusCard icon={<HeartPulse />} title="Beden ölçegleri" value={horse.bodyMeasurements ?? "Girizilmedik"} detail="Çeşme: iberilen resmi sanaw" color="green" />
-        <StatusCard icon={<Dna />} title="Nesil ugry" value={horse.lineage ?? "Girizilmedik"} detail="Şejere maglumatlary pasportda görkezilýär" color="blue" />
-        <StatusCard icon={<ShieldCheck />} title="Sanawdaky belgisi" value={horse.code} detail="Portal üçin içerki sanaw belgisi" color="amber" />
-      </div>
-
-
       {editorOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 print:hidden">
           <div className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
@@ -553,22 +549,6 @@ function PedigreeItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StatusCard({ icon, title, value, detail, color }: { icon: React.ReactNode; title: string; value: string; detail: string; color: "green" | "blue" | "amber" }) {
-  const colors = {
-    green: "bg-emerald-50 text-emerald-700 border-emerald-100",
-    blue: "bg-blue-50 text-blue-700 border-blue-100",
-    amber: "bg-amber-50 text-amber-700 border-amber-100",
-  };
-  return (
-    <section className="rounded-2xl bg-white p-6 shadow-sm">
-      <div className={`mb-5 flex h-12 w-12 items-center justify-center rounded-xl border ${colors[color]}`}>{icon}</div>
-      <h3 className="font-semibold text-gray-500">{title}</h3>
-      <p className="mt-2 text-xl font-bold text-[#0b2f24]">{value}</p>
-      <p className="mt-2 text-sm text-gray-500">{detail}</p>
-    </section>
-  );
-}
-
 function NotFoundState() {
   return (
     <div className="rounded-3xl border border-dashed border-gray-300 bg-white px-6 py-20 text-center shadow-sm">
@@ -585,7 +565,7 @@ function ProfileSkeleton() {
   return (
     <div className="animate-pulse overflow-hidden rounded-3xl bg-white shadow-sm">
       <div>
-        <div className="h-[420px] bg-slate-200" />
+        <div className="aspect-video w-full bg-slate-200" />
         <div className="space-y-5 p-8">
           <div className="h-5 w-32 rounded bg-slate-200" />
           <div className="h-12 w-64 rounded bg-slate-200" />
