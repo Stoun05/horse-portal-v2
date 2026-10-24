@@ -45,3 +45,54 @@ test("server conflict cannot erase encrypted local horse edits",async()=>{
   assert.equal(recovered.listHorses()["horse-2"].name,"New local horse");
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("encrypted horse create update delete lifecycle survives desktop restarts",async()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"horse-sync-lifecycle-"));
+ const key=randomBytes(32),userId="53a25d93-52be-4cab-8fea-f344f9340c9a",token="c".repeat(64);
+ const horseId="horse-lifecycle";
+ let serverVersion=0,serverHorse=null;
+ const requests=[];
+ const send=createHorseSyncSender({token,fetchImpl:async(_url,options)=>{
+  const change=JSON.parse(options.body);
+  requests.push(change);
+  assert.equal(change.entityId,horseId);
+  if(change.action==="create"){
+   assert.equal(change.baseVersion,null);
+   assert.equal(serverVersion,0);
+   serverHorse=change.payload;
+  }else{
+   assert.equal(change.baseVersion,serverVersion);
+   assert.ok(serverHorse);
+   if(change.action==="update")serverHorse=change.payload;
+   else if(change.action==="delete")serverHorse=null;
+   else throw Error("Unexpected action");
+  }
+  serverVersion++;
+  return {status:200,json:async()=>({changeId:change.changeId,status:"accepted",serverVersion})};
+ }});
+ try{
+  let store=openAccountOfflineStore({root,userId,key});
+  store.addLocalChange({entityId:horseId,action:"create",payload:{name:"Akýol",code:"AT-1"}});
+  store=openAccountOfflineStore({root,userId,key});
+  assert.equal((await flushPending({store,send})).state,"complete");
+  assert.equal(store.listHorseVersions()[horseId],1);
+  store=openAccountOfflineStore({root,userId,key});
+  store.addLocalChange({entityId:horseId,action:"update",baseVersion:1,payload:{name:"Akýol updated",code:"AT-1"}});
+  store=openAccountOfflineStore({root,userId,key});
+  assert.equal((await flushPending({store,send})).state,"complete");
+  assert.equal(store.listHorseVersions()[horseId],2);
+  assert.equal(store.listHorses()[horseId].name,"Akýol updated");
+  store=openAccountOfflineStore({root,userId,key});
+  store.addLocalChange({entityId:horseId,action:"delete",baseVersion:2});
+  store=openAccountOfflineStore({root,userId,key});
+  assert.equal(store.listHorses()[horseId],undefined);
+  assert.equal((await flushPending({store,send})).state,"complete");
+  const recovered=openAccountOfflineStore({root,userId,key});
+  assert.equal(recovered.listPending().length,0);
+  assert.equal(recovered.listHorses()[horseId],undefined);
+  assert.equal(recovered.listHorseVersions()[horseId],undefined);
+  assert.equal(serverHorse,null);
+  assert.equal(serverVersion,3);
+  assert.deepEqual(requests.map(r=>[r.action,r.baseVersion]),[["create",null],["update",1],["delete",2]]);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
