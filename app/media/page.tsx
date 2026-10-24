@@ -41,6 +41,8 @@ export default function MediaPage() {
   const [mediaHydrated, setMediaHydrated] = useState(false);
   const [query, setQuery] = useState("");
   const [horseFilter, setHorseFilter] = useState("all");
+  const [horsePickerOpen, setHorsePickerOpen] = useState(false);
+  const [horseSearch, setHorseSearch] = useState("");
   const [kindFilter, setKindFilter] = useState<"all" | MediaKind>("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [horseId, setHorseId] = useState("");
@@ -75,6 +77,12 @@ export default function MediaPage() {
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
   }, []);
+
+  const matchingHorses = useMemo(() => {
+    const needle = horseSearch.trim().toLocaleLowerCase("tk");
+    return horses.filter((horse) => `${horse.name} ${horse.code}`.toLocaleLowerCase("tk").includes(needle));
+  }, [horses, horseSearch]);
+  const selectedHorse = horses.find((horse) => horse.id === horseFilter);
 
   const visibleItems = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("tk");
@@ -149,7 +157,7 @@ export default function MediaPage() {
             <div>
               <h1 className="text-3xl font-black text-[#082f24] lg:text-4xl">Wideo / Suratlar</h1>
               <p className="mt-2 font-medium text-slate-600">
-                24 at boýunça suratlary we wideo ýazgylaryny aýratyn media arhiwinde saklaň.
+                {horses.length} at boýunça suratlary we wideo ýazgylaryny aýratyn media arhiwinde saklaň.
               </p>
             </div>
             <button
@@ -180,16 +188,26 @@ export default function MediaPage() {
                   className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-10 pr-3 text-slate-950 outline-none placeholder:text-slate-400 focus:border-[#0b5e3c] focus:ring-2 focus:ring-emerald-100"
                 />
               </label>
-              <select
-                value={horseFilter}
-                onChange={(event) => setHorseFilter(event.target.value)}
-                className="rounded-xl border border-slate-300 bg-white px-3 py-3 font-semibold text-slate-950 outline-none focus:border-[#0b5e3c]"
-              >
-                <option value="all">Ähli atlar ({horses.length})</option>
-                {horses.map((horse) => (
-                  <option key={horse.id} value={horse.id}>{horse.name} — {horse.code}</option>
-                ))}
-              </select>
+              <div className="relative min-w-0">
+                <button type="button" aria-expanded={horsePickerOpen} aria-controls="media-horse-picker" onClick={() => setHorsePickerOpen(!horsePickerOpen)} className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-300 bg-white px-3 py-3 text-left font-semibold text-slate-950 focus:border-[#0b5e3c]">
+                  <span className="truncate">{selectedHorse ? `${selectedHorse.name} — ${selectedHorse.code}` : `Ähli atlar (${horses.length})`}</span>
+                  <Search size={18} className="shrink-0 text-emerald-800" />
+                </button>
+                {horsePickerOpen && (
+                  <div id="media-horse-picker" className="absolute inset-x-0 top-full z-30 mt-2 rounded-xl border border-emerald-200 bg-white p-2 shadow-2xl">
+                    <input autoFocus aria-label="At saýlawynda gözle" value={horseSearch} onChange={(event) => setHorseSearch(event.target.value)} placeholder="Atyň ady ýa-da ID-si..." className="mb-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-950 outline-none focus:border-emerald-700" onKeyDown={(event) => { if (event.key === "Escape") setHorsePickerOpen(false); }} />
+                    <div className="max-h-56 overflow-y-auto">
+                      <button type="button" onClick={() => { setHorseFilter("all"); setHorsePickerOpen(false); setHorseSearch(""); }} className="block w-full rounded-lg px-3 py-2 text-left font-semibold text-emerald-900 hover:bg-emerald-50">Ähli atlar ({horses.length})</button>
+                      {matchingHorses.map((horse) => (
+                        <button type="button" key={horse.id} onClick={() => { setHorseFilter(horse.id); setHorsePickerOpen(false); setHorseSearch(""); }} className={`block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-emerald-50 ${horseFilter === horse.id ? "bg-emerald-100 font-bold" : ""}`}>
+                          {horse.name} — {horse.code}
+                        </button>
+                      ))}
+                      {!matchingHorses.length && <p className="px-3 py-3 text-sm text-slate-500">At tapylmady</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
               <select
                 value={kindFilter}
                 onChange={(event) => setKindFilter(event.target.value as "all" | MediaKind)}
@@ -257,11 +275,11 @@ export default function MediaPage() {
               </div>
             </section>
           ) : (
-            <section className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-              <ImageIcon className="mx-auto text-emerald-700" size={48} />
-              <h2 className="mt-4 text-2xl font-black text-slate-950">Media tapylmady</h2>
+            <section className="rounded-2xl border border-slate-200 bg-white px-5 py-8 text-center shadow-sm">
+              <ImageIcon className="mx-auto text-emerald-700" size={36} />
+              <h2 className="mt-3 text-xl font-black text-slate-950">Media tapylmady</h2>
               <p className="mx-auto mt-2 max-w-xl text-slate-600">
-                Demo suratlar we wideolar aýryldy. Saýlanan at üçin hakyky surat ýa-da wideo goşuň.
+                {horseFilter === "all" ? "Media arhiwinde entek surat ýa-da wideo ýok." : "Bu at üçin entek surat ýa-da wideo ýok."} Ilkinji media faýlyny goşup bilersiňiz.
               </p>
               <button onClick={openUpload} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white">
                 <Upload size={18} /> Ilkinji media faýlyny goş

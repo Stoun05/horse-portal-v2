@@ -1,0 +1,6 @@
+BEGIN;
+CREATE TABLE IF NOT EXISTS horse_deletions (
+  horse_id TEXT PRIMARY KEY,
+  deleted_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+COMMIT;

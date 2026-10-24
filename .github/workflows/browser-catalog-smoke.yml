@@ -1,0 +1,39 @@
+name: Browser catalog isolation smoke
+on:
+  push:
+    branches: [feature/offline-sync]
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'scripts/browser-catalog-smoke.cjs'
+      - '.github/workflows/browser-catalog-smoke.yml'
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save --package-lock=false playwright
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Run static server and browser smoke
+        run: |
+          npx serve out -l 4173 > /tmp/web-smoke.log 2>&1 &
+          web_pid=$!
+          trap 'kill "$web_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4173/ >/dev/null
+          node scripts/browser-catalog-smoke.cjs
+      - name: Show web server diagnostic on failure
+        if: failure()
+        run: cat /tmp/web-smoke.log || true

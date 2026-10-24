@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   Camera,
   CalendarDays,
+  MoreHorizontal,
   Dna,
   FileDown,
   HeartPulse,
@@ -200,51 +201,63 @@ function HorseProfile({
           <Link href="/atlar" className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-[#0b5e3c] hover:underline">
             <ArrowLeft size={17} /> Atlar katalogyna dolan
           </Link>
-          <h1 className="text-3xl font-bold text-[#0b2f24] lg:text-4xl">At pasporty</h1>
+          <h1 className="text-2xl font-bold text-[#0b2f24]">At pasporty</h1>
         </div>
         <div className="flex flex-wrap gap-3">
+          <button type="button" onClick={openEditor} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 font-semibold text-[#0b2f24] hover:bg-emerald-50 print:hidden"><Pencil size={18} /> Üýtgetmek</button>
           <Link href={`/nesil?horse=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl border border-[#0b5e3c] bg-white px-5 py-3 font-semibold text-[#0b5e3c] hover:bg-emerald-50">
             <Network size={18} /> Nesil daragty
           </Link>
           <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-semibold text-white hover:bg-[#08462d]">
-            <FileDown size={18} /> PDF / Çap et
+            <FileDown size={18} /> PDF pasport
           </button>
+          <Link href="/atlar" aria-label="Kataloga dolan" className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-[#0b2f24] hover:bg-slate-50"><MoreHorizontal size={20} /></Link>
         </div>
       </div>
 
-      <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
-        <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr]">
-          <div className="relative min-h-[360px] overflow-hidden bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a] xl:min-h-[520px]">
-            {horse.image ? (
-              <Image src={assetPath(horse.image)} alt={horse.name} fill priority sizes="(max-width: 1280px) 100vw, 420px" className="object-cover" />
-            ) : (
-              <div className="flex min-h-[520px] items-center justify-center text-[12rem] font-black text-white/15">{horse.name.slice(0, 1)}</div>
-            )}
-            <button
-              type="button"
-              onClick={openEditor}
-              className="absolute bottom-5 right-5 z-10 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 font-bold text-[#0b2f24] shadow-xl transition hover:bg-emerald-50 print:hidden"
-              aria-label="Esasy suraty üýtget"
-            >
-              <Camera size={19} /> Suraty üýtget
-            </button>
-            {horse.champion && (
-              <span className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-bold text-amber-950 shadow-lg">
-                <Trophy size={18} /> Çempion at
-              </span>
-            )}
-          </div>
-
-          <div className="p-6 sm:p-8 lg:p-10">
-            <div className="mb-8 flex flex-col gap-4 border-b border-gray-100 pb-7 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-[#b58b2a]">{horse.code}</p>
-                <h2 className="text-4xl font-bold text-[#0b2f24] sm:text-5xl">{horse.name}</h2>
-                <p className="mt-3 text-lg font-semibold text-[#0b5e3c]">{horse.breed}</p>
-              </div>
-              <span className="w-fit rounded-xl bg-emerald-50 px-4 py-2 font-bold text-emerald-800">{horse.sex}</span>
+      <section className="space-y-4">
+        <div className="relative isolate aspect-video w-full overflow-hidden rounded-3xl bg-gradient-to-br from-[#092d23] via-[#0b5e3c] to-[#aa852e] sm:h-[440px] lg:h-[520px]">
+          {horse.image ? (
+            <>
+              <Image src={assetPath(horse.image)} alt="" fill sizes="100vw" className="object-cover opacity-50 blur-2xl scale-110" aria-hidden="true" />
+              <Image src={assetPath(horse.image)} alt={horse.name} fill priority sizes="100vw" className="object-contain object-center" />
+            </>
+          ) : (
+            <div className="flex h-full items-center justify-center text-[11rem] font-black text-white/15 sm:text-[16rem]">{horse.name.slice(0, 1)}</div>
+          )}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#052b1f]/85 via-[#052b1f]/20 to-transparent" />
+          <div className="absolute left-0 top-0 z-10 max-w-[85%] p-4 text-white sm:max-w-md sm:p-9">
+            <p className="text-sm font-bold uppercase tracking-[0.19em] text-amber-200">{horse.code}</p>
+            <h2 className="mt-2 text-3xl font-black sm:text-6xl">{horse.name}</h2>
+            <p className="mt-2 inline-block rounded-full bg-emerald-700/85 px-4 py-1.5 text-sm font-bold">{horse.breed}</p>
+            <div className="mt-4 hidden max-w-xs grid-cols-2 gap-3 text-sm font-semibold text-white/90 sm:grid">
+              <span>Jynsy: {horse.sex}</span>
+              <span>Ýyly: {horse.year}</span>
+              <span>Reňki: {horse.color}</span>
             </div>
-
+            {horse.champion && <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-400 px-3 py-1 text-sm font-black text-amber-950"><Trophy size={16} /> Çempion at</span>}
+          </div>
+          <button type="button" onClick={openEditor} aria-label="Esasy suraty üýtget" className="absolute bottom-5 right-5 z-10 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 font-bold text-[#0b2f24] shadow-xl transition hover:bg-emerald-50 print:hidden">
+            <Camera size={19} /> Suraty üýtget
+          </button>
+        </div>
+        <nav aria-label="Pasport bölümleri" className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:grid-cols-3 lg:grid-cols-6 print:hidden">
+          <a href="#esasy-maglumatlar" className="rounded-xl bg-[#0b5e3c] px-3 py-3 text-center text-sm font-semibold text-white">Esasy maglumatlar</a>
+          <a href="#nesil-maglumatlary" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Nesil maglumatlary</a>
+          <Link href="/saglyk" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Saglygy</Link>
+          <Link href="/yenijiler" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Netijeler we bäsleşikler</Link>
+          <Link href="/media" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Suratlar we wideo</Link>
+          <a href="#bellikler" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Bellikler</a>
+        </nav>
+        <div className="space-y-5">
+          <div id="esasy-maglumatlar" className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <h3 className="mb-5 text-2xl font-black text-[#0b2f24]">Esasy maglumatlar</h3>
+            <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <InfoCard icon={<Tag />} label="Ady" value={horse.name} />
+              <InfoCard icon={<Tag />} label="Hasaba alyş ID" value={horse.code} />
+              <InfoCard icon={<ShieldCheck />} label="Tohumy" value={horse.breed} />
+              <InfoCard icon={<HeartPulse />} label="Jynsy" value={horse.sex} />
+            </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <InfoCard icon={<CalendarDays />} label="Doglan ýyly" value={String(horse.year)} />
               <InfoCard icon={<Tag />} label="Reňki" value={horse.color} />
@@ -253,8 +266,9 @@ function HorseProfile({
               <InfoCard icon={<Dna />} label="Tohumçylyk gymmaty" value={horse.breedingValue ?? "Girizilmedik"} />
               <InfoCard icon={<Trophy />} label="Klasy" value={horse.horseClass ?? "Girizilmedik"} />
             </div>
+          </div>
 
-            <div className="mt-8 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5">
+            <div id="nesil-maglumatlary" className="rounded-3xl border border-emerald-200 bg-emerald-50/60 p-5 sm:p-7">
               <div className="mb-4 flex items-center gap-3">
                 <Network className="text-[#0b5e3c]" />
                 <h3 className="text-xl font-bold text-[#0b2f24]">Nesil maglumatlary</h3>
@@ -266,9 +280,9 @@ function HorseProfile({
               </div>
             </div>
 
-            <div className="mt-6 rounded-2xl border border-amber-100 bg-amber-50/70 p-5">
+            <div id="bellikler" className="rounded-3xl border border-amber-200 bg-amber-50/70 p-5 sm:p-7">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-lg font-bold text-[#0b2f24]">Bedew barada</h3>
+                <h3 className="text-xl font-bold text-[#0b2f24]">Goşmaça bellikler</h3>
                 {!descriptionEditing && (
                   <button
                     type="button"
@@ -322,15 +336,7 @@ function HorseProfile({
               )}
             </div>
           </div>
-        </div>
       </section>
-
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <StatusCard icon={<HeartPulse />} title="Beden ölçegleri" value={horse.bodyMeasurements ?? "Girizilmedik"} detail="Çeşme: iberilen resmi sanaw" color="green" />
-        <StatusCard icon={<Dna />} title="Nesil ugry" value={horse.lineage ?? "Girizilmedik"} detail="Şejere maglumatlary pasportda görkezilýär" color="blue" />
-        <StatusCard icon={<ShieldCheck />} title="Sanawdaky belgisi" value={horse.code} detail="Portal üçin içerki sanaw belgisi" color="amber" />
-      </div>
-
       {editorOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 print:hidden">
           <div className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
@@ -543,22 +549,6 @@ function PedigreeItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StatusCard({ icon, title, value, detail, color }: { icon: React.ReactNode; title: string; value: string; detail: string; color: "green" | "blue" | "amber" }) {
-  const colors = {
-    green: "bg-emerald-50 text-emerald-700 border-emerald-100",
-    blue: "bg-blue-50 text-blue-700 border-blue-100",
-    amber: "bg-amber-50 text-amber-700 border-amber-100",
-  };
-  return (
-    <section className="rounded-2xl bg-white p-6 shadow-sm">
-      <div className={`mb-5 flex h-12 w-12 items-center justify-center rounded-xl border ${colors[color]}`}>{icon}</div>
-      <h3 className="font-semibold text-gray-500">{title}</h3>
-      <p className="mt-2 text-xl font-bold text-[#0b2f24]">{value}</p>
-      <p className="mt-2 text-sm text-gray-500">{detail}</p>
-    </section>
-  );
-}
-
 function NotFoundState() {
   return (
     <div className="rounded-3xl border border-dashed border-gray-300 bg-white px-6 py-20 text-center shadow-sm">
@@ -574,8 +564,8 @@ function NotFoundState() {
 function ProfileSkeleton() {
   return (
     <div className="animate-pulse overflow-hidden rounded-3xl bg-white shadow-sm">
-      <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr]">
-        <div className="min-h-[420px] bg-slate-200" />
+      <div>
+        <div className="aspect-video w-full bg-slate-200" />
         <div className="space-y-5 p-8">
           <div className="h-5 w-32 rounded bg-slate-200" />
           <div className="h-12 w-64 rounded bg-slate-200" />

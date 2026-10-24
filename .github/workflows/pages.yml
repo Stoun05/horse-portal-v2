@@ -2,7 +2,7 @@ name: Deploy GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ["feature/offline-sync"]
   workflow_dispatch:
 
 permissions:
@@ -32,11 +32,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Validate TypeScript
+        run: npx tsc --noEmit
 
       - name: Build static site
         run: npm run build

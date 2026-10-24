@@ -7,8 +7,6 @@ import { assetPath } from "../lib/assetPath";
 import {
   Home,
   Badge,
-  Award,
-  Landmark,
   Network,
   BarChart3,
   HeartPulse,
@@ -31,8 +29,6 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
   const menuItems = [
     { name: "Baş sahypa", icon: Home, href: "/" },
     { name: "Atlar katalogy", icon: Badge, href: "/atlar" },
-    { name: "Gözellik bäsleşiginiň ýeňijileri", icon: Award, href: "/yenijiler" },
-    { name: "Arkadag şäheriniň 24 aty", icon: Landmark, href: "/arkadag-atlary" },
     { name: "Nesil daragty", icon: Network, href: "/nesil" },
     { name: "Tohumçylyk seljermesi", icon: BarChart3, href: "/seljerme" },
     { name: "Saglyk taryhy", icon: HeartPulse, href: "/saglyk" },
@@ -64,11 +60,13 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
         </button>
 
         <div className="mb-8 flex justify-center">
-          <img
-            src={assetPath("/logo.jpg")}
-            alt="Atçylyk Akademiýasy"
-            className="w-44 mx-auto"
-          />
+          <div className="isolate flex h-52 w-52 items-center justify-center overflow-hidden bg-[#052b1f]">
+            <img
+              src={assetPath("/sidebar-emblem.svg")}
+              alt="Aba Annaýew adyndaky Halkara atçylyk akademiýasynyň nyşany"
+              className="block h-full w-full object-contain"
+            />
+          </div>
         </div>
 
         <nav className="space-y-2">

@@ -1,0 +1,79 @@
+name: PostgreSQL integration smoke
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/offline-sync]
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: portal_test
+          POSTGRES_PASSWORD: portal_test_password
+          POSTGRES_DB: portal_integration
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U portal_test -d portal_integration"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: server
+    env:
+      DATABASE_URL: postgres://portal_test:portal_test_password@127.0.0.1:5432/portal_integration
+      HOST: 127.0.0.1
+      PORT: 4100
+      PORTAL_URL: http://127.0.0.1:4100
+      PORTAL_INTEGRATION_DISPOSABLE: "YES"
+      WEB_ORIGIN: http://localhost:3000
+      PORTAL_EXPECT_SEEDED_HORSE: "1"
+      PORTAL_TEST_USER: integration_operator
+      PORTAL_TEST_PASSWORD: integration_test_password_12345
+      PORTAL_TEST_ADMIN: integration_admin
+      PORTAL_TEST_ADMIN_PASSWORD: integration_admin_password_12345
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Initialize isolated test database
+        run: npm run db:init
+      - name: Create disposable test operator
+        run: |
+          node --input-type=module <<'NODE'
+          import { randomUUID } from 'node:crypto';
+          import { pool } from './src/db.mjs';
+          import { hashPassword } from './src/passwords.mjs';
+          await pool.query(
+            "INSERT INTO portal_users(id,username,password_hash,role,active) VALUES($1,$2,$3,'Operator',true)",
+            [randomUUID(),process.env.PORTAL_TEST_USER,await hashPassword(process.env.PORTAL_TEST_PASSWORD)]
+          );
+          await pool.query(
+            "INSERT INTO horses(id,name,code,breed,year,sex,data,version) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,1)",
+            ["ci-horse-001","CI Test Aty","CI-001","Ahalteke",2020,"At",JSON.stringify({name:"CI Test Aty",code:"CI-001",breed:"Ahalteke",sex:"At",year:2020,color:"Mele",champion:false})]
+          );
+          await pool.query(
+            "INSERT INTO portal_users(id,username,password_hash,role,active) VALUES($1,$2,$3,'Admin',true)",
+            [randomUUID(),process.env.PORTAL_TEST_ADMIN,await hashPassword(process.env.PORTAL_TEST_ADMIN_PASSWORD)]
+          );
+          await pool.end();
+          NODE
+      - name: Start local server and run read-only smoke test
+        run: |
+          node src/index.mjs > /tmp/portal-server.log 2>&1 &
+          server_pid=$!
+          trap 'status=$?; if [ "$status" -ne 0 ]; then echo "::group::Portal server diagnostics"; cat /tmp/portal-server.log || true; echo "::endgroup::"; fi; kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4100/ready >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4100/ready >/dev/null
+          node test/smoke-live-catalog.mjs
+          node test/smoke-live-sync.mjs

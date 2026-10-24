@@ -1,0 +1,91 @@
+const test=require("node:test");
+const assert=require("node:assert/strict");
+const fs=require("node:fs"),os=require("node:os"),path=require("node:path");
+const {randomBytes}=require("node:crypto");
+const {openAccountOfflineStore}=require("../account-offline-store.cjs");
+const {flushPending}=require("../sync-runner.cjs");
+const userId="53a25d93-52be-4cab-8fea-f344f9340c9a";
+async function withStore(fn){const root=fs.mkdtempSync(path.join(os.tmpdir(),"sync-runner-")),key=randomBytes(32);try{await fn(openAccountOfflineStore({root,userId,key}),()=>openAccountOfflineStore({root,userId,key}));}finally{fs.rmSync(root,{recursive:true,force:true});}}
+test("sequential acknowledgements clear encrypted queue",()=>withStore(async(store,reload)=>{
+ const first=store.addLocalChange({entityId:"h1",action:"create",payload:{name:"Horse 1"}});
+ const second=store.addLocalChange({entityId:"h2",action:"create",payload:{name:"Horse 2"}});
+ const ids=[];
+ const result=await flushPending({store,send:async change=>{ids.push(change.changeId);return {changeId:change.changeId,status:"accepted",serverVersion:1};}});
+ assert.deepEqual(ids,[first,second]);assert.deepEqual(result,{state:"complete",acknowledged:2,conflicted:0});assert.equal(reload().listPending().length,0);
+}));
+test("network failure preserves pending operations",()=>withStore(async(store,reload)=>{
+ store.addLocalChange({entityId:"h1",action:"create",payload:{name:"Horse"}});
+ assert.equal((await flushPending({store,send:async()=>{throw Error("offline");}})).state,"retry");
+ assert.equal(reload().listPending().length,1);
+}));
+test("conflict is retained, blocks following changes",()=>withStore(async(store,reload)=>{
+ const id=store.addLocalChange({entityId:"h1",action:"create",payload:{name:"Horse"}});
+ store.addLocalChange({entityId:"h2",action:"create",payload:{name:"Horse2"}});
+ let calls=0;
+ const result=await flushPending({store,send:async()=>{calls++;return {changeId:id,status:"conflict"};}});
+ assert.equal(result.state,"conflict");assert.equal(calls,1);
+ assert.equal(reload().listPending()[0].status,"conflict");assert.equal(reload().listPending().length,2);
+}));
+test("forbidden and malformed acknowledgements never clear queue",()=>withStore(async(store,reload)=>{
+ const id=store.addLocalChange({entityId:"h1",action:"create",payload:{name:"Horse"}});
+ assert.equal((await flushPending({store,send:async()=>({changeId:id,status:"forbidden"})})).state,"blocked");
+ assert.equal((await flushPending({store,send:async()=>({changeId:id,status:"accepted",serverVersion:9})})).state,"retry");
+ assert.equal(reload().listPending().length,1);
+}));
+
+test("simultaneous flush calls cannot send same operation twice",async()=>{
+ let release;
+ const gate=new Promise(resolve=>{release=resolve;});
+ const pending=[{id:"op1",entity_id:"h1",action:"create",base_version:null,payload:{name:"Horse"}}];
+ let calls=0;
+ const store={
+  listPending:()=>pending.map(x=>({...x})),
+  acknowledge:()=>{pending.shift();return true;},
+  markConflict:()=>false
+ };
+ const first=flushPending({store,send:async request=>{calls++;await gate;return {changeId:request.changeId,status:"accepted",serverVersion:1};}});
+ const second=await flushPending({store,send:async()=>{calls++;throw Error("must not send");}});
+ assert.equal(second.state,"busy");
+ release();
+ assert.equal((await first).state,"complete");
+ assert.equal(calls,1);
+ assert.equal(pending.length,0);
+});
+
+test("logout during in-flight sync preserves encrypted queue for later retry",async()=>{
+ const controller=new AbortController();
+ let release;
+ const gate=new Promise(resolve=>{release=resolve;});
+ const pending=[{id:"b8b646bd-7d54-4edb-9d14-4587afebca99",entity_id:"horse-1",action:"create",base_version:null,payload:{name:"Akyol",code:"AT-1"}}];
+ let acknowledgements=0;
+ const store={listPending:()=>pending.map(x=>({...x})),acknowledge:()=>{acknowledgements++;return true;},markConflict:()=>false};
+ let started;
+ const sent=new Promise(resolve=>{started=resolve;});
+ const result=flushPending({store,send:async()=>{started();await gate;return {changeId:pending[0].id,status:"accepted",serverVersion:1};},signal:controller.signal});
+ await sent;
+ controller.abort();
+ release();
+ assert.equal((await result).state,"cancelled");
+ assert.equal(acknowledgements,0);
+ assert.equal(pending.length,1);
+});
+
+test("partial sync acknowledges first horse but preserves later change across restart",()=>withStore(async(store,reload)=>{
+ const first=store.addLocalChange({entityId:"partial-1",action:"create",payload:{name:"First"}});
+ const second=store.addLocalChange({entityId:"partial-2",action:"create",payload:{name:"Second"}});
+ let count=0;
+ const result=await flushPending({store,send:async change=>{
+  count++;
+  if(count===2)throw Error("Network interrupted");
+  return {changeId:change.changeId,status:"accepted",serverVersion:1};
+ }});
+ assert.deepEqual(result,{state:"retry",acknowledged:1,conflicted:0});
+ const recovered=reload();
+ assert.deepEqual(recovered.listPending().map(x=>x.id),[second]);
+ assert.equal(recovered.listHorseVersions()["partial-1"],1);
+ const finish=await flushPending({store:recovered,send:async change=>({changeId:change.changeId,status:"accepted",serverVersion:1})});
+ assert.deepEqual(finish,{state:"complete",acknowledged:1,conflicted:0});
+ assert.equal(reload().listPending().length,0);
+ assert.equal(reload().listHorseVersions()["partial-2"],1);
+ assert.notEqual(first,second);
+}));
