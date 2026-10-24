@@ -43,7 +43,7 @@ export default function DesktopOfflineHorses(){
   if(action==="update"){const answer=window.prompt("Atyň täze ady",item.name);if(answer===null||!answer.trim())return;name=answer.trim();}
   else if(!window.confirm(`"${item.name}" atly aty pozmalymy?`))return;
   setBusyCreate(true);setError("");
-  try{if(action==="update")await bridge.updateHorse(item.id,item.version,{name,...item.payload,name,code:item.code});else await bridge.deleteHorse(item.id,item.version);await refresh();}
+  try{if(action==="update")await bridge.updateHorse(item.id,item.version,{name,name,code:item.code,...Object.fromEntries(["breed","sex","year","color","father","mother","description"].filter(key=>item.payload[key as keyof HorsePayload]!==undefined).map(key=>[key,item.payload[key as keyof HorsePayload]]))});else await bridge.deleteHorse(item.id,item.version);await refresh();}
   catch{setError("Üýtgeşme başartmady. Serwer wersiýasyny we garaşýan üýtgeşmeleri barlaň.");}
   finally{setBusyCreate(false);}
  }
