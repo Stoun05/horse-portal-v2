@@ -212,39 +212,39 @@ function HorseProfile({
         </div>
       </div>
 
-      <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
-        <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr]">
-          <div className="relative min-h-[360px] overflow-hidden bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a] xl:min-h-[520px]">
-            {horse.image ? (
-              <Image src={assetPath(horse.image)} alt={horse.name} fill priority sizes="(max-width: 1280px) 100vw, 420px" className="object-cover" />
-            ) : (
-              <div className="flex min-h-[520px] items-center justify-center text-[12rem] font-black text-white/15">{horse.name.slice(0, 1)}</div>
-            )}
-            <button
-              type="button"
-              onClick={openEditor}
-              className="absolute bottom-5 right-5 z-10 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 font-bold text-[#0b2f24] shadow-xl transition hover:bg-emerald-50 print:hidden"
-              aria-label="Esasy suraty üýtget"
-            >
-              <Camera size={19} /> Suraty üýtget
-            </button>
-            {horse.champion && (
-              <span className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-bold text-amber-950 shadow-lg">
-                <Trophy size={18} /> Çempion at
-              </span>
-            )}
-          </div>
-
-          <div className="p-6 sm:p-8 lg:p-10">
-            <div className="mb-8 flex flex-col gap-4 border-b border-gray-100 pb-7 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-[#b58b2a]">{horse.code}</p>
-                <h2 className="text-4xl font-bold text-[#0b2f24] sm:text-5xl">{horse.name}</h2>
-                <p className="mt-3 text-lg font-semibold text-[#0b5e3c]">{horse.breed}</p>
-              </div>
-              <span className="w-fit rounded-xl bg-emerald-50 px-4 py-2 font-bold text-emerald-800">{horse.sex}</span>
+      <section className="overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-sm">
+        <div className="relative isolate h-[360px] overflow-hidden bg-gradient-to-br from-[#092d23] via-[#0b5e3c] to-[#aa852e] sm:h-[440px] lg:h-[520px]">
+          {horse.image ? (
+            <Image src={assetPath(horse.image)} alt={horse.name} fill priority sizes="100vw" className="object-cover object-center" />
+          ) : (
+            <div className="flex h-full items-center justify-center text-[11rem] font-black text-white/15 sm:text-[16rem]">{horse.name.slice(0, 1)}</div>
+          )}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#052b1f]/90 via-[#052b1f]/35 to-transparent" />
+          <div className="absolute inset-x-0 top-0 z-10 p-6 text-white sm:p-9">
+            <p className="text-sm font-bold uppercase tracking-[0.19em] text-amber-200">{horse.code}</p>
+            <h2 className="mt-2 text-4xl font-black sm:text-6xl">{horse.name}</h2>
+            <p className="mt-2 inline-block rounded-full bg-emerald-700/85 px-4 py-1.5 text-sm font-bold">{horse.breed}</p>
+            <div className="mt-5 grid max-w-xs grid-cols-2 gap-3 text-sm font-semibold text-white/90">
+              <span>Jynsy: {horse.sex}</span>
+              <span>Ýyly: {horse.year}</span>
+              <span>Reňki: {horse.color}</span>
             </div>
-
+            {horse.champion && <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-400 px-3 py-1 text-sm font-black text-amber-950"><Trophy size={16} /> Çempion at</span>}
+          </div>
+          <button type="button" onClick={openEditor} aria-label="Esasy suraty üýtget" className="absolute bottom-5 right-5 z-10 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 font-bold text-[#0b2f24] shadow-xl transition hover:bg-emerald-50 print:hidden">
+            <Camera size={19} /> Suraty üýtget
+          </button>
+        </div>
+        <div className="space-y-7 p-5 sm:p-8 lg:p-10">
+          <div>
+            <h3 className="mb-5 text-2xl font-black text-[#0b2f24]">Esasy maglumatlar</h3>
+            <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <InfoCard icon={<Tag />} label="Ady" value={horse.name} />
+              <InfoCard icon={<Tag />} label="Hasaba alyş ID" value={horse.code} />
+              <InfoCard icon={<ShieldCheck />} label="Tohumy" value={horse.breed} />
+              <InfoCard icon={<HeartPulse />} label="Jynsy" value={horse.sex} />
+            </div>
+          </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <InfoCard icon={<CalendarDays />} label="Doglan ýyly" value={String(horse.year)} />
               <InfoCard icon={<Tag />} label="Reňki" value={horse.color} />
@@ -325,11 +325,15 @@ function HorseProfile({
         </div>
       </section>
 
+
+        </div>
+      </section>
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <StatusCard icon={<HeartPulse />} title="Beden ölçegleri" value={horse.bodyMeasurements ?? "Girizilmedik"} detail="Çeşme: iberilen resmi sanaw" color="green" />
         <StatusCard icon={<Dna />} title="Nesil ugry" value={horse.lineage ?? "Girizilmedik"} detail="Şejere maglumatlary pasportda görkezilýär" color="blue" />
         <StatusCard icon={<ShieldCheck />} title="Sanawdaky belgisi" value={horse.code} detail="Portal üçin içerki sanaw belgisi" color="amber" />
       </div>
+
 
       {editorOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 print:hidden">
@@ -574,8 +578,8 @@ function NotFoundState() {
 function ProfileSkeleton() {
   return (
     <div className="animate-pulse overflow-hidden rounded-3xl bg-white shadow-sm">
-      <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr]">
-        <div className="min-h-[420px] bg-slate-200" />
+      <div>
+        <div className="h-[420px] bg-slate-200" />
         <div className="space-y-5 p-8">
           <div className="h-5 w-32 rounded bg-slate-200" />
           <div className="h-12 w-64 rounded bg-slate-200" />
