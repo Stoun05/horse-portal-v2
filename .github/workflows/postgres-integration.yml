@@ -69,7 +69,7 @@ jobs:
         run: |
           node src/index.mjs > /tmp/portal-server.log 2>&1 &
           server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          trap 'status=$?; if [ "$status" -ne 0 ]; then echo "::group::Portal server diagnostics"; cat /tmp/portal-server.log || true; echo "::endgroup::"; fi; kill "$server_pid" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:4100/ready >/dev/null; then break; fi
             sleep 1
