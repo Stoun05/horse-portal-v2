@@ -36,6 +36,19 @@ test("cleanup preserves unrelated IPC channels",()=>{
  assert.equal(handlers.get("unrelated:channel")(),"untouched");
 });
 
+test("failed offline IPC registration keeps unrelated handler",()=>{
+ const unrelated=()=> "alive";
+ const handlers=new Map([["unrelated:channel",unrelated]]);
+ const ipcMain={
+  handle:(name,fn)=>{if(name==="offline:horses")throw Error("Registration failed");handlers.set(name,fn);},
+  removeHandler:name=>handlers.delete(name)
+ };
+ const store={listHorses:()=>({}),listPending:()=>[],lastSyncedAt:()=>null};
+ assert.throws(()=>registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444"}),/Registration failed/);
+ assert.deepEqual([...handlers.keys()],["unrelated:channel"]);
+ assert.equal(handlers.get("unrelated:channel"),unrelated);
+});
+
 test("optional horse IPC channels are registered only when capabilities exist",async()=>{
  const handlers=new Map(),frame={url:"http://127.0.0.1:4444/atlar"},sender={mainFrame:frame};
  const event={sender,senderFrame:frame};
