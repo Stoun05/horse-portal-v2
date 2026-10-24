@@ -7,9 +7,6 @@ import {
   ArrowLeft,
   Camera,
   CalendarDays,
-  Images,
-  ClipboardList,
-  Medal,
   MoreHorizontal,
   Dna,
   FileDown,
@@ -245,8 +242,8 @@ function HorseProfile({
           <a href="#esasy-maglumatlar" className="rounded-xl bg-[#0b5e3c] px-3 py-3 text-center text-sm font-semibold text-white">Esasy maglumatlar</a>
           <a href="#nesil-maglumatlary" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Nesil maglumatlary</a>
           <Link href="/saglyk" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Saglygy</Link>
-          <a href="#netijeler" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Netijeler we bäsleşikler</a>
-          <a href="#surat-we-wideo" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Suratlar we wideo</a>
+          <Link href="/yenijiler" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Netijeler we bäsleşikler</Link>
+          <Link href="/media" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Suratlar we wideo</Link>
           <a href="#bellikler" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Bellikler</a>
         </nav>
         <div className="space-y-5">
