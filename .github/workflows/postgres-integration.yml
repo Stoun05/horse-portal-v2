@@ -4,6 +4,7 @@ on:
     branches: [feature/offline-sync]
     paths:
       - 'server/**'
+      - 'electron/**'
       - '.github/workflows/postgres-integration.yml'
 permissions:
   contents: read
