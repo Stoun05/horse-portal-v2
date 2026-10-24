@@ -25,6 +25,17 @@ test("only constrained read-only channels are registered", async () => {
 });
 
 
+test("cleanup preserves unrelated IPC channels",()=>{
+ const handlers=new Map([["unrelated:channel",()=> "untouched"]]);
+ const ipcMain={handle:(name,handler)=>handlers.set(name,handler),removeHandler:name=>handlers.delete(name)};
+ const store={listHorses:()=>({}),listPending:()=>[],lastSyncedAt:()=>null};
+ const close=registerOfflineReadIpc({ipcMain,store,expectedOrigin:"http://127.0.0.1:4444"});
+ assert.equal(handlers.size,4);
+ close();
+ assert.deepEqual([...handlers.keys()],["unrelated:channel"]);
+ assert.equal(handlers.get("unrelated:channel")(),"untouched");
+});
+
 test("optional horse IPC channels are registered only when capabilities exist",async()=>{
  const handlers=new Map(),frame={url:"http://127.0.0.1:4444/atlar"},sender={mainFrame:frame};
  const event={sender,senderFrame:frame};
