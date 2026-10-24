@@ -112,7 +112,7 @@ export default function AtlarPage() {
         (sex === "Ähli jynslar" || horse.sex === sex) &&
         (color === "Ähli reňkler" || horse.color === color) &&
         (collection === "Ähli atlar" || (collection === "Gözellik bäsleşiginiň ýeňijileri" ? horse.champion && Boolean(horse.sourceSide && horse.sourceNumber) : Boolean(horse.sourceSide && horse.sourceNumber))) &&
-        (side === "Ähli taraplar" || horse.sourceSide === side)
+        (collection !== "Arkadag şäheriniň 24 aty" || side === "Ähli taraplar" || horse.sourceSide === side)
       );
     });
 
