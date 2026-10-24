@@ -122,3 +122,30 @@ test("lost server acknowledgement retries same change ID without duplicating hor
   assert.equal(recovered.listHorseVersions()["retry-horse"],1);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test("lost delete acknowledgement preserves pending deletion across restart",async()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"horse-delete-retry-"));
+ const key=randomBytes(32),userId="53a25d93-52be-4cab-8fea-f344f9340c9a",token="e".repeat(64);
+ try{
+  let store=openAccountOfflineStore({root,userId,key});
+  store.importServerHorses([{id:"horse-to-delete",version:2,data:{name:"Akýol",code:"AT-10"}}]);
+  const changeId=store.addLocalChange({entityId:"horse-to-delete",action:"delete",baseVersion:2});
+  const calls=[];
+  const send=createHorseSyncSender({token,fetchImpl:async(_url,options)=>{
+   const change=JSON.parse(options.body);
+   calls.push(change);
+   if(calls.length===1)throw Error("Server response lost");
+   return {status:200,json:async()=>({changeId,status:"accepted",serverVersion:3})};
+  }});
+  assert.equal((await flushPending({store,send})).state,"retry");
+  store=openAccountOfflineStore({root,userId,key});
+  assert.equal(store.listPending()[0].id,changeId);
+  assert.equal(store.listHorses()["horse-to-delete"],undefined);
+  assert.equal((await flushPending({store,send})).state,"complete");
+  const reopened=openAccountOfflineStore({root,userId,key});
+  assert.deepEqual(calls.map(c=>[c.changeId,c.action,c.baseVersion]),[[changeId,"delete",2],[changeId,"delete",2]]);
+  assert.equal(reopened.listPending().length,0);
+  assert.equal(reopened.listHorses()["horse-to-delete"],undefined);
+  assert.equal(reopened.listHorseVersions()["horse-to-delete"],undefined);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
