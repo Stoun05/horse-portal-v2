@@ -216,11 +216,13 @@ function HorseProfile({
       </div>
 
       <section className="space-y-4">
-        <div className="relative isolate aspect-video w-full overflow-hidden rounded-3xl bg-gradient-to-br from-[#092d23] via-[#0b5e3c] to-[#aa852e] sm:h-[440px] lg:h-[520px]">
+        <div className="relative isolate aspect-video w-full overflow-hidden rounded-3xl bg-gradient-to-br from-[#092d23] via-[#0b5e3c] to-[#aa852e] sm:h-[540px] lg:h-[620px]">
           {horse.image ? (
             <>
-              <Image src={assetPath(horse.image)} alt="" fill sizes="100vw" className="object-cover opacity-50 blur-2xl scale-110" aria-hidden="true" />
-              <Image src={assetPath(horse.image)} alt={horse.name} fill priority sizes="100vw" className="object-contain object-center" />
+              <Image src={assetPath(horse.image)} alt="" fill sizes="100vw" className="object-cover opacity-30 blur-2xl scale-110" aria-hidden="true" />
+              <div className="absolute inset-y-0 right-0 left-0 sm:left-[33%]">
+                <Image src={assetPath(horse.image)} alt={horse.name} fill priority sizes="(min-width: 640px) 67vw, 100vw" className="object-cover object-center" />
+              </div>
             </>
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-white/90"><Camera size={54} strokeWidth={1.5} aria-hidden="true" /><p className="text-xl font-semibold">Bu atyň esasy suraty goşulmady</p><p className="max-w-sm text-sm text-white/70">Dogry suraty goşmak üçin aşakdaky «Suraty üýtget» düwmesine basyň.</p></div>
