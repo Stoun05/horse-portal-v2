@@ -41,6 +41,7 @@ export const initialHorses: Horse[] = [
   {
     id: "gundogar-01-akyol",
     name: "Akýol",
+    image: "/horses/akyol.webp",
     breed: "Ahalteke",
     sex: "At",
     color: "Gyr",
