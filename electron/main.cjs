@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain, safeStorage } = require("electron");
+const { attachAuthorizedWindow } = require("./authorized-window.cjs");
+const { createOfflineSessionController } = require("./offline-session-controller.cjs");
+const { createLocalLoginClient } = require("./local-login-client.cjs");
+const { createDesktopLoginFlow } = require("./desktop-login-flow.cjs");
+const { registerDesktopAuthIpc } = require("./desktop-auth-ipc.cjs");
+const { createHorseSyncSender } = require("./sync-transport.cjs");
 const fs = require("node:fs");
 const http = require("node:http");
 const path = require("node:path");
@@ -100,12 +106,57 @@ async function createWindow() {
     backgroundColor: "#f4f7f5",
     icon: path.join(__dirname, "..", "build", "icon.ico"),
     webPreferences: {
+      // Read-only bridge only; IPC handlers require a separately authorized account session.
+      preload: path.join(__dirname, "offline-preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
     },
   });
 
+  let loginClient=null;
+  // No access on launch: a verified main-process login must eventually supply
+  // a server-signed grant. Never accept a renderer-provided grant or user ID.
+  const offlineSessions=createOfflineSessionController({
+    attach:attachAuthorizedWindow,ipcMain,webContents:window.webContents,
+    expectedOrigin:`http://127.0.0.1:${port}`,safeStorage,
+    root:app.getPath("userData"),
+    sendSync:change=>loginClient.withToken(token=>createHorseSyncSender({token})(change)),
+    fetchServerHorses:()=>loginClient.listServerHorses(),
+    fetchServerDeletions:()=>loginClient.listServerDeletions()
+  });
+  // Public signing key is provisioned by the desktop deployment, never fetched as a trust anchor.
+  // Missing configuration leaves the encrypted offline store inaccessible.
+  let desktopLogin=null;
+  let disposeAuthIpc=()=>{};
+  if(process.env.PORTAL_OFFLINE_TRUSTED_PUBLIC_KEY_PEM){
+    loginClient=createLocalLoginClient();
+    desktopLogin=createDesktopLoginFlow({
+      loginClient,offlineSessions,
+      trustedPublicKey:process.env.PORTAL_OFFLINE_TRUSTED_PUBLIC_KEY_PEM.replace(/\\n/g,"\n")
+    });
+  }
+  if(desktopLogin){
+    disposeAuthIpc=registerDesktopAuthIpc({ipcMain,webContents:window.webContents,
+      expectedOrigin:`http://127.0.0.1:${port}`,loginFlow:desktopLogin,
+      getSession:()=>loginClient.getSession()});
+  }
+  window.on("closed",()=>{
+    disposeAuthIpc();
+    offlineSessions.dispose();
+    if(desktopLogin)void desktopLogin.logout().catch(()=>{});
+  });
+  // UI login initiation remains pending; do not expose grants or tokens to the renderer.
+  // A new same-origin document revokes the previous IPC grant. Restore it only
+  // after main-process authentication and a fresh server-signed grant are checked.
+  window.webContents.on("did-finish-load",async()=>{
+    if(!desktopLogin || !loginClient?.getSession()?.user)return;
+    try{
+      const loaded=new URL(window.webContents.getURL());
+      if(loaded.origin!==`http://127.0.0.1:${port}`)return;
+      await desktopLogin.refreshOfflineAccess();
+    }catch(error){console.error("Offline session refresh failed",error);}
+  });
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   window.webContents.on("will-navigate", (event, url) => {
     if (!url.startsWith(`http://127.0.0.1:${port}/`)) event.preventDefault();

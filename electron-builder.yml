@@ -18,7 +18,7 @@ win:
     - target: nsis
       arch:
         - x64
-  artifactName: Atcylyk-Portal-Setup-1.0.0.${ext}
+  artifactName: Atcylyk-Portal-Setup-${version}.${ext}
 
 nsis:
   oneClick: false

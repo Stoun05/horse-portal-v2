@@ -26,8 +26,22 @@ export const HORSE_STORAGE_KEY = "horse-portal-v3-real-horses";
 
 export const initialHorses: Horse[] = [
   {
+    id: "akhan-guinness-2006",
+    name: "Akhan",
+    breed: "Ahalteke",
+    sex: "At",
+    color: "Gyr",
+    year: 2006,
+    code: "AKHAN-2006",
+    champion: true,
+    father: "Gurply",
+    mother: "Ruhubelent",
+    description: "Akhan 2006-njy ýylda doglan gyr reňkli ahalteke bedewidir. Atasy Gurply, enesi Ruhubelent. 2018-nji ýylyň 29-njy iýunynda Aşgabatda yzky aýaklarynyň üstünde 10 metr aralygy 4,19 sekuntda geçip, Guinness World Records rekordyny goýdy. Çeşmeler: https://www.guinnessworldrecords.com/world-records/113715-fastest-10-m-on-hind-legs-by-a-horse ; https://armenia.tmembassy.gov.tm/tk/news/17691",
+  },
+  {
     id: "gundogar-01-akyol",
     name: "Akýol",
+    image: "/horses/akyol.webp",
     breed: "Ahalteke",
     sex: "At",
     color: "Gyr",
@@ -498,8 +512,14 @@ export const initialHorses: Horse[] = [
 ];
 
 export function mergeHorseDefaults(horses: Horse[]) {
-  return horses.map((horse) => ({
+  const merged = horses.map((horse) => ({
     ...initialHorses.find((item) => item.id === horse.id),
     ...horse,
   }));
+  // An existing browser catalog also receives this newly verified record once.
+  if (!merged.some((horse) => horse.id === "akhan-guinness-2006")) {
+    const akhan = initialHorses.find((horse) => horse.id === "akhan-guinness-2006");
+    if (akhan) merged.push(akhan);
+  }
+  return merged;
 }
