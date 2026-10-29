@@ -223,7 +223,7 @@ function HorseProfile({
               <Image src={assetPath(horse.image)} alt={horse.name} fill priority sizes="100vw" className="object-contain object-center" />
             </>
           ) : (
-            <div className="flex h-full items-center justify-center text-[11rem] font-black text-white/15 sm:text-[16rem]">{horse.name.slice(0, 1)}</div>
+            <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-white/90"><Camera size={54} strokeWidth={1.5} aria-hidden="true" /><p className="text-xl font-semibold">Bu atyň esasy suraty goşulmady</p><p className="max-w-sm text-sm text-white/70">Dogry suraty goşmak üçin aşakdaky «Suraty üýtget» düwmesine basyň.</p></div>
           )}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#052b1f]/85 via-[#052b1f]/20 to-transparent" />
           <div className="absolute left-0 top-0 z-10 max-w-[85%] p-4 text-white sm:max-w-md sm:p-9">
