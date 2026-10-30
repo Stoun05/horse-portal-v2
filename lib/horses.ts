@@ -28,6 +28,7 @@ export const initialHorses: Horse[] = [
   {
     id: "gundogar-01-akyol",
     name: "Akýol",
+    image: "/horses/akyol.webp",
     breed: "Ahalteke",
     sex: "At",
     color: "Gyr",
@@ -67,6 +68,7 @@ export const initialHorses: Horse[] = [
   {
     id: "gundogar-03-kanun",
     name: "Kanun",
+    image: "/horses/kanun.webp",
     breed: "Ahalteke",
     sex: "At",
     color: "Gurt mele",
@@ -165,6 +167,7 @@ export const initialHorses: Horse[] = [
   {
     id: "gundogar-08-ruhybelent",
     name: "Ruhybelent",
+    image: "/horses/ruhybelent.webp",
     breed: "Ahalteke",
     sex: "At",
     color: "Çakan",
@@ -264,6 +267,7 @@ export const initialHorses: Horse[] = [
   {
     id: "gunbatar-01-gyrat",
     name: "Gyrat",
+    image: "/horses/Gyrat.png",
     breed: "Ahalteke",
     sex: "At",
     color: "Gyr",
@@ -343,6 +347,7 @@ export const initialHorses: Horse[] = [
   {
     id: "gunbatar-05-polatly",
     name: "Polatly",
+    image: "/horses/Polatly.png",
     breed: "Ahalteke",
     sex: "At",
     color: "Altynsow mele",
@@ -362,6 +367,7 @@ export const initialHorses: Horse[] = [
   {
     id: "gunbatar-06-hanbeg",
     name: "Hanbeg",
+    image: "/horses/Hanbeg.png",
     breed: "Ahalteke",
     sex: "At",
     color: "Mele",
@@ -401,6 +407,7 @@ export const initialHorses: Horse[] = [
   {
     id: "gunbatar-08-toyly",
     name: "Toýly",
+    image: "/horses/toyly.webp",
     breed: "Ahalteke",
     sex: "At",
     color: "Mele",
@@ -440,6 +447,7 @@ export const initialHorses: Horse[] = [
   {
     id: "gunbatar-10-miras",
     name: "Miras",
+    image: "/horses/Miras.png",
     breed: "Ahalteke",
     sex: "At",
     color: "Mele",
