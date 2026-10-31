@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "desktop:pack": "npm run build && electron-builder --win nsis"
   },
   "dependencies": {
     "lucide-react": "^1.23.0",
@@ -22,6 +23,33 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "electron": "^35.7.5",
+    "electron-builder": "^26.0.12"
+  },
+  "main": "desktop/main.cjs",
+  "build": {
+    "appId": "tm.atcylyk.portal",
+    "productName": "Atçylyk portaly",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop/main.cjs",
+      "out/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "Atcylyk-Portal-Setup-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
   }
 }
