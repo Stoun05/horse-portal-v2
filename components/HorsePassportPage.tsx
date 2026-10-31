@@ -234,7 +234,7 @@ function HorseProfile({
             <p className="mt-2 inline-block rounded-full bg-emerald-700/85 px-4 py-1.5 text-sm font-bold">{horse.breed}</p>
             <div className="mt-4 hidden max-w-xs grid-cols-2 gap-3 text-sm font-semibold text-white/90 sm:grid">
               <span>Jynsy: {horse.sex}</span>
-              <span>Ýyly: {horse.year}</span>
+              <span>Ýyly: {horse.year || "Näbelli"}</span>
               <span>Reňki: {horse.color}</span>
             </div>
             {horse.champion && <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-400 px-3 py-1 text-sm font-black text-amber-950"><Trophy size={16} /> Çempion at</span>}
@@ -261,7 +261,7 @@ function HorseProfile({
               <InfoCard icon={<HeartPulse />} label="Jynsy" value={horse.sex} />
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <InfoCard icon={<CalendarDays />} label="Doglan ýyly" value={String(horse.year)} />
+              <InfoCard icon={<CalendarDays />} label="Doglan ýyly" value={horse.year ? String(horse.year) : "Näbelli"} />
               <InfoCard icon={<Tag />} label="Reňki" value={horse.color} />
               <InfoCard icon={<MapPin />} label="Sanawdaky ýeri" value={horse.sourceSide && horse.sourceNumber ? `${horse.sourceSide} tarap — №${horse.sourceNumber}` : "Girizilmedik"} />
               <InfoCard icon={<ShieldCheck />} label="Beden ölçegleri" value={horse.bodyMeasurements ?? "Girizilmedik"} wide />
