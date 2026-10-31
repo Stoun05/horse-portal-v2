@@ -1,5 +1,5 @@
 name: Build Windows EXE
-# Windows installer build for v1.1.0-beta.2
+# Windows installer build for v1.1.0-beta.3
 
 on:
   workflow_dispatch:
@@ -28,7 +28,7 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
       - uses: actions/upload-artifact@v4
         with:
-          name: Atcylyk-Portal-Windows-v1.1.0-beta.2
+          name: Atcylyk-Portal-Windows-v1.1.0-beta.3
           path: dist/*.exe
           if-no-files-found: error
       - name: Attach installer to GitHub Release
@@ -36,8 +36,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG=v1.1.0-beta.2
+          TAG=v1.1.0-beta.3
           if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" --target "$GITHUB_SHA" --title "Atçylyk portaly $TAG" --notes-file RELEASE_NOTES_v1.1.0-beta.2.md --prerelease
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "Atçylyk portaly $TAG" --notes-file RELEASE_NOTES_v1.1.0-beta.3.md --prerelease
           fi
           gh release upload "$TAG" dist/*.exe --clobber
