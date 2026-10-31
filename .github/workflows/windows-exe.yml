@@ -39,6 +39,6 @@ jobs:
         run: |
           TAG=v1.1.0-beta.3
           if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" --target "$GITHUB_SHA" --title "Atçylyk portaly $TAG" --notes-file RELEASE_NOTES_v1.1.0-beta.3.md --prerelease
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "Atçylyk portaly $TAG" --generate-notes --prerelease
           fi
           gh release upload "$TAG" dist/*.exe --clobber
