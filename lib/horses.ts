@@ -503,11 +503,25 @@ export const initialHorses: Horse[] = [
     sourceSide: "Günbatar",
     sourceNumber: 12,
   },
+  {
+    id: "akhan",
+    name: "Akhan",
+    breed: "Maglumat ýok",
+    sex: "Näbelli",
+    color: "Näbelli",
+    year: 0,
+    code: "AKHAN",
+    image: "/horses/Akhan.png",
+    champion: false,
+    description: "Pasport maglumatlary entek girizilmedi.",
+  },
 ];
 
 export function mergeHorseDefaults(horses: Horse[]) {
-  return horses.map((horse) => ({
+  const merged = horses.map((horse) => ({
     ...initialHorses.find((item) => item.id === horse.id),
     ...horse,
   }));
+  const savedIds = new Set(merged.map((horse) => horse.id));
+  return [...merged, ...initialHorses.filter((horse) => !savedIds.has(horse.id))];
 }
