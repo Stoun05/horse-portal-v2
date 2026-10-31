@@ -54,9 +54,33 @@ export default function MediaPage() {
     let active = true;
     Promise.allSettled([
       loadMedia(),
-      fetch("/api/horse-media").then(async (response) => {
+      fetch("https://api.github.com/repos/Stoun05/horse-portal-v2/git/trees/main?recursive=1").then(async (response) => {
         if (!response.ok) throw new Error("GitHub media list unavailable");
-        return (await response.json()) as { items: GitHubMedia[] };
+        const data = (await response.json()) as { tree?: { path: string; type: string }[]; truncated?: boolean };
+        if (data.truncated) throw new Error("GitHub file list incomplete");
+        const imageExt = /\.(png|jpe?g|webp|gif|avif)$/i;
+        const videoExt = /\.(mp4|webm|mov|m4v)$/i;
+        const media: GitHubMedia[] = (data.tree ?? []).filter((entry) =>
+          entry.type === "blob" && entry.path.startsWith("public/horses/")
+        ).flatMap((entry) => {
+          const relative = entry.path.slice("public/horses/".length);
+          const parts = relative.split("/");
+          const filename = parts[parts.length - 1];
+          const kind: MediaKind | null = imageExt.test(filename) ? "image" : videoExt.test(filename) ? "video" : null;
+          if (!kind) return [];
+          if (parts.length !== 1 && !(parts.length === 3 && (parts[1] === "photos" || parts[1] === "videos"))) return [];
+          if (parts.length === 3 && ((parts[1] === "photos" && kind !== "image") || (parts[1] === "videos" && kind !== "video"))) return [];
+          const slug = parts.length === 1 ? filename.replace(/\.[^.]+$/, "").toLowerCase() : parts[0].toLowerCase();
+          return [{
+            id: "github:" + entry.path,
+            slug,
+            kind,
+            title: filename.replace(/\.[^.]+$/, ""),
+            fileName: filename,
+            url: "/horses/" + relative.split("/").map(encodeURIComponent).join("/"),
+          }];
+        });
+        return { items: media };
       }),
     ]).then(([local, remote]) => {
       if (!active) return;
