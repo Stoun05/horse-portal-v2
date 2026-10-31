@@ -1,0 +1,31 @@
+name: Publish v1.1.0-beta.2 source release
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/publish-beta2.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Publish release if missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=v1.1.0-beta.2
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release already exists"
+          else
+            gh release create "$TAG" \
+              --target "$GITHUB_SHA" \
+              --title "Atçylyk portaly v1.1.0-beta.2" \
+              --notes-file RELEASE_NOTES_v1.1.0-beta.2.md \
+              --prerelease
+          fi
