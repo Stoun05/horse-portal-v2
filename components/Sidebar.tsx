@@ -16,6 +16,7 @@ import {
   FileText,
   Users,
   Settings,
+  Info,
   X,
 } from "lucide-react";
 
@@ -40,6 +41,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
     { name: "Hasabatlar", icon: FileText, href: "/hasabatlar" },
     { name: "Ulanyjylar", icon: Users, href: "/ulanyjylar" },
     { name: "Sazlamalar", icon: Settings, href: "/sazlamalar" },
+    { name: "Programma barada", icon: Info, href: "/programma-barada" },
   ];
 
   return (
