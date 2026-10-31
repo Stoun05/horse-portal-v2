@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "desktop:pack": "npm run build && electron-builder --win nsis"
+    "desktop:pack": "npm run build && electron-builder --win nsis --publish never"
   },
   "dependencies": {
     "lucide-react": "^1.23.0",
