@@ -306,7 +306,7 @@ export default function AtlarPage() {
                           </div>
                           <span className="rounded-lg bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">{horse.sex}</span>
                         </div>
-                        <div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Reňki</p><p className="mt-1 font-black text-slate-950">{horse.color}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Doglan ýyly</p><p className="mt-1 font-black text-slate-950">{horse.year}</p></div></div><p className="mt-3 truncate text-sm font-bold text-slate-600">ID: {horse.code}</p><p className="mt-2 line-clamp-1 text-sm font-bold text-[#0b5e3c]">{horse.lineage || "Nesil ugry barada maglumat ýok"}</p>
+                        <div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Reňki</p><p className="mt-1 font-black text-slate-950">{horse.color}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Doglan ýyly</p><p className="mt-1 font-black text-slate-950">{horse.year || "Näbelli"}</p></div></div><p className="mt-3 truncate text-sm font-bold text-slate-600">ID: {horse.code}</p><p className="mt-2 line-clamp-1 text-sm font-bold text-[#0b5e3c]">{horse.lineage || "Nesil ugry barada maglumat ýok"}</p>
 
                         <div className="mt-5 grid grid-cols-4 gap-2">
                           <ActionLink href={horsePassportHref(horse.id)} label="Gör" icon={<Eye size={18} />} />
