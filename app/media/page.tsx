@@ -28,7 +28,8 @@ type StoredMedia = {
   createdAt: string;
 };
 
-type MediaItem = StoredMedia & { url: string };
+type MediaItem = StoredMedia & { url: string; source?: "github" | "local" };
+type GitHubMedia = { id: string; slug: string; kind: MediaKind; title: string; fileName: string; url: string };
 
 const DB_NAME = "horse-portal-media";
 const STORE_NAME = "media";
@@ -50,15 +51,35 @@ export default function MediaPage() {
   const [lightbox, setLightbox] = useState<MediaItem | null>(null);
 
   useEffect(() => {
-    loadMedia()
-      .then((stored) => {
-        setItems(
-          stored
-            .map((item) => ({ ...item, url: URL.createObjectURL(item.file) }))
-            .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-        );
-      })
-      .finally(() => setMediaHydrated(true));
+    let active = true;
+    Promise.allSettled([
+      loadMedia(),
+      fetch("/api/horse-media").then(async (response) => {
+        if (!response.ok) throw new Error("GitHub media list unavailable");
+        return (await response.json()) as { items: GitHubMedia[] };
+      }),
+    ]).then(([local, remote]) => {
+      if (!active) return;
+      const saved = local.status === "fulfilled"
+        ? local.value.map((item) => ({ ...item, url: URL.createObjectURL(item.file), source: "local" as const }))
+        : [];
+      const github = remote.status === "fulfilled"
+        ? remote.value.items.map((item) => ({
+            id: item.id,
+            horseId: item.slug === "akhan" ? "media-akhan" : "slug:" + item.slug,
+            title: item.title,
+            kind: item.kind,
+            file: new Blob(),
+            fileName: item.fileName,
+            createdAt: "",
+            url: item.url,
+            source: "github" as const,
+          }))
+        : [];
+      setItems([...saved, ...github]);
+      setMediaHydrated(true);
+    });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -76,15 +97,35 @@ export default function MediaPage() {
     return () => window.removeEventListener("keydown", close);
   }, []);
 
+  const horseForItem = (item: MediaItem) => {
+    if (item.horseId.startsWith("slug:")) {
+      const slug = item.horseId.slice(5);
+      return horses.find((horse) => horse.id.endsWith("-" + slug));
+    }
+    return horses.find((horse) => horse.id === item.horseId);
+  };
+  const getHorseName = (item: MediaItem) =>
+    item.horseId === "media-akhan" ? "Akhan" : horseForItem(item)?.name || item.horseId.replace(/^slug:/, "");
+
+  const availableFilters = useMemo(() => {
+    const extra = items.filter((item) => item.source === "github").map((item) => ({
+      id: item.horseId,
+      label: getHorseName(item),
+    }));
+    return [...new Map(extra.map((item) => [item.id, item])).values()];
+  }, [items, horses]);
+
   const visibleItems = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("tk");
     return items.filter((item) => {
-      const horse = horses.find((entry) => entry.id === item.horseId);
-      const matchesHorse = horseFilter === "all" || item.horseId === horseFilter;
+      const horse = horseForItem(item);
+      const matchesHorse = horseFilter === "all" ||
+        item.horseId === horseFilter ||
+        (item.horseId.startsWith("slug:") && horse?.id === horseFilter);
       const matchesKind = kindFilter === "all" || item.kind === kindFilter;
       const matchesQuery =
         !normalized ||
-        [item.title, item.fileName, horse?.name, horse?.code]
+        [item.title, item.fileName, getHorseName(item), horse?.code]
           .join(" ")
           .toLocaleLowerCase("tk")
           .includes(normalized);
@@ -126,6 +167,7 @@ export default function MediaPage() {
   };
 
   const deleteItem = async (item: MediaItem) => {
+    if (item.source === "github") return;
     if (!window.confirm("Bu media faýlyny pozmalymy?")) return;
     await removeMedia(item.id);
     URL.revokeObjectURL(item.url);
@@ -149,7 +191,7 @@ export default function MediaPage() {
             <div>
               <h1 className="text-3xl font-black text-[#082f24] lg:text-4xl">Wideo / Suratlar</h1>
               <p className="mt-2 font-medium text-slate-600">
-                24 at boýunça suratlary we wideo ýazgylaryny aýratyn media arhiwinde saklaň.
+                Her at boýunça GitHub suratlaryny we brauzerdäki media faýllaryny görüň.
               </p>
             </div>
             <button
@@ -189,6 +231,9 @@ export default function MediaPage() {
                 {horses.map((horse) => (
                   <option key={horse.id} value={horse.id}>{horse.name} — {horse.code}</option>
                 ))}
+                {availableFilters.filter((item) => item.id === "media-akhan" || (item.id.startsWith("slug:") && !horses.some((horse) => horse.id.endsWith("-" + item.id.slice(5))))).map((item) => (
+                  <option key={item.id} value={item.id}>{item.label}</option>
+                ))}
               </select>
               <select
                 value={kindFilter}
@@ -214,7 +259,7 @@ export default function MediaPage() {
               </div>
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {visibleItems.map((item) => {
-                  const horse = horses.find((entry) => entry.id === item.horseId);
+                  const horse = horseForItem(item);
                   return (
                     <article key={item.id} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
                       <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
@@ -241,14 +286,14 @@ export default function MediaPage() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <h3 className="truncate text-lg font-black text-slate-950">{item.title}</h3>
-                            <p className="mt-1 font-bold text-[#0b5e3c]">{horse?.name || "At tapylmady"}</p>
+                            <p className="mt-1 font-bold text-[#0b5e3c]">{getHorseName(item)}</p>
                             <p className="mt-1 text-xs font-semibold text-slate-500">
-                              {horse?.code || "ID ýok"} · {formatDate(item.createdAt)}
+                              {horse?.code || (item.source === "github" ? "GitHub" : "ID ýok")} · {item.source === "github" ? "GitHub faýly" : formatDate(item.createdAt)}
                             </p>
                           </div>
-                          <button onClick={() => deleteItem(item)} className="shrink-0 rounded-lg border border-rose-200 p-2 text-rose-700 hover:bg-rose-50" aria-label="Media poz">
+                          {item.source !== "github" && <button onClick={() => deleteItem(item)} className="shrink-0 rounded-lg border border-rose-200 p-2 text-rose-700 hover:bg-rose-50" aria-label="Media poz">
                             <Trash2 size={17} />
-                          </button>
+                          </button>}
                         </div>
                       </div>
                     </article>
@@ -325,7 +370,7 @@ export default function MediaPage() {
             <img src={lightbox.url} alt={lightbox.title} className="max-h-[82vh] max-w-full rounded-xl object-contain" />
             <div className="mt-4 text-center text-white">
               <h3 className="text-xl font-black">{lightbox.title}</h3>
-              <p className="mt-1 text-sm text-white/75">{horses.find((horse) => horse.id === lightbox.horseId)?.name}</p>
+              <p className="mt-1 text-sm text-white/75">{getHorseName(lightbox)}</p>
             </div>
           </div>
         </div>
