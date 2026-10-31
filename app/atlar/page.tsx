@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Award,
+  Download,
   Eye,
   Network,
   Pencil,
@@ -19,6 +20,8 @@ import Breadcrumb from "../../components/Breadcrumb";
 import { assetPath } from "../../lib/assetPath";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
+
+
 import {
   HORSE_STORAGE_KEY,
   initialHorses,
@@ -26,6 +29,7 @@ import {
   type Horse,
   type HorseForm,
 } from "../../lib/horses";
+const horsePassportHref = (id: string) => `/atlar/${encodeURIComponent(id)}`;
 
 const emptyForm: HorseForm = {
   name: "",
@@ -51,10 +55,13 @@ export default function AtlarPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [horses, setHorses] = useState<Horse[]>(initialHorses);
   const [hydrated, setHydrated] = useState(false);
+  const [storageReadable, setStorageReadable] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<HorseForm>(emptyForm);
   const [search, setSearch] = useState("");
+  const [collection, setCollection] = useState("Ähli atlar");
+  const [side, setSide] = useState("Ähli taraplar");
   const [breed, setBreed] = useState("Ähli tohumlar");
   const [sex, setSex] = useState("Ähli jynslar");
   const [color, setColor] = useState("Ähli reňkler");
@@ -63,17 +70,30 @@ export default function AtlarPage() {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(HORSE_STORAGE_KEY);
-      if (saved) setHorses(mergeHorseDefaults(JSON.parse(saved) as Horse[]));
+      if (saved) {
+        const parsed: unknown = JSON.parse(saved);
+        if (!Array.isArray(parsed) || !parsed.every(item => item && typeof item === "object" && typeof item.id === "string" && typeof item.name === "string")) {
+          throw new Error("Invalid saved horse catalog");
+        }
+        setHorses(mergeHorseDefaults(parsed as Horse[]));
+      }
     } catch {
-      // Nädogry lokal maglumat bolsa başlangyç sanaw ulanylýar.
+      // Malformed data must remain untouched so it can be recovered.
+      setStorageReadable(false);
     } finally {
       setHydrated(true);
     }
   }, []);
 
   useEffect(() => {
-    if (hydrated) window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(horses));
-  }, [horses, hydrated]);
+    if (hydrated && storageReadable) {
+      try {
+        window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(horses));
+      } catch {
+        setStorageReadable(false);
+      }
+    }
+  }, [horses, hydrated, storageReadable]);
 
   const visibleHorses = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("tk");
@@ -90,7 +110,9 @@ export default function AtlarPage() {
         matchesSearch &&
         (breed === "Ähli tohumlar" || horse.breed === breed) &&
         (sex === "Ähli jynslar" || horse.sex === sex) &&
-        (color === "Ähli reňkler" || horse.color === color)
+        (color === "Ähli reňkler" || horse.color === color) &&
+        (collection === "Ähli atlar" || (collection === "Gözellik bäsleşiginiň ýeňijileri" ? horse.champion && Boolean(horse.sourceSide && horse.sourceNumber) : Boolean(horse.sourceSide && horse.sourceNumber))) &&
+        (collection !== "Arkadag şäheriniň 24 aty" || side === "Ähli taraplar" || horse.sourceSide === side)
       );
     });
 
@@ -100,15 +122,17 @@ export default function AtlarPage() {
       if (sort === "breed") return a.breed.localeCompare(b.breed, "tk");
       return a.name.localeCompare(b.name, "tk");
     });
-  }, [horses, search, breed, sex, color, sort]);
+  }, [horses, search, breed, sex, color, collection, side, sort]);
 
   function openCreateModal() {
+    if (!storageReadable) return;
     setEditingId(null);
     setForm({ ...emptyForm, code: `AT-${new Date().getFullYear()}-` });
     setModalOpen(true);
   }
 
   function openEditModal(horse: Horse) {
+    if (!storageReadable) return;
     const { id, ...values } = horse;
     setEditingId(id);
     setForm(values);
@@ -123,6 +147,7 @@ export default function AtlarPage() {
 
   function saveHorse(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!storageReadable) return;
     if (editingId) {
       setHorses((current) =>
         current.map((horse) =>
@@ -139,12 +164,37 @@ export default function AtlarPage() {
   }
 
   function deleteHorse(horse: Horse) {
+    if (!storageReadable) return;
     if (window.confirm(`${horse.name} atly aty sanawdan pozmalymy?`)) {
       setHorses((current) => current.filter((item) => item.id !== horse.id));
     }
   }
 
+  function exportLocalBackup() {
+    try {
+      // Export stored bytes, not the current in-memory fallback, for recovery.
+      const raw = window.localStorage.getItem(HORSE_STORAGE_KEY);
+      if (raw === null) {
+        window.alert("Ýerli saklaýjyda at maglumatlary ýok.");
+        return;
+      }
+      const blob = new Blob([raw], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `atcylyk-atlar-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.alert("Ätiýaçlyk faýly taýýarlamak başa barmady.");
+    }
+  }
+
   function resetFilters() {
+    setCollection("Ähli atlar");
+    setSide("Ähli taraplar");
     setSearch("");
     setBreed("Ähli tohumlar");
     setSex("Ähli jynslar");
@@ -161,6 +211,9 @@ export default function AtlarPage() {
 
         <main className="p-4 sm:p-6 lg:p-8">
           <Breadcrumb />
+          
+          
+          {!storageReadable && <p role="alert" className="my-4 rounded-lg border border-red-500 bg-red-50 p-4 text-red-900">Ýerli at maglumatlaryny okamak ýa-da saklamak başa barmady. Maglumatlaryň üstünden ýazmazlyk üçin üýtgetmek wagtlaýyn ýapyldy. Maglumatlary dikeltmezden brauzeriň saklaýjysyny arassalamaň.</p>}
 
           <section className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-[#052b1f] via-[#0b5e3c] to-[#b58b2a] p-6 text-white shadow-lg sm:p-8">
             <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[36px] border-white/5" />
@@ -181,7 +234,10 @@ export default function AtlarPage() {
             </div>
           </section>
 
-          <div className="mb-6 flex justify-end">
+          <div className="mb-6 flex flex-wrap justify-end gap-3">
+            <button type="button" onClick={exportLocalBackup} className="inline-flex items-center gap-2 rounded-xl border border-[#0b5e3c] bg-white px-5 py-3 font-bold text-[#0b5e3c] transition hover:bg-emerald-50">
+              <Download size={19} /> Ätiýaçlyk nusgany al
+            </button>
             <button type="button" onClick={openCreateModal} className="inline-flex items-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white shadow-sm transition hover:bg-[#08462d] focus:outline-none focus:ring-4 focus:ring-emerald-200">
               <Plus size={19} /> Täze at goş
             </button>
@@ -191,6 +247,8 @@ export default function AtlarPage() {
             <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-6">
               <h2 className="mb-6 text-xl font-black text-[#082f24]">Filtrler</h2>
               <div className="space-y-5">
+                <FilterSelect label="Atlaryň topary" value={collection} onChange={setCollection} options={["Ähli atlar", "Gözellik bäsleşiginiň ýeňijileri", "Arkadag şäheriniň 24 aty"]} />
+                {collection === "Arkadag şäheriniň 24 aty" && <FilterSelect label="Sanawdaky tarapy" value={side} onChange={setSide} options={["Ähli taraplar", "Gündogar", "Günbatar"]} />}
                 <FilterSelect label="Tohum" value={breed} onChange={setBreed} options={["Ähli tohumlar", ...Array.from(new Set(horses.map((horse) => horse.breed)))]} />
                 <FilterSelect label="Görnüşi" value={sex} onChange={setSex} options={["Ähli jynslar", ...Array.from(new Set(horses.map((horse) => horse.sex)))]} />
                 <FilterSelect label="Reňk" value={color} onChange={setColor} options={["Ähli reňkler", ...Array.from(new Set(horses.map((horse) => horse.color)))]} />
@@ -248,10 +306,10 @@ export default function AtlarPage() {
                           </div>
                           <span className="rounded-lg bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">{horse.sex}</span>
                         </div>
-                        <div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Reňki</p><p className="mt-1 font-black text-slate-950">{horse.color}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Doglan ýyly</p><p className="mt-1 font-black text-slate-950">{horse.year}</p></div></div><p className="mt-3 truncate text-sm font-bold text-slate-600">ID: {horse.code}</p><p className="mt-2 line-clamp-1 text-sm font-bold text-[#0b5e3c]">{horse.lineage || "Nesil ugry barada maglumat ýok"}</p>
+                        <div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Reňki</p><p className="mt-1 font-black text-slate-950">{horse.color}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Doglan ýyly</p><p className="mt-1 font-black text-slate-950">{horse.year || "Näbelli"}</p></div></div><p className="mt-3 truncate text-sm font-bold text-slate-600">ID: {horse.code}</p><p className="mt-2 line-clamp-1 text-sm font-bold text-[#0b5e3c]">{horse.lineage || "Nesil ugry barada maglumat ýok"}</p>
 
                         <div className="mt-5 grid grid-cols-4 gap-2">
-                          <ActionLink href={`/atlar/${horse.id}`} label="Gör" icon={<Eye size={18} />} />
+                          <ActionLink href={horsePassportHref(horse.id)} label="Gör" icon={<Eye size={18} />} />
                           <ActionLink href={`/nesil?horse=${encodeURIComponent(horse.id)}`} label={`${horse.name} — nesil daragty`} icon={<Network size={18} />} />
                           <ActionButton label="Redaktirle" onClick={() => openEditModal(horse)} icon={<Pencil size={18} />} />
                           <ActionButton label="Poz" onClick={() => deleteHorse(horse)} icon={<Trash2 size={18} />} danger />

@@ -7,8 +7,6 @@ import { assetPath } from "../lib/assetPath";
 import {
   Home,
   Badge,
-  Award,
-  Landmark,
   Network,
   BarChart3,
   HeartPulse,
@@ -16,6 +14,7 @@ import {
   FileText,
   Users,
   Settings,
+  Info,
   X,
 } from "lucide-react";
 
@@ -31,8 +30,6 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
   const menuItems = [
     { name: "Baş sahypa", icon: Home, href: "/" },
     { name: "Atlar katalogy", icon: Badge, href: "/atlar" },
-    { name: "Gözellik bäsleşiginiň ýeňijileri", icon: Award, href: "/yenijiler" },
-    { name: "Arkadag şäheriniň 24 aty", icon: Landmark, href: "/arkadag-atlary" },
     { name: "Nesil daragty", icon: Network, href: "/nesil" },
     { name: "Tohumçylyk seljermesi", icon: BarChart3, href: "/seljerme" },
     { name: "Saglyk taryhy", icon: HeartPulse, href: "/saglyk" },
@@ -40,6 +37,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
     { name: "Hasabatlar", icon: FileText, href: "/hasabatlar" },
     { name: "Ulanyjylar", icon: Users, href: "/ulanyjylar" },
     { name: "Sazlamalar", icon: Settings, href: "/sazlamalar" },
+    { name: "Programma barada", icon: Info, href: "/programma-barada" },
   ];
 
   return (
@@ -65,7 +63,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
 
         <div className="mb-8 flex justify-center">
           <img
-            src={assetPath("/logo.jpg")}
+            src={assetPath("/sidebar-emblem.svg")}
             alt="Atçylyk Akademiýasy"
             className="w-44 mx-auto"
           />
