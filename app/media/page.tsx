@@ -77,7 +77,7 @@ export default function MediaPage() {
             kind,
             title: filename.replace(/\.[^.]+$/, ""),
             fileName: filename,
-            url: "/horses/" + relative.split("/").map(encodeURIComponent).join("/"),
+            url: "https://raw.githubusercontent.com/Stoun05/horse-portal-v2/main/" + entry.path.split("/").map(encodeURIComponent).join("/"),
           }];
         });
         return { items: media };
