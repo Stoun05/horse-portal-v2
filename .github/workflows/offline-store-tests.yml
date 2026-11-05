@@ -1,5 +1,7 @@
 name: Offline store tests
 on:
+  push:
+    branches: [integration/v1.1.0-offline-rebased]
   pull_request:
     paths:
       - 'electron/**'
