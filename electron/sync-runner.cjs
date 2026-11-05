@@ -1,0 +1,36 @@
+/* Opt-in sequential sync engine. No networking or renderer access: caller supplies send(). */
+const {planSync,classifyServerResponse}=require("./sync-planner.cjs");
+const activeStores=new WeakSet();
+async function flushPending({store,send,signal}){
+ if(!store?.listPending||!store?.acknowledge||!store?.markConflict||typeof send!=="function") throw Error("Invalid sync dependencies");
+ if(signal?.aborted) return {state:"cancelled",acknowledged:0,conflicted:0};
+ if(activeStores.has(store)) return {state:"busy",acknowledged:0,conflicted:0};
+ activeStores.add(store);
+ try {
+ let acknowledged=0,conflicted=0;
+ for(const change of store.listPending()){
+  if(signal?.aborted) return {state:"cancelled",acknowledged,conflicted};
+  if(change.status==="conflict") return {state:"conflict",acknowledged,conflicted};
+  const request=planSync([change])[0];
+  let response;
+  try{response=await send(request);}catch{return {state:"retry",acknowledged,conflicted};}
+  // Logout cannot cancel an already sent request, but must not update a closed account store.
+  if(signal?.aborted) return {state:"cancelled",acknowledged,conflicted};
+  const disposition=classifyServerResponse(change,response);
+  if(disposition==="ack"){
+   if(!store.acknowledge(change.id,response)) return {state:"retry",acknowledged,conflicted};
+   acknowledged++;
+  }else if(disposition==="conflict"){
+   store.markConflict(change.id);
+   conflicted++;
+   return {state:"conflict",acknowledged,conflicted};
+  }else if(disposition==="blocked"){
+   return {state:"blocked",acknowledged,conflicted};
+  }else{
+   return {state:"retry",acknowledged,conflicted};
+  }
+ }
+ return {state:"complete",acknowledged,conflicted};
+ } finally { activeStores.delete(store); }
+}
+module.exports={flushPending};
