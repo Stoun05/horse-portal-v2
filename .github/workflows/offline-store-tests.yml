@@ -1,0 +1,62 @@
+name: Offline store tests
+on:
+  push:
+    branches: [feature/offline-sync]
+  pull_request:
+    paths:
+      - 'electron/**'
+      - 'electron/test/**'
+      - '.github/workflows/offline-store-tests.yml'
+jobs:
+  offline-tests:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test account-offline-store
+        if: always()
+        run: node --test electron/test/account-offline-store.test.cjs
+      - name: Test authorized-offline-store
+        if: always()
+        run: node --test electron/test/authorized-offline-store.test.cjs
+      - name: Test offline-access
+        if: always()
+        run: node --test electron/test/offline-access.test.cjs
+      - name: Test offline-backup
+        if: always()
+        run: node --test electron/test/offline-backup.test.cjs
+      - name: Test offline-ipc
+        if: always()
+        run: node --test electron/test/offline-ipc.test.cjs
+      - name: Test offline-key-store
+        if: always()
+        run: node --test electron/test/offline-key-store.test.cjs
+      - name: Test offline-store
+        if: always()
+        run: node --test electron/test/offline-store.test.cjs
+      - name: Test offline-vault
+        if: always()
+        run: node --test electron/test/offline-vault.test.cjs
+      - name: Test protected-offline-store
+        if: always()
+        run: node --test electron/test/protected-offline-store.test.cjs
+      - name: Test sync-planner
+        if: always()
+        run: node --test electron/test/sync-planner.test.cjs
+      - name: Test sync-runner
+        if: always()
+        run: node --test electron/test/sync-runner.test.cjs
+      - name: Test sync-transport
+        if: always()
+        run: node --test electron/test/sync-transport.test.cjs
+      - name: Test sync transport and runner
+        if: always()
+        run: node --test electron/test/sync-transport-runner.test.cjs
+      - name: Test encrypted end-to-end sync
+        if: always()
+        run: node --test electron/test/sync-encrypted-end-to-end.test.cjs
+      - name: Test authorized encrypted IPC integration
+        if: always()
+        run: node --test electron/test/authorized-ipc-integration.test.cjs
