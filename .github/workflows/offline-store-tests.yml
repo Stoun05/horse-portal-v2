@@ -3,10 +3,6 @@ on:
   pull_request:
     paths:
       - 'electron/**'
-      - '.github/workflows/offline-store-tests.yml'
-  pull_request:
-    paths:
-      - 'electron/**'
       - 'electron/test/**'
       - '.github/workflows/offline-store-tests.yml'
 jobs:
