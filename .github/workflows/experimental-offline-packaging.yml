@@ -1,0 +1,51 @@
+name: Experimental offline Windows packaging
+on:
+  push:
+    branches: [integration/v1.1.0-offline-packaging-test]
+    paths:
+      - '.github/workflows/experimental-offline-packaging.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/experimental-offline-packaging.yml'
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install reproducibly
+        run: npm ci --no-audit --no-fund
+      - name: Build static Next.js site
+        run: npm run build
+      - name: Select offline entrypoint in temporary runner only
+        shell: pwsh
+        run: |
+          node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.main='electron/main.cjs';p.build.files=['electron/**/*','out/**/*','package.json'];fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
+          node -e "const p=require('./package.json');if(p.main!=='electron/main.cjs'||!p.build.files.includes('electron/**/*'))process.exit(1)"
+      - name: Check Electron JS modules
+        shell: pwsh
+        run: |
+          Get-ChildItem electron -Filter *.cjs | ForEach-Object { node --check $_.FullName; if ($LASTEXITCODE -ne 0) { exit 1 } }
+      - name: Package offline-entry Windows installer without publishing
+        run: npx electron-builder --win nsis --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - name: Validate installer and offline entry in ASAR
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem dist -Filter '*.exe' -ErrorAction SilentlyContinue
+          if (!$exe) { throw 'Offline Windows installer missing' }
+          $asar = 'dist/win-unpacked/resources/app.asar'
+          if (!(Test-Path $asar)) { throw 'Packaged app.asar missing' }
+          $entries = @(npx --yes @electron/asar list $asar)
+          if ($LASTEXITCODE -ne 0) { throw 'ASAR inspection failed' }
+          foreach ($required in @('electron/main.cjs', 'electron/offline-preload.cjs', 'electron/offline-store.cjs')) {
+            $found = @($entries | Where-Object { ([string]$_).Replace([char]92, '/').EndsWith($required, [System.StringComparison]::OrdinalIgnoreCase) })
+            if ($found.Count -eq 0) { throw "Required offline module missing from ASAR: $required" }
+            Write-Host "Found packaged module: $required"
+          }
+      # This checks packaging and contents, NOT functional offline login or SQLite behavior.
