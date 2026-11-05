@@ -1,11 +1,15 @@
 import http from "node:http";
+import {createPrivateKey,createPublicKey} from "node:crypto";
+import {issueOfflineGrant} from "./offline-grants.mjs";
 import { pool } from "./db.mjs";
-import { isAuthorized } from "./auth.mjs";
-import { listHorses } from "./horses.mjs";
+import { can } from "./permissions.mjs";
+import { listHorses, listHorseDeletions } from "./horses.mjs";
 import { host, port } from "./config.mjs";
 import { login } from "./login.mjs";
+import { applyHorseSync } from "./sync-apply.mjs";
 import { getSessionUser, revokeSession } from "./sessions.mjs";
 import { readJsonBody, sendJson } from "./http-utils.mjs";
+import { applyWebCors } from "./web-cors.mjs";
 
 // Initial deployment exposes health checks only. No horse or user records are public.
 const server = http.createServer(async (req, res) => {
@@ -13,12 +17,31 @@ const server = http.createServer(async (req, res) => {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Content-Type-Options", "nosniff");
+  const allowedWebOrigin = applyWebCors(req, res);
+  if (req.method === "OPTIONS") {
+    sendJson(res, allowedWebOrigin ? 204 : 403, allowedWebOrigin ? {} : { error: "Forbidden origin" });
+    return;
+  }
   if (pathname === "/api/auth/login" && req.method === "POST") {
     try {
       const body = await readJsonBody(req, 4096);
       const session = await login(body?.username, body?.password);
       sendJson(res, session ? 200 : 401, session || { error: "Invalid credentials" });
     } catch (error) { sendJson(res, error.status || 503, { error: error.status ? error.message : "Request failed" }); }
+    return;
+  }
+  if (pathname === "/api/auth/offline-grant" && req.method === "POST") {
+    try {
+      const user=await getSessionUser(req);
+      if(!user){sendJson(res,401,{error:"Unauthorized"});return;}
+      const pem=process.env.PORTAL_OFFLINE_SIGNING_KEY_PEM;
+      if(!pem){sendJson(res,503,{error:"Offline signing unavailable"});return;}
+      const key=createPrivateKey(pem.replace(/\\n/g,"\n"));
+      if(key.asymmetricKeyType!=="ed25519")throw Error("Invalid signing key");
+      const signed=issueOfflineGrant(user,key);
+      const publicKey=createPublicKey(key).export({type:"spki",format:"pem"});
+      sendJson(res,200,{...signed,publicKey});
+    }catch{sendJson(res,503,{error:"Offline signing unavailable"});}
     return;
   }
   if (pathname === "/api/auth/logout" && req.method === "POST") {
@@ -29,6 +52,19 @@ const server = http.createServer(async (req, res) => {
   if (pathname === "/api/auth/me" && req.method === "GET") {
     try { const user = await getSessionUser(req); sendJson(res, user ? 200 : 401, user || { error: "Unauthorized" }); }
     catch { sendJson(res, 503, { error: "Request failed" }); }
+    return;
+  }
+  if (pathname === "/api/sync/horses" && req.method === "POST") {
+    try {
+      const user = await getSessionUser(req);
+      if (!user) { sendJson(res, 401, { error: "Unauthorized" }); return; }
+      const change = await readJsonBody(req, 65536);
+      const outcome = await applyHorseSync(user, change);
+      const { status: httpStatus, syncStatus, ...rest } = outcome;
+      sendJson(res, httpStatus, { ...rest, ...(syncStatus ? { status: syncStatus } : {}) });
+    } catch (error) {
+      sendJson(res, error.status || 503, { error: error.status ? error.message : "Request failed" });
+    }
     return;
   }
   if (req.method !== "GET") {
@@ -52,13 +88,20 @@ const server = http.createServer(async (req, res) => {
     }
     return;
   }
+  if(pathname==="/api/horses/deletions"){
+    try{
+      const user=await getSessionUser(req);
+      if(!user){sendJson(res,401,{error:"Unauthorized"});return;}
+      if(!can(user.role,"horses:read")){sendJson(res,403,{error:"Forbidden"});return;}
+      sendJson(res,200,await listHorseDeletions());
+    }catch{sendJson(res,503,{error:"Deletion list unavailable"});}
+    return;
+  }
   if (pathname === "/api/horses") {
-    if (!isAuthorized(req)) {
-      res.writeHead(401);
-      res.end(JSON.stringify({ error: "Unauthorized" }));
-      return;
-    }
     try {
+      const user = await getSessionUser(req);
+      if (!user) { sendJson(res, 401, { error: "Unauthorized" }); return; }
+      if (!can(user.role, "horses:read")) { sendJson(res, 403, { error: "Forbidden" }); return; }
       const result = await listHorses(new URL(req.url || "/", "http://localhost"));
       res.writeHead(200);
       res.end(JSON.stringify(result));

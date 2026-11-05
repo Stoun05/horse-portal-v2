@@ -1,0 +1,3 @@
+BEGIN;
+ALTER TABLE sync_operations ADD COLUMN IF NOT EXISTS request_digest TEXT;
+COMMIT;
