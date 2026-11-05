@@ -4,6 +4,9 @@ on:
     branches: [integration/v1.1.0-offline-packaging-test]
     paths:
       - '.github/workflows/experimental-offline-packaging.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/experimental-offline-packaging.yml'
 permissions:
   contents: read
 jobs:
