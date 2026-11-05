@@ -20,10 +20,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      # Diagnostic build: package-lock.json is currently out of sync with package.json.
-      # Restore npm ci after regenerating and committing the lockfile.
-      - name: Install dependencies for diagnostic build
-        run: npm install --no-audit --no-fund
+      - name: Install reproducibly from synchronized lockfile
+        run: npm ci --no-audit --no-fund
       - name: Verify offline JS syntax
         shell: pwsh
         run: |
