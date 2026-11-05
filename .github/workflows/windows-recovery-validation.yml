@@ -1,0 +1,41 @@
+name: Windows recovery validation
+on:
+  push:
+    branches: [integration/v1.1.0-offline-rebased]
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - 'electron/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'next.config.ts'
+      - '.github/workflows/windows-recovery-validation.yml'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install reproducibly from synchronized lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Verify offline JS syntax
+        shell: pwsh
+        run: |
+          Get-ChildItem electron -Filter *.cjs | ForEach-Object { node --check $_.FullName; if ($LASTEXITCODE -ne 0) { exit 1 } }
+      - name: Build static Next.js frontend
+        run: npm run build
+      - name: Package current beta3 installer without publishing
+        run: npx electron-builder --win nsis --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - name: Verify an installer was generated
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem dist -Filter '*.exe' -ErrorAction SilentlyContinue
+          if (!$exe) { throw 'Windows installer not found' }
+      # Packaging check validates beta3 entrypoint only.
+      # It does not prove the new Electron offline modules are packaged or active.
