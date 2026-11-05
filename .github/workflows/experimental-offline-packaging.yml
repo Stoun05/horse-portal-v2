@@ -44,7 +44,7 @@ jobs:
           $entries = @(npx --yes @electron/asar list $asar)
           if ($LASTEXITCODE -ne 0) { throw 'ASAR inspection failed' }
           foreach ($required in @('electron/main.cjs', 'electron/offline-preload.cjs', 'electron/offline-store.cjs')) {
-            $found = @($entries | Where-Object { $_.Replace('\\','/').EndsWith($required) })
+            $found = @($entries | Where-Object { ([string]$_).Replace([char]92, '/').EndsWith($required, [System.StringComparison]::OrdinalIgnoreCase) })
             if ($found.Count -eq 0) { throw "Required offline module missing from ASAR: $required" }
             Write-Host "Found packaged module: $required"
           }
