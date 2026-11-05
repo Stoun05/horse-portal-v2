@@ -41,6 +41,11 @@ jobs:
           if (!$exe) { throw 'Offline Windows installer missing' }
           $asar = 'dist/win-unpacked/resources/app.asar'
           if (!(Test-Path $asar)) { throw 'Packaged app.asar missing' }
-          npx --yes @electron/asar list $asar | Select-String 'electron/main.cjs|electron/offline-preload.cjs|electron/offline-store.cjs' | Out-Host
+          $entries = @(npx --yes @electron/asar list $asar)
           if ($LASTEXITCODE -ne 0) { throw 'ASAR inspection failed' }
+          foreach ($required in @('electron/main.cjs', 'electron/offline-preload.cjs', 'electron/offline-store.cjs')) {
+            $found = @($entries | Where-Object { $_.Replace('\\','/').EndsWith($required) })
+            if ($found.Count -eq 0) { throw "Required offline module missing from ASAR: $required" }
+            Write-Host "Found packaged module: $required"
+          }
       # This checks packaging and contents, NOT functional offline login or SQLite behavior.
