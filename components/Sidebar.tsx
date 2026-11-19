@@ -65,9 +65,9 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
 
         <div className="mb-7 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-6">
           <img
-            src={assetPath("/logo.jpg")}
+            src={assetPath("/sidebar-emblem.svg")}
             alt="Atçylyk Akademiýasy"
-            className="h-24 w-40 object-contain drop-shadow-lg"
+            className="h-24 w-24 rounded-full border border-amber-200/20 object-contain drop-shadow-lg"
           />
           <p className="text-center text-xs font-bold uppercase tracking-[0.2em] text-amber-200">ATÇYLYK PORTAL</p>
         </div>
