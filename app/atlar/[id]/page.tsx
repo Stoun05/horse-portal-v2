@@ -202,7 +202,7 @@ function HorseProfile({
           <Link href="/atlar" className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-[#0b5e3c] hover:underline">
             <ArrowLeft size={17} /> Atlar katalogyna dolan
           </Link>
-          <h1 className="text-3xl font-black tracking-tight text-[#0b2f24] lg:text-4xl">At pasporty</h1>
+          <h1 className="text-3xl font-black tracking-tight text-[#0b2f24] lg:text-4xl">At pasporty</h1><p className="mt-2 text-sm font-medium text-emerald-800">At baradaky maglumatlar, suratlar we nesil taryhy</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link href={`/nesil?horse=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl border border-[#0b5e3c] bg-white px-5 py-3 font-semibold text-[#0b5e3c] hover:bg-emerald-50">
@@ -214,7 +214,7 @@ function HorseProfile({
         </div>
       </div>
 
-      <section className="overflow-hidden rounded-[30px] border border-[#deebe3] bg-white shadow-[0_18px_50px_-28px_rgba(4,48,29,0.45)]">
+      <section className="overflow-hidden rounded-[30px] border border-[#deebe3] bg-white shadow-[0_18px_50px_-28px_rgba(4,48,29,0.45)] ring-1 ring-emerald-50">
         <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr]">
           <div className="relative min-h-[360px] overflow-hidden bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a] xl:min-h-[520px]">
             {horse.image ? (
