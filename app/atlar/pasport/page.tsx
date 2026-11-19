@@ -1,16 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import HorsePassportPage from "../../../components/HorsePassportPage";
 
-const subscribe = () => () => {};
-
 export default function ExtendedHorsePassportRoute() {
-  const search = useSyncExternalStore(subscribe, () => window.location.search, () => "");
-  const horseId = new URLSearchParams(search).get("horse") ?? "";
+  const [search, setSearch] = useState<string | null>(null);
+  useEffect(() => setSearch(window.location.search), []);
+  const horseId = new URLSearchParams(search ?? "").get("horse") ?? "";
 
-  if (!search) {
+  if (search === null) {
     return <main className="flex min-h-screen items-center justify-center bg-[#f3f6f3] p-6"><p className="font-semibold text-[#0b5e3c]">Pasport açylýar...</p></main>;
   }
 
