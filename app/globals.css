@@ -33,3 +33,15 @@ th { color: #26352e; font-weight: 800; }
 td { font-weight: 550; }
 input, select { color: #111827; background: #fff; }
 ::placeholder { color: #6b7280; opacity: 1; }
+
+/* Design reconciliation: visible keyboard focus without overriding the existing theme. */
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid #0b7a53;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+  }
+}
