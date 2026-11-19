@@ -55,6 +55,8 @@ export default function AtlarPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<HorseForm>(emptyForm);
   const [search, setSearch] = useState("");
+  const [collection, setCollection] = useState("Ähli atlar");
+  const [side, setSide] = useState("Ähli taraplar");
   const [breed, setBreed] = useState("Ähli tohumlar");
   const [sex, setSex] = useState("Ähli jynslar");
   const [color, setColor] = useState("Ähli reňkler");
@@ -90,7 +92,11 @@ export default function AtlarPage() {
         matchesSearch &&
         (breed === "Ähli tohumlar" || horse.breed === breed) &&
         (sex === "Ähli jynslar" || horse.sex === sex) &&
-        (color === "Ähli reňkler" || horse.color === color)
+        (color === "Ähli reňkler" || horse.color === color) &&
+        (collection === "Ähli atlar" ||
+          (collection === "Gözellik bäsleşiginiň ýeňijileri" && horse.champion && Boolean(horse.sourceSide && horse.sourceNumber)) ||
+          (collection === "Arkadag şäheriniň 24 aty" && Boolean(horse.sourceSide && horse.sourceNumber))) &&
+        (collection !== "Arkadag şäheriniň 24 aty" || side === "Ähli taraplar" || horse.sourceSide === side)
       );
     });
 
@@ -100,7 +106,7 @@ export default function AtlarPage() {
       if (sort === "breed") return a.breed.localeCompare(b.breed, "tk");
       return a.name.localeCompare(b.name, "tk");
     });
-  }, [horses, search, breed, sex, color, sort]);
+  }, [horses, search, collection, side, breed, sex, color, sort]);
 
   function openCreateModal() {
     setEditingId(null);
@@ -146,13 +152,15 @@ export default function AtlarPage() {
 
   function resetFilters() {
     setSearch("");
+    setCollection("Ähli atlar");
+    setSide("Ähli taraplar");
     setBreed("Ähli tohumlar");
     setSex("Ähli jynslar");
     setColor("Ähli reňkler");
     setSort("name");
   }
 
-  const activeFilterCount = Number(breed !== "Ähli tohumlar") + Number(sex !== "Ähli jynslar") + Number(color !== "Ähli reňkler") + Number(search.trim().length > 0);
+  const activeFilterCount = Number(collection !== "Ähli atlar") + Number(collection === "Arkadag şäheriniň 24 aty" && side !== "Ähli taraplar") + Number(breed !== "Ähli tohumlar") + Number(sex !== "Ähli jynslar") + Number(color !== "Ähli reňkler") + Number(search.trim().length > 0);
 
   return (
     <div className="min-h-screen bg-[#f3f6f3] lg:flex">
@@ -196,6 +204,8 @@ export default function AtlarPage() {
                 <FilterSelect label="Tohum" value={breed} onChange={setBreed} options={["Ähli tohumlar", ...Array.from(new Set(horses.map((horse) => horse.breed)))]} />
                 <FilterSelect label="Görnüşi" value={sex} onChange={setSex} options={["Ähli jynslar", ...Array.from(new Set(horses.map((horse) => horse.sex)))]} />
                 <FilterSelect label="Reňk" value={color} onChange={setColor} options={["Ähli reňkler", ...Array.from(new Set(horses.map((horse) => horse.color)))]} />
+                <FilterSelect label="Atlaryň topary" value={collection} onChange={(value) => { setCollection(value); setSide("Ähli taraplar"); }} options={["Ähli atlar", "Gözellik bäsleşiginiň ýeňijileri", "Arkadag şäheriniň 24 aty"]} />
+                {collection === "Arkadag şäheriniň 24 aty" && <FilterSelect label="Sanawdaky tarapy" value={side} onChange={setSide} options={["Ähli taraplar", "Gündogar", "Günbatar"]} />}
                 <button type="button" onClick={resetFilters} className="w-full rounded-xl border border-[#b58b2a] py-3 font-semibold text-[#9b741d] transition hover:bg-amber-50">
                   Täzeden başla
                 </button>
@@ -221,7 +231,7 @@ export default function AtlarPage() {
                 </select>
               </div>
 
-              <div className="mb-4 flex flex-wrap items-center gap-2"><p className="mr-2 text-sm font-bold text-gray-600">Netije: {visibleHorses.length} at</p>{breed !== "Ähli tohumlar" && <button type="button" onClick={() => setBreed("Ähli tohumlar")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Tohum: {breed} ×</button>}{sex !== "Ähli jynslar" && <button type="button" onClick={() => setSex("Ähli jynslar")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Görnüş: {sex} ×</button>}{color !== "Ähli reňkler" && <button type="button" onClick={() => setColor("Ähli reňkler")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Reňk: {color} ×</button>}{search.trim() && <button type="button" onClick={() => setSearch("")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Gözleg: {search} ×</button>}</div>
+              <div className="mb-4 flex flex-wrap items-center gap-2"><p className="mr-2 text-sm font-bold text-gray-600">Netije: {visibleHorses.length} at</p>{breed !== "Ähli tohumlar" && <button type="button" onClick={() => setBreed("Ähli tohumlar")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Tohum: {breed} ×</button>}{sex !== "Ähli jynslar" && <button type="button" onClick={() => setSex("Ähli jynslar")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Görnüş: {sex} ×</button>}{color !== "Ähli reňkler" && <button type="button" onClick={() => setColor("Ähli reňkler")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Reňk: {color} ×</button>}{search.trim() && <button type="button" onClick={() => setSearch("")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Gözleg: {search} ×</button>}{collection !== "Ähli atlar" && <button type="button" onClick={() => { setCollection("Ähli atlar"); setSide("Ähli taraplar"); }} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Topar: {collection} ×</button>}{collection === "Arkadag şäheriniň 24 aty" && side !== "Ähli taraplar" && <button type="button" onClick={() => setSide("Ähli taraplar")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Tarap: {side} ×</button>}</div>
 
               {visibleHorses.length ? (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
