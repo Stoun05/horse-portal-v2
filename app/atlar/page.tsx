@@ -152,6 +152,8 @@ export default function AtlarPage() {
     setSort("name");
   }
 
+  const activeFilterCount = Number(breed !== "Ähli tohumlar") + Number(sex !== "Ähli jynslar") + Number(color !== "Ähli reňkler") + Number(search.trim().length > 0);
+
   return (
     <div className="min-h-screen bg-[#f3f6f3] lg:flex">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
@@ -162,7 +164,7 @@ export default function AtlarPage() {
         <main className="p-4 sm:p-6 lg:p-8">
           <Breadcrumb />
 
-          <section className="relative mb-6 overflow-hidden rounded-[30px] border border-emerald-900/20 bg-gradient-to-br from-[#052b1f] via-[#0a503c] to-[#92702e] p-6 text-white shadow-[0_18px_50px_-24px_rgba(2,44,29,0.7)] sm:p-8 sm:p-8">
+          <section className="relative mb-6 overflow-hidden rounded-[30px] border border-emerald-900/20 bg-gradient-to-br from-[#052b1f] via-[#0a503c] to-[#92702e] p-6 text-white shadow-[0_18px_50px_-24px_rgba(2,44,29,0.7)] sm:p-8">
             <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[36px] border-white/5" />
             <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
               <div className="max-w-3xl">
@@ -189,7 +191,7 @@ export default function AtlarPage() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
             <aside className="h-fit rounded-3xl border border-[#dbe7df] bg-white p-6 shadow-[0_12px_36px_-28px_rgba(4,48,29,0.45)] lg:sticky lg:top-6">
-              <h2 className="mb-6 text-xl font-black text-[#082f24]">Filtrler</h2>
+              <div className="mb-6 flex items-center justify-between gap-2"><h2 className="text-xl font-black text-[#082f24]">Filtrler</h2><span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-800">{activeFilterCount} işjeň</span></div>
               <div className="space-y-5">
                 <FilterSelect label="Tohum" value={breed} onChange={setBreed} options={["Ähli tohumlar", ...Array.from(new Set(horses.map((horse) => horse.breed)))]} />
                 <FilterSelect label="Görnüşi" value={sex} onChange={setSex} options={["Ähli jynslar", ...Array.from(new Set(horses.map((horse) => horse.sex)))]} />
@@ -219,9 +221,7 @@ export default function AtlarPage() {
                 </select>
               </div>
 
-              <p className="mb-4 text-sm font-medium text-gray-500">
-                Netije: {visibleHorses.length} at
-              </p>
+              <div className="mb-4 flex flex-wrap items-center gap-2"><p className="mr-2 text-sm font-bold text-gray-600">Netije: {visibleHorses.length} at</p>{breed !== "Ähli tohumlar" && <button type="button" onClick={() => setBreed("Ähli tohumlar")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Tohum: {breed} ×</button>}{sex !== "Ähli jynslar" && <button type="button" onClick={() => setSex("Ähli jynslar")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Görnüş: {sex} ×</button>}{color !== "Ähli reňkler" && <button type="button" onClick={() => setColor("Ähli reňkler")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Reňk: {color} ×</button>}{search.trim() && <button type="button" onClick={() => setSearch("")} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">Gözleg: {search} ×</button>}</div>
 
               {visibleHorses.length ? (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
