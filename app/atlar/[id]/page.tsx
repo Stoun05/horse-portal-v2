@@ -205,6 +205,9 @@ function HorseProfile({
           <h1 className="text-3xl font-black tracking-tight text-[#0b2f24] lg:text-4xl">At pasporty</h1><p className="mt-2 text-sm font-medium text-emerald-800">At baradaky maglumatlar, suratlar we nesil taryhy</p>
         </div>
         <div className="flex flex-wrap gap-3">
+          <Link href={`/atlar/pasport?horse=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-5 py-3 font-bold text-amber-950 transition hover:bg-amber-200">
+            <FileDown size={18} /> Giňişleýin pasport
+          </Link>
           <Link href={`/nesil?horse=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl border border-[#0b5e3c] bg-white px-5 py-3 font-semibold text-[#0b5e3c] hover:bg-emerald-50">
             <Network size={18} /> Nesil daragty
           </Link>
