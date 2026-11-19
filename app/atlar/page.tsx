@@ -153,16 +153,16 @@ export default function AtlarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f7f5] lg:flex">
+    <div className="min-h-screen bg-[#f3f6f3] lg:flex">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
-      <div className="min-w-0 flex-1 border-[#93c5fd] sm:border-x-4 lg:border-x-[15px]">
+      <div className="min-w-0 flex-1 border-[#d8e6dc] sm:border-x-4 lg:border-x-[10px]">
         <Topbar setOpen={setSidebarOpen} />
 
         <main className="p-4 sm:p-6 lg:p-8">
           <Breadcrumb />
 
-          <section className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-[#052b1f] via-[#0b5e3c] to-[#b58b2a] p-6 text-white shadow-lg sm:p-8">
+          <section className="relative mb-6 overflow-hidden rounded-[30px] border border-emerald-900/20 bg-gradient-to-br from-[#052b1f] via-[#0a503c] to-[#92702e] p-6 text-white shadow-[0_18px_50px_-24px_rgba(2,44,29,0.7)] sm:p-8 sm:p-8">
             <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[36px] border-white/5" />
             <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
               <div className="max-w-3xl">
@@ -188,7 +188,7 @@ export default function AtlarPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
-            <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-6">
+            <aside className="h-fit rounded-3xl border border-[#dbe7df] bg-white p-6 shadow-[0_12px_36px_-28px_rgba(4,48,29,0.45)] lg:sticky lg:top-6">
               <h2 className="mb-6 text-xl font-black text-[#082f24]">Filtrler</h2>
               <div className="space-y-5">
                 <FilterSelect label="Tohum" value={breed} onChange={setBreed} options={["Ähli tohumlar", ...Array.from(new Set(horses.map((horse) => horse.breed)))]} />
@@ -227,7 +227,7 @@ export default function AtlarPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                   {visibleHorses.map((horse) => (
                     <article key={horse.id} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl">
-                      <div className="relative h-56 overflow-hidden bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a]">
+                      <div className="relative h-60 overflow-hidden bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a]">
                         {horse.image ? (
                           <Image src={assetPath(horse.image)} alt={horse.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw" className="object-cover transition duration-500 group-hover:scale-105" />
                         ) : (
@@ -240,7 +240,7 @@ export default function AtlarPage() {
                         )}
                       </div>
 
-                      <div className="p-5">
+                      <div className="p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <h3 className="text-xl font-bold text-[#0b2f24]">{horse.name}</h3>
