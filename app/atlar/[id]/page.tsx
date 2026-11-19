@@ -75,10 +75,10 @@ export default function AtProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 lg:flex">
+    <div className="min-h-screen bg-[#f3f6f3] lg:flex">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
-      <div className="min-w-0 flex-1 border-[#93c5fd] sm:border-x-4 lg:border-x-[15px]">
+      <div className="min-w-0 flex-1 border-[#d8e6dc] sm:border-x-4 lg:border-x-[10px]">
         <Topbar setOpen={setSidebarOpen} />
 
         <main className="p-4 sm:p-6 lg:p-8">
@@ -202,7 +202,7 @@ function HorseProfile({
           <Link href="/atlar" className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-[#0b5e3c] hover:underline">
             <ArrowLeft size={17} /> Atlar katalogyna dolan
           </Link>
-          <h1 className="text-3xl font-bold text-[#0b2f24] lg:text-4xl">At pasporty</h1>
+          <h1 className="text-3xl font-black tracking-tight text-[#0b2f24] lg:text-4xl">At pasporty</h1>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link href={`/nesil?horse=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl border border-[#0b5e3c] bg-white px-5 py-3 font-semibold text-[#0b5e3c] hover:bg-emerald-50">
@@ -214,7 +214,7 @@ function HorseProfile({
         </div>
       </div>
 
-      <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
+      <section className="overflow-hidden rounded-[30px] border border-[#deebe3] bg-white shadow-[0_18px_50px_-28px_rgba(4,48,29,0.45)]">
         <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr]">
           <div className="relative min-h-[360px] overflow-hidden bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a] xl:min-h-[520px]">
             {horse.image ? (
@@ -241,7 +241,7 @@ function HorseProfile({
             <div className="mb-8 flex flex-col gap-4 border-b border-gray-100 pb-7 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-[#b58b2a]">{horse.code}</p>
-                <h2 className="text-4xl font-bold text-[#0b2f24] sm:text-5xl">{horse.name}</h2>
+                <h2 className="text-4xl font-black tracking-tight text-[#0b2f24] sm:text-5xl">{horse.name}</h2>
                 <p className="mt-3 text-lg font-semibold text-[#0b5e3c]">{horse.breed}</p>
               </div>
               <span className="w-fit rounded-xl bg-emerald-50 px-4 py-2 font-bold text-emerald-800">{horse.sex}</span>
@@ -470,7 +470,7 @@ function PhotoRange({
   icon?: React.ReactNode;
 }) {
   return (
-    <label className="block rounded-2xl border border-gray-200 bg-gray-50 p-4">
+    <label className="block rounded-2xl border border-[#dcebe2] bg-[#f5f9f6] p-4">
       <span className="mb-3 flex items-center justify-between gap-3 font-semibold text-gray-800">
         <span className="flex items-center gap-2">{icon}{label}</span>
         <span className="text-sm text-[#0b5e3c]">
