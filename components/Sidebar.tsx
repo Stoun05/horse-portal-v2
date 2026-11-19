@@ -7,8 +7,6 @@ import { assetPath } from "../lib/assetPath";
 import {
   Home,
   Badge,
-  Award,
-  Landmark,
   Network,
   BarChart3,
   HeartPulse,
@@ -31,8 +29,6 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
   const menuItems = [
     { name: "Baş sahypa", icon: Home, href: "/" },
     { name: "Atlar katalogy", icon: Badge, href: "/atlar" },
-    { name: "Gözellik bäsleşiginiň ýeňijileri", icon: Award, href: "/yenijiler" },
-    { name: "Arkadag şäheriniň 24 aty", icon: Landmark, href: "/arkadag-atlary" },
     { name: "Nesil daragty", icon: Network, href: "/nesil" },
     { name: "Tohumçylyk seljermesi", icon: BarChart3, href: "/seljerme" },
     { name: "Saglyk taryhy", icon: HeartPulse, href: "/saglyk" },
