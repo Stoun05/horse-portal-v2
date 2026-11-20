@@ -44,3 +44,9 @@ The `Admin Panel CI` workflow on `feature/admin-panel` runs `npm ci` and `npm ru
 - Without Redis, the catalog continues in READ-ONLY local demonstration mode. Admin add/edit/delete buttons are hidden until the shared database is reachable. Existing browser-local records can still be displayed, but are not synchronized.
 - Uploaded images currently use browser data URLs; move photos to object storage before production.
 - User accounts and other editing routes are not migrated yet.
+
+## Backup and additive migration
+
+Admin > Atlar contains a JSON backup download of the current browser-local horse records, even when Redis is offline. The file includes a format marker and version. The administrator can explicitly select this file for migration only when the central catalog is reachable.
+
+POST /api/admin/horses/import verifies the signed admin session, checks all horse records, detects duplicate IDs and passport codes in the uploaded batch, and adds only records whose IDs and codes are not already stored. Existing records are never overwritten by the importer. The revision compare-and-swap prevents concurrent edits from silently being lost. Export a separate copy of the server catalog before major production migrations; current export is browser-local only. Imported records are NOT rolled back automatically; take database backups before using this on valuable data.
