@@ -218,13 +218,13 @@ export default function MediaPage() {
                 Her at boýunça GitHub suratlaryny we brauzerdäki media faýllaryny görüň.
               </p>
             </div>
-            <button
+            {false && <button
               onClick={openUpload}
               disabled={!horses.length}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white hover:bg-[#08462d] disabled:opacity-50"
             >
               <Upload size={18} /> Media goş
-            </button>
+            </button>}
           </header>
 
           <section className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -315,7 +315,7 @@ export default function MediaPage() {
                               {horse?.code || (item.source === "github" ? "GitHub" : "ID ýok")} · {item.source === "github" ? "GitHub faýly" : formatDate(item.createdAt)}
                             </p>
                           </div>
-                          {item.source !== "github" && <button onClick={() => deleteItem(item)} className="shrink-0 rounded-lg border border-rose-200 p-2 text-rose-700 hover:bg-rose-50" aria-label="Media poz">
+                          {false && item.source !== "github" && <button onClick={() => deleteItem(item)} className="shrink-0 rounded-lg border border-rose-200 p-2 text-rose-700 hover:bg-rose-50" aria-label="Media poz">
                             <Trash2 size={17} />
                           </button>}
                         </div>
@@ -340,7 +340,7 @@ export default function MediaPage() {
         </main>
       </div>
 
-      {modalOpen && (
+      {false && modalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 p-4">
           <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
