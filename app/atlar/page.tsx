@@ -311,8 +311,8 @@ export default function AtlarPage() {
                         <div className={`mt-5 grid gap-2 ${management ? "grid-cols-4" : "grid-cols-2"}`}>
                           <ActionLink href={`/atlar/${horse.id}`} label="Gör" icon={<Eye size={18} />} />
                           <ActionLink href={`/nesil?horse=${encodeURIComponent(horse.id)}`} label={`${horse.name} — nesil daragty`} icon={<Network size={18} />} />
-                          {management && <ActionButton label="Redaktirle" onClick={() => openEditModal(horse)} icon={<Pencil size={18} />} />}
-                          {management && <ActionButton label="Poz" onClick={() => deleteHorse(horse)} icon={<Trash2 size={18} />} danger />}
+                          {management && central && <ActionButton label="Redaktirle" onClick={() => openEditModal(horse)} icon={<Pencil size={18} />} />}
+                          {management && central && <ActionButton label="Poz" onClick={() => deleteHorse(horse)} icon={<Trash2 size={18} />} danger />}
                         </div>
                       </div>
                     </article>
@@ -331,7 +331,7 @@ export default function AtlarPage() {
         </main>
       </div>
 
-      {management && modalOpen && (
+      {management && central && modalOpen && (
         <HorseModal
           form={form}
           editing={Boolean(editingId)}
