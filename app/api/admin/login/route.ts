@@ -8,7 +8,7 @@ import { isTrustedAdminRequest } from "../../../../lib/adminRequestSecurity";
 export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   if (!isTrustedAdminRequest(request)) return NextResponse.json({ error: "Gadagan edilen sorag." }, { status: 403 });
-  if (!configured() || !storageConfigured()) return NextResponse.json({ error: "Admin login üçin gizlin sazlamalary we Redis bazasyny birikdiriň." }, { status: 503 });
+  if (!configured()) return NextResponse.json({ error: "Admin giriş kody entek sazlanmady." }, { status: 503 });
   let data: unknown;
   try { data = await request.json(); } catch { return NextResponse.json({ error: "Nädogry maglumat." }, { status: 400 }); }
   if (!data || typeof data !== "object") return NextResponse.json({ error: "Nädogry maglumat." }, { status: 400 });
