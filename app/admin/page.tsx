@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowUpRight, Database, FileText, HeartPulse, Images, Networ
 import { HORSE_STORAGE_KEY, initialHorses, mergeHorseDefaults, type Horse } from "../../lib/horses";
 
 const areas = [
-  { title: "Atlary dolandyrmak", desc: "Atlary goşmak, üýtgetmek we sanawy tertiplemek", href: "/atlar", icon: BookOpen },
+  { title: "Atlary dolandyrmak", desc: "Atlary goşmak, üýtgetmek we sanawy tertiplemek", href: "/admin/atlar", icon: BookOpen },
   { title: "Ulanyjylar", desc: "Rollar we ulanyjy ýazgylary", href: "/ulanyjylar", icon: Users },
   { title: "Nesil daragty", desc: "Atlaryň nesil maglumatlary", href: "/nesil", icon: Network },
   { title: "Saglyk taryhy", desc: "Weterinariýa ýazgylary", href: "/saglyk", icon: HeartPulse },
