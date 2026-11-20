@@ -348,67 +348,7 @@ export default function SaglykPage() {
         </main>
       </div>
 
-      {false && modalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4 print:hidden">
-          <div className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
-              <div>
-                <h2 className="text-2xl font-black text-[#082f24]">{editingId ? "Ýazgyny üýtget" : "Täze saglyk ýazgysy"}</h2>
-                <p className="text-sm text-slate-600">Diňe hakyky weterinar maglumatlaryny giriziň.</p>
-              </div>
-              <button onClick={() => setModalOpen(false)} className="rounded-lg p-2 text-slate-700 hover:bg-slate-100"><X /></button>
-            </div>
 
-            <form onSubmit={saveRecord} className="grid gap-4 p-5 sm:grid-cols-2">
-              <Field label="At">
-                <select required value={form.horseId} onChange={(e) => setForm({ ...form, horseId: e.target.value })} className={inputClass}>
-                  {horses.map((horse) => <option key={horse.id} value={horse.id}>{horse.name} — {horse.code}</option>)}
-                </select>
-              </Field>
-              <Field label="Ýazgynyň görnüşi">
-                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as RecordType })} className={inputClass}>
-                  <option>Umumy barlag</option><option>Waksina</option><option>Bejergi</option><option>Analiz</option><option>Şikes</option>
-                </select>
-              </Field>
-              <Field label="Ady / sebäbi">
-                <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Mysal: Ýyllyk umumy barlag" className={inputClass} />
-              </Field>
-              <Field label="Sene">
-                <input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className={inputClass} />
-              </Field>
-              <Field label="Weterinar">
-                <input value={form.veterinarian} onChange={(e) => setForm({ ...form, veterinarian: e.target.value })} placeholder="Ady we familiýasy" className={inputClass} />
-              </Field>
-              <Field label="Ýagdaýy">
-                <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as RecordStatus })} className={inputClass}>
-                  <option>Tamamlandy</option><option>Gözegçilikde</option><option>Meýilleşdirildi</option>
-                </select>
-              </Field>
-              <Field label="Kesgitleme">
-                <input value={form.diagnosis} onChange={(e) => setForm({ ...form, diagnosis: e.target.value })} placeholder="Diagnoz ýa-da barlag netijesi" className={inputClass} />
-              </Field>
-              <Field label="Bejergi">
-                <input value={form.treatment} onChange={(e) => setForm({ ...form, treatment: e.target.value })} placeholder="Derman / bejergi tertibi" className={inputClass} />
-              </Field>
-              <Field label="Waksina">
-                <input value={form.vaccine} onChange={(e) => setForm({ ...form, vaccine: e.target.value })} placeholder="Waksinanyň ady" className={inputClass} />
-              </Field>
-              <Field label="Indiki barlag senesi">
-                <input type="date" value={form.nextCheckDate} onChange={(e) => setForm({ ...form, nextCheckDate: e.target.value })} className={inputClass} />
-              </Field>
-              <div className="sm:col-span-2">
-                <Field label="Weterinaryň belligi">
-                  <textarea rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Goşmaça bellikler..." className={inputClass} />
-                </Field>
-              </div>
-              <div className="flex justify-end gap-3 border-t border-slate-200 pt-4 sm:col-span-2">
-                <button type="button" onClick={() => setModalOpen(false)} className="rounded-xl border border-slate-300 px-5 py-3 font-bold text-slate-800">Ýatyr</button>
-                <button type="submit" className="rounded-xl bg-[#0b5e3c] px-6 py-3 font-bold text-white hover:bg-[#08462d]">Ýatda sakla</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
