@@ -12,8 +12,6 @@ import {
   HeartPulse,
   Image,
   FileText,
-  Users,
-  Settings,
   X,
 } from "lucide-react";
 
@@ -34,8 +32,6 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
     { name: "Saglyk taryhy", icon: HeartPulse, href: "/saglyk" },
     { name: "Wideo / Suratlar", icon: Image, href: "/media" },
     { name: "Hasabatlar", icon: FileText, href: "/hasabatlar" },
-    { name: "Ulanyjylar", icon: Users, href: "/ulanyjylar" },
-    { name: "Sazlamalar", icon: Settings, href: "/sazlamalar" },
   ];
 
   return (
@@ -68,7 +64,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
           <p className="text-center text-xs font-bold uppercase tracking-[0.2em] text-amber-200">ATÇYLYK PORTAL</p>
         </div>
 
-        <p className="mb-3 px-3 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-200/60">Dolandyryş bölümleri</p>
+        <p className="mb-3 px-3 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-200/60">Portal bölümleri</p>
         <nav className="space-y-1.5">
           {menuItems.map((item, index) => {
             const Icon = item.icon;

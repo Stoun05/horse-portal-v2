@@ -218,13 +218,13 @@ export default function MediaPage() {
                 Her at boýunça GitHub suratlaryny we brauzerdäki media faýllaryny görüň.
               </p>
             </div>
-            <button
+            {false && <button
               onClick={openUpload}
               disabled={!horses.length}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white hover:bg-[#08462d] disabled:opacity-50"
             >
               <Upload size={18} /> Media goş
-            </button>
+            </button>}
           </header>
 
           <section className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -315,7 +315,7 @@ export default function MediaPage() {
                               {horse?.code || (item.source === "github" ? "GitHub" : "ID ýok")} · {item.source === "github" ? "GitHub faýly" : formatDate(item.createdAt)}
                             </p>
                           </div>
-                          {item.source !== "github" && <button onClick={() => deleteItem(item)} className="shrink-0 rounded-lg border border-rose-200 p-2 text-rose-700 hover:bg-rose-50" aria-label="Media poz">
+                          {false && item.source !== "github" && <button onClick={() => deleteItem(item)} className="shrink-0 rounded-lg border border-rose-200 p-2 text-rose-700 hover:bg-rose-50" aria-label="Media poz">
                             <Trash2 size={17} />
                           </button>}
                         </div>
@@ -332,60 +332,11 @@ export default function MediaPage() {
               <p className="mx-auto mt-2 max-w-xl text-slate-600">
                 Demo suratlar we wideolar aýryldy. Saýlanan at üçin hakyky surat ýa-da wideo goşuň.
               </p>
-              <button onClick={openUpload} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white">
-                <Upload size={18} /> Ilkinji media faýlyny goş
-              </button>
+
             </section>
           )}
         </main>
       </div>
-
-      {modalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 p-4">
-          <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-              <div>
-                <h2 className="text-2xl font-black text-[#082f24]">Media goş</h2>
-                <p className="text-sm text-slate-600">Suraty ýa-da wideony degişli ata baglaň.</p>
-              </div>
-              <button onClick={() => setModalOpen(false)} className="rounded-lg p-2 text-slate-700 hover:bg-slate-100"><X /></button>
-            </div>
-            <form onSubmit={saveMedia} className="space-y-4 p-5">
-              <Field label="At">
-                <select required value={horseId} onChange={(event) => setHorseId(event.target.value)} className={inputClass}>
-                  {horses.map((horse) => <option key={horse.id} value={horse.id}>{horse.name} — {horse.code}</option>)}
-                </select>
-              </Field>
-              <Field label="Media ady">
-                <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Mysal: Akýol — türgenleşik" className={inputClass} />
-              </Field>
-              <Field label="Surat ýa-da wideo faýly">
-                <input
-                  required
-                  type="file"
-                  accept="image/*,video/*"
-                  onChange={(event) => setFile(event.target.files?.[0] || null)}
-                  className="w-full rounded-xl border border-dashed border-slate-400 bg-slate-50 p-4 text-sm font-semibold text-slate-800 file:mr-4 file:rounded-lg file:border-0 file:bg-[#0b5e3c] file:px-4 file:py-2 file:font-bold file:text-white"
-                />
-              </Field>
-              {file && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-950">
-                  {file.name} · {formatBytes(file.size)}
-                </div>
-              )}
-              <p className="text-xs leading-5 text-slate-500">
-                Faýl şu brauzeriň IndexedDB ammarynda saklanýar. Örän uly wideo üçin brauzerde ýeterlik boş ýer bolmaly.
-              </p>
-              <div className="flex justify-end gap-3 border-t border-slate-200 pt-4">
-                <button type="button" onClick={() => setModalOpen(false)} className="rounded-xl border border-slate-300 px-5 py-3 font-bold text-slate-800">Ýatyr</button>
-                <button disabled={saving || !file} type="submit" className="rounded-xl bg-[#0b5e3c] px-6 py-3 font-bold text-white disabled:opacity-50">
-                  {saving ? "Saklanýar..." : "Ýatda sakla"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {lightbox && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 p-4" onClick={() => setLightbox(null)}>

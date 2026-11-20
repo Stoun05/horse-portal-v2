@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Award,
@@ -19,6 +20,7 @@ import Breadcrumb from "../../components/Breadcrumb";
 import { assetPath } from "../../lib/assetPath";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
+import HorseDataTransfer from "../../components/HorseDataTransfer";
 import {
   HORSE_STORAGE_KEY,
   initialHorses,
@@ -48,9 +50,15 @@ const emptyForm: HorseForm = {
 };
 
 export default function AtlarPage() {
+  const pathname = usePathname();
+  const management = pathname.startsWith("/admin/atlar");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [horses, setHorses] = useState<Horse[]>(initialHorses);
   const [hydrated, setHydrated] = useState(false);
+  const [central, setCentral] = useState(false);
+  const [revision, setRevision] = useState(0);
+  const [catalogNotice, setCatalogNotice] = useState("");
+  const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<HorseForm>(emptyForm);
@@ -63,19 +71,61 @@ export default function AtlarPage() {
   const [sort, setSort] = useState("name");
 
   useEffect(() => {
+    let active = true;
     try {
       const saved = window.localStorage.getItem(HORSE_STORAGE_KEY);
       if (saved) setHorses(mergeHorseDefaults(JSON.parse(saved) as Horse[]));
     } catch {
       // Nädogry lokal maglumat bolsa başlangyç sanaw ulanylýar.
-    } finally {
-      setHydrated(true);
     }
+    setHydrated(true);
+    async function loadCentral() {
+      try {
+        const response = await fetch("/api/horses", { cache: "no-store" });
+        if (!response.ok) throw new Error("unavailable");
+        const data: { horses: Horse[]; revision: number } = await response.json();
+        if (!Array.isArray(data.horses) || !Number.isSafeInteger(data.revision)) throw new Error("invalid");
+        if (!active) return;
+        setCentral(true);
+        setHorses(data.horses);
+        setRevision(data.revision);
+        setCatalogNotice("");
+      } catch {
+        if (active) setCatalogNotice("Merkezi baza birikdirilmedi. Häzir diňe bu brauzeriň ýerli maglumatlary görkezilýär.");
+      }
+    }
+    void loadCentral();
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
-    if (hydrated) window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(horses));
-  }, [horses, hydrated]);
+    if (hydrated && !central) window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(horses));
+  }, [horses, hydrated, central]);
+
+  async function updateCentral(action: "upsert" | "delete", horse?: Horse, id?: string) {
+    setSaving(true);
+    try {
+      const response = await fetch("/api/admin/horses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, horse, id, revision }),
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        const error: { error?: string } = await response.json();
+        throw new Error(error.error || "Maglumat üýtgedilmedi.");
+      }
+      const data: { horses: Horse[]; revision: number } = await response.json();
+      setHorses(data.horses);
+      setRevision(data.revision);
+      return true;
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Serwer ýalňyşlygy.");
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const visibleHorses = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("tk");
@@ -127,26 +177,22 @@ export default function AtlarPage() {
     setForm(emptyForm);
   }
 
-  function saveHorse(event: FormEvent<HTMLFormElement>) {
+  async function saveHorse(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (editingId) {
-      setHorses((current) =>
-        current.map((horse) =>
-          horse.id === editingId ? { id: editingId, ...form } : horse,
-        ),
-      );
-    } else {
-      setHorses((current) => [
-        { id: crypto.randomUUID(), ...form },
-        ...current,
-      ]);
+    if (saving) return;
+    if (central) {
+      const candidate: Horse = { id: editingId ?? crypto.randomUUID(), ...form };
+      if (await updateCentral("upsert", candidate)) closeModal();
+      return;
     }
-    closeModal();
+    window.alert("Merkezi maglumat bazasy birikdirilmedik. At üýtgetmek elýeterli däl.");
   }
 
-  function deleteHorse(horse: Horse) {
+  async function deleteHorse(horse: Horse) {
+    if (saving) return;
     if (window.confirm(`${horse.name} atly aty sanawdan pozmalymy?`)) {
-      setHorses((current) => current.filter((item) => item.id !== horse.id));
+      if (central) { await updateCentral("delete", undefined, horse.id); return; }
+      window.alert("Merkezi maglumat bazasy birikdirilmedik. At pozmak elýeterli däl.");
     }
   }
 
@@ -171,6 +217,10 @@ export default function AtlarPage() {
 
         <main className="p-4 sm:p-6 lg:p-8">
           <Breadcrumb />
+          {catalogNotice && <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">{catalogNotice}</p>}
+          {central && <p role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-950">Merkezi katalog birikdirildi. At maglumatlary serwerden alynýar.</p>}
+          {management && !central && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-900">Admin katalogy diňe görmek üçin açyk. Merkezi maglumat bazasy birikdirilýänçä at goşmak, üýtgetmek we pozmak ýapyk.</p>}
+          {management && <HorseDataTransfer central={central} revision={revision} onImported={data => { setHorses(data.horses); setRevision(data.revision); }} />}
 
           <section className="relative mb-6 overflow-hidden rounded-[30px] border border-emerald-900/20 bg-gradient-to-br from-[#052b1f] via-[#0a503c] to-[#92702e] p-6 text-white shadow-[0_18px_50px_-24px_rgba(2,44,29,0.7)] sm:p-8">
             <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[36px] border-white/5" />
@@ -181,7 +231,7 @@ export default function AtlarPage() {
                 </div>
                 <p className="mb-2 text-sm font-black uppercase tracking-[0.2em] text-amber-300">Ahalteke bedewleriniň resmi katalogy</p>
                 <h1 className="text-3xl font-black sm:text-4xl lg:text-5xl">Atlar katalogy</h1>
-                <p className="mt-3 max-w-2xl leading-7 text-white/85">Atlaryň pasport, nesil, tohumçylyk we çempionlyk maglumatlaryny bir ýerden gözläň we dolandyryň.</p>
+                <p className="mt-3 max-w-2xl leading-7 text-white/85">Atlaryň pasport, nesil, tohumçylyk we çempionlyk maglumatlaryny bir ýerden gözläň.</p>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <HeroStat label="Jemi atlar" value={horses.length} />
@@ -191,11 +241,11 @@ export default function AtlarPage() {
             </div>
           </section>
 
-          <div className="mb-6 flex justify-end">
+          {management && central && <div className="mb-6 flex justify-end">
             <button type="button" onClick={openCreateModal} className="inline-flex items-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white shadow-sm transition hover:bg-[#08462d] focus:outline-none focus:ring-4 focus:ring-emerald-200">
               <Plus size={19} /> Täze at goş
             </button>
-          </div>
+          </div>}
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
             <aside className="h-fit rounded-3xl border border-[#dbe7df] bg-white p-6 shadow-[0_12px_36px_-28px_rgba(4,48,29,0.45)] lg:sticky lg:top-6">
@@ -260,11 +310,11 @@ export default function AtlarPage() {
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Reňki</p><p className="mt-1 font-black text-slate-950">{horse.color}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Doglan ýyly</p><p className="mt-1 font-black text-slate-950">{horse.year}</p></div></div><p className="mt-3 truncate text-sm font-bold text-slate-600">ID: {horse.code}</p><p className="mt-2 line-clamp-1 text-sm font-bold text-[#0b5e3c]">{horse.lineage || "Nesil ugry barada maglumat ýok"}</p>
 
-                        <div className="mt-5 grid grid-cols-4 gap-2">
+                        <div className={`mt-5 grid gap-2 ${management && central ? "grid-cols-4" : "grid-cols-2"}`}>
                           <ActionLink href={`/atlar/${horse.id}`} label="Gör" icon={<Eye size={18} />} />
                           <ActionLink href={`/nesil?horse=${encodeURIComponent(horse.id)}`} label={`${horse.name} — nesil daragty`} icon={<Network size={18} />} />
-                          <ActionButton label="Redaktirle" onClick={() => openEditModal(horse)} icon={<Pencil size={18} />} />
-                          <ActionButton label="Poz" onClick={() => deleteHorse(horse)} icon={<Trash2 size={18} />} danger />
+                          {management && central && <ActionButton label="Redaktirle" onClick={() => openEditModal(horse)} icon={<Pencil size={18} />} />}
+                          {management && central && <ActionButton label="Poz" onClick={() => deleteHorse(horse)} icon={<Trash2 size={18} />} danger />}
                         </div>
                       </div>
                     </article>
@@ -283,7 +333,7 @@ export default function AtlarPage() {
         </main>
       </div>
 
-      {modalOpen && (
+      {management && central && modalOpen && (
         <HorseModal
           form={form}
           editing={Boolean(editingId)}
@@ -320,7 +370,11 @@ function HorseModal({ form, editing, onChange, onClose, onSubmit }: { form: Hors
           <FormSelect label="Reňki" value={form.color} onChange={(value) => onChange({ ...form, color: value as Horse["color"] })} options={["Mele", "Gyr", "Dor", "Gara", "Al", "Çakan", "Gurt mele", "Akýal mele", "Altynsow mele"]} />
           <FormInput label="Doglan ýyly" required type="number" min="1900" max={String(new Date().getFullYear())} value={String(form.year)} onChange={(value) => onChange({ ...form, year: Number(value) })} />
           <div className="md:col-span-2">
-            <ImageUpload value={form.image ?? ""} horseName={form.name} onChange={(value) => onChange({ ...form, image: value })} />
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <p className="font-bold text-amber-950">Atyň suraty</p>
+              <p className="mt-1 text-sm text-amber-900">Öňki suratlar saklanýar. Täze suraty ýüklemek hemişelik faýl saklaýyş birikdirilýänçä wagtlaýyn ýapyk.</p>
+              {form.image && <p className="mt-2 break-all text-xs text-amber-950">Häzirki surat salgysy: {form.image.startsWith("data:") ? "Brauzerdäki surat" : form.image}</p>}
+            </div>
           </div>
 
           <div className="md:col-span-2 border-t pt-5">
