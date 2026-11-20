@@ -28,50 +28,13 @@ import Breadcrumb from "./Breadcrumb";
 import { assetPath } from "../lib/assetPath";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
-import {
-  HORSE_STORAGE_KEY,
-  initialHorses,
-  mergeHorseDefaults,
-  type Horse,
-} from "../lib/horses";
+import type { Horse } from "../lib/horses";
+import { useHorseCatalog } from "../lib/useHorseCatalog";
 
 export default function HorsePassportPage({ horseId }: { horseId: string }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [horse, setHorse] = useState<Horse | null | undefined>(undefined);
-
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(HORSE_STORAGE_KEY);
-      const horses = saved
-        ? mergeHorseDefaults(JSON.parse(saved) as Horse[])
-        : initialHorses;
-      setHorse(horses.find((item) => item.id === horseId) ?? null);
-    } catch {
-      setHorse(initialHorses.find((item) => item.id === horseId) ?? null);
-    }
-  }, [horseId]);
-
-  const updateHorse = (changes: Partial<Horse>) => {
-    if (!horse) return false;
-
-    try {
-      const saved = window.localStorage.getItem(HORSE_STORAGE_KEY);
-      const horses = saved
-        ? mergeHorseDefaults(JSON.parse(saved) as Horse[])
-        : initialHorses;
-      const updatedHorse = { ...horse, ...changes };
-      const updatedHorses = horses.map((item) =>
-        item.id === horse.id ? updatedHorse : item,
-      );
-
-      window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(updatedHorses));
-      setHorse(updatedHorse);
-      return true;
-    } catch {
-      window.alert("Üýtgeşmäni saklamak başartmady. Täzeden synanyşyň.");
-      return false;
-    }
-  };
+  const { horses, hydrated } = useHorseCatalog();
+  const horse = !hydrated ? undefined : horses.find((item) => item.id === horseId) ?? null;
 
   return (
     <div className="min-h-screen bg-slate-100 lg:flex">
@@ -90,8 +53,8 @@ export default function HorsePassportPage({ horseId }: { horseId: string }) {
           ) : (
             <HorseProfile
               horse={horse}
-              onImageChange={(image) => updateHorse({ image })}
-              onDescriptionChange={(description) => updateHorse({ description })}
+              onImageChange={() => false}
+              onDescriptionChange={() => false}
             />
           )}
         </main>
@@ -204,7 +167,7 @@ function HorseProfile({
           <h1 className="text-2xl font-bold text-[#0b2f24]">At pasporty</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button type="button" onClick={openEditor} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 font-semibold text-[#0b2f24] hover:bg-emerald-50 print:hidden"><Pencil size={18} /> Üýtgetmek</button>
+          
           <Link href={`/nesil?horse=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl border border-[#0b5e3c] bg-white px-5 py-3 font-semibold text-[#0b5e3c] hover:bg-emerald-50">
             <Network size={18} /> Nesil daragty
           </Link>
@@ -239,9 +202,7 @@ function HorseProfile({
             </div>
             {horse.champion && <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-400 px-3 py-1 text-sm font-black text-amber-950"><Trophy size={16} /> Çempion at</span>}
           </div>
-          <button type="button" onClick={openEditor} aria-label="Esasy suraty üýtget" className="absolute bottom-5 right-5 z-10 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 font-bold text-[#0b2f24] shadow-xl transition hover:bg-emerald-50 print:hidden">
-            <Camera size={19} /> Suraty üýtget
-          </button>
+          
         </div>
         <nav aria-label="Pasport bölümleri" className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:grid-cols-3 lg:grid-cols-6 print:hidden">
           <a href="#esasy-maglumatlar" className="rounded-xl bg-[#0b5e3c] px-3 py-3 text-center text-sm font-semibold text-white">Esasy maglumatlar</a>
@@ -285,7 +246,7 @@ function HorseProfile({
             <div id="bellikler" className="rounded-3xl border border-amber-200 bg-amber-50/70 p-5 sm:p-7">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-xl font-bold text-[#0b2f24]">Goşmaça bellikler</h3>
-                {!descriptionEditing && (
+                {false && !descriptionEditing && (
                   <button
                     type="button"
                     onClick={() => {
@@ -339,7 +300,7 @@ function HorseProfile({
             </div>
           </div>
       </section>
-      {editorOpen && (
+      {false && editorOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 print:hidden">
           <div className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
             <div className="flex items-start justify-between border-b border-gray-200 p-5 sm:p-6">
