@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { ADMIN_COOKIE, configured, readAdminSession, verifyAdminCode } from "../../../../lib/adminAuth";
 import { getAdminRecord, makeRecord, replaceAdminRecord, storageConfigured, verifyHash } from "../../../../lib/adminCredentialStore";
 
+import { isTrustedAdminRequest } from "../../../../lib/adminRequestSecurity";
+
 export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
+  if (!isTrustedAdminRequest(request)) return NextResponse.json({ error: "Gadagan edilen sorag." }, { status: 403 });
   const session = readAdminSession(request.cookies.get(ADMIN_COOKIE)?.value);
   if (!session) return NextResponse.json({ error: "Admin giriş talap edilýär." }, { status: 401 });
   if (!storageConfigured()) return NextResponse.json({ error: "Kod çalyşmak üçin hemişelik Redis maglumat bazasyny birikdiriň." }, { status: 503 });
