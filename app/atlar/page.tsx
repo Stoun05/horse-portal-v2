@@ -370,7 +370,11 @@ function HorseModal({ form, editing, onChange, onClose, onSubmit }: { form: Hors
           <FormSelect label="Reňki" value={form.color} onChange={(value) => onChange({ ...form, color: value as Horse["color"] })} options={["Mele", "Gyr", "Dor", "Gara", "Al", "Çakan", "Gurt mele", "Akýal mele", "Altynsow mele"]} />
           <FormInput label="Doglan ýyly" required type="number" min="1900" max={String(new Date().getFullYear())} value={String(form.year)} onChange={(value) => onChange({ ...form, year: Number(value) })} />
           <div className="md:col-span-2">
-            <ImageUpload value={form.image ?? ""} horseName={form.name} onChange={(value) => onChange({ ...form, image: value })} />
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <p className="font-bold text-amber-950">Atyň suraty</p>
+              <p className="mt-1 text-sm text-amber-900">Öňki suratlar saklanýar. Täze suraty ýüklemek hemişelik faýl saklaýyş birikdirilýänçä wagtlaýyn ýapyk.</p>
+              {form.image && <p className="mt-2 break-all text-xs text-amber-950">Häzirki surat salgysy: {form.image.startsWith("data:") ? "Brauzerdäki surat" : form.image}</p>}
+            </div>
           </div>
 
           <div className="md:col-span-2 border-t pt-5">
