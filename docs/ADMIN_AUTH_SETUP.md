@@ -29,4 +29,8 @@ On the first change, the existing ADMIN_ACCESS_CODE is validated and a salted sc
 
 Each successful change increments the credential version, clears the current cookie and invalidates existing signed sessions via the Next.js proxy. Keep ADMIN_SESSION_SECRET stable during normal changes. Redis outages fail closed while configured.
 
-The bootstrap environment ADMIN_ACCESS_CODE remains configured as a recovery baseline but is *not* accepted after a stored hash exists. Changing or removing the Redis database can revert to bootstrap credentials; restrict administrative access to Redis and project settings. Production deployment still needs login rate limiting and server-protected writes outside /admin.
+The bootstrap environment ADMIN_ACCESS_CODE remains configured as a recovery baseline but is *not* accepted after a stored hash exists. Changing or removing the Redis database can revert to bootstrap credentials; restrict administrative access to Redis and project settings. Login attempts are limited to 8 requests per 15 minutes per client IP only when Redis is configured; without Redis this protection is not active. Protect login endpoints at the edge as well and configure trusted proxy IP handling. Production deployment still needs server-protected writes outside /admin.
+
+## GitHub Actions
+
+The `Admin Panel CI` workflow on `feature/admin-panel` runs `npm ci` and `npm run build` in GitHub Actions. This tests compilation only; it is not hosting and does not test live credentials, Redis connectivity, or browser interaction. GitHub Pages static export cannot execute the server login endpoints.
