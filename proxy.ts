@@ -5,7 +5,10 @@ import { getAdminRecord, storageConfigured } from "./lib/adminCredentialStore";
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const loginPage = pathname === "/admin/login" || pathname === "/admin/login/";
-  const publicAdminApi = pathname === "/api/admin/login" || pathname === "/api/admin/logout";
+  // Next.js trailingSlash redirects and POST requests may arrive with a terminal slash.
+  // Normalize just the admin API path before checking the login/logout exception.
+  const adminApiPath = pathname.replace(/\/+$/, "") || "/";
+  const publicAdminApi = adminApiPath === "/api/admin/login" || adminApiPath === "/api/admin/logout";
   if (loginPage || publicAdminApi) return NextResponse.next();
   const session = readAdminSession(request.cookies.get(ADMIN_COOKIE)?.value);
   let allowed = Boolean(session);
