@@ -14,3 +14,19 @@ The session expires after 8 hours. Changing ADMIN_SESSION_SECRET invalidates exi
 IMPORTANT: This is a first stage for a **single admin**, not a complete multi-user RBAC solution. The rest of the portal still uses localStorage, and pages outside /admin (such as /media or /saglyk) may still contain write controls. Those must be migrated to protected server endpoints. Rate limiting for login attempts should be enabled before public production use. The current implementation has no login-attempt rate limiting, no centralized user store, and does not secure existing non-admin write paths.
 
 For the Electron static export, set ATCYLYK_STATIC_EXPORT=1 during next build. In static export mode Next.js route handlers and proxy authentication do not exist. Do not expose sensitive admin operations through the static app.
+
+## Changing the admin code from Settings
+
+The Admin Panel > Sazlamalar screen now contains a change-code form. This feature is disabled with an explicit HTTP 503 error until a durable Upstash Redis-compatible REST database is configured.
+
+Required additional **server-only** variables:
+- UPSTASH_REDIS_REST_URL — Redis REST endpoint.
+- UPSTASH_REDIS_REST_TOKEN — Redis REST authentication token.
+
+Configure the same Redis database on every deployment that is intended to share a code. Do not expose these values to browser JavaScript or GitHub.
+
+On the first change, the existing ADMIN_ACCESS_CODE is validated and a salted scrypt hash is persisted in Redis. Future logins use the stored hash. Subsequent code changes require the current code. The operation uses atomic compare-and-swap to avoid concurrent lost updates.
+
+Each successful change increments the credential version, clears the current cookie and invalidates existing signed sessions via the Next.js proxy. Keep ADMIN_SESSION_SECRET stable during normal changes. Redis outages fail closed while configured.
+
+The bootstrap environment ADMIN_ACCESS_CODE remains configured as a recovery baseline but is *not* accepted after a stored hash exists. Changing or removing the Redis database can revert to bootstrap credentials; restrict administrative access to Redis and project settings. Production deployment still needs login rate limiting and server-protected writes outside /admin.
