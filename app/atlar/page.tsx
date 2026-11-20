@@ -184,26 +184,14 @@ export default function AtlarPage() {
       if (await updateCentral("upsert", candidate)) closeModal();
       return;
     }
-    if (editingId) {
-      setHorses((current) =>
-        current.map((horse) =>
-          horse.id === editingId ? { id: editingId, ...form } : horse,
-        ),
-      );
-    } else {
-      setHorses((current) => [
-        { id: crypto.randomUUID(), ...form },
-        ...current,
-      ]);
-    }
-    closeModal();
+    window.alert("Merkezi maglumat bazasy birikdirilmedik. At üýtgetmek elýeterli däl.");
   }
 
   async function deleteHorse(horse: Horse) {
     if (saving) return;
     if (window.confirm(`${horse.name} atly aty sanawdan pozmalymy?`)) {
       if (central) { await updateCentral("delete", undefined, horse.id); return; }
-      setHorses((current) => current.filter((item) => item.id !== horse.id));
+      window.alert("Merkezi maglumat bazasy birikdirilmedik. At pozmak elýeterli däl.");
     }
   }
 
@@ -230,6 +218,7 @@ export default function AtlarPage() {
           <Breadcrumb />
           {catalogNotice && <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">{catalogNotice}</p>}
           {central && <p role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-950">Merkezi katalog birikdirildi. At maglumatlary serwerden alynýar.</p>}
+          {management && !central && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-900">Admin katalogy diňe görmek üçin açyk. Merkezi maglumat bazasy birikdirilýänçä at goşmak, üýtgetmek we pozmak ýapyk.</p>}
 
           <section className="relative mb-6 overflow-hidden rounded-[30px] border border-emerald-900/20 bg-gradient-to-br from-[#052b1f] via-[#0a503c] to-[#92702e] p-6 text-white shadow-[0_18px_50px_-24px_rgba(2,44,29,0.7)] sm:p-8">
             <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[36px] border-white/5" />
@@ -250,7 +239,7 @@ export default function AtlarPage() {
             </div>
           </section>
 
-          {management && <div className="mb-6 flex justify-end">
+          {management && central && <div className="mb-6 flex justify-end">
             <button type="button" onClick={openCreateModal} className="inline-flex items-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white shadow-sm transition hover:bg-[#08462d] focus:outline-none focus:ring-4 focus:ring-emerald-200">
               <Plus size={19} /> Täze at goş
             </button>
