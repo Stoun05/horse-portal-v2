@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 const nextConfig: NextConfig = {
-  output: "export",
+  ...(process.env.ATCYLYK_STATIC_EXPORT === "1" ? { output: "export" as const } : {}),
   trailingSlash: true,
   basePath,
   assetPrefix: basePath,
