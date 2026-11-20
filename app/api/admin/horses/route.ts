@@ -27,6 +27,15 @@ export async function POST(request: NextRequest) {
     const current = await readHorses();
     if (current.revision !== data.revision) return NextResponse.json({ error: "Katalog başga ýerde üýtgedildi. Täzeläp synanyşyň." }, { status: 409 });
     const exists = current.horses.some(h => h.id === horseId);
+    if (horse) {
+      // A horse can keep its own passport code while being edited, but another
+      // horse must never silently receive the same passport code.
+      const duplicate = current.horses.some(h =>
+        h.id !== horse.id &&
+        h.code.trim().toLocaleLowerCase("tk") === horse.code.trim().toLocaleLowerCase("tk")
+      );
+      if (duplicate) return NextResponse.json({ error: "Bu pasport kody başga ata degişli. Başga kod saýlaň." }, { status: 409 });
+    }
     if (data.action === "delete" && !exists) return NextResponse.json({ error: "At tapylmady." }, { status: 404 });
     const horses = data.action === "delete" ? current.horses.filter(h => h.id !== horseId)
       : exists ? current.horses.map(h => h.id === horseId ? horse! : h) : [horse!, ...current.horses];
