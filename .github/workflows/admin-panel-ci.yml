@@ -1,0 +1,45 @@
+name: Admin Panel CI
+
+on:
+  push:
+    branches:
+      - feature/admin-panel
+    paths:
+      - "app/**"
+      - "components/**"
+      - "lib/**"
+      - "proxy.ts"
+      - "next.config.ts"
+      - "package*.json"
+      - "tsconfig.json"
+      - ".github/workflows/admin-panel-ci.yml"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admin-panel-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: TypeScript and Next.js build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run production build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
