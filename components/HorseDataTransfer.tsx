@@ -20,8 +20,8 @@ export default function HorseDataTransfer({ central, revision, onImported }: Pro
       const saved = window.localStorage.getItem(HORSE_STORAGE_KEY);
       const horses: unknown = saved ? JSON.parse(saved) : initialHorses;
       if (!Array.isArray(horses)) throw new Error("Lokal maglumat nädogry.");
-      const document = { format: "atcylyk-horses-backup", version: 1, exportedAt: new Date().toISOString(), horses };
-      const blob = new Blob([JSON.stringify(document, null, 2)], { type: "application/json;charset=utf-8" });
+      const backup = { format: "atcylyk-horses-backup", version: 1, exportedAt: new Date().toISOString(), horses };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
