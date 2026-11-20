@@ -2,6 +2,7 @@
 
 import { ChangeEvent, ReactNode, useEffect, useRef, useState } from "react";
 import Sidebar from "../../../components/Sidebar";
+import ChangeAdminCode from "../../../components/ChangeAdminCode";
 import Topbar from "../../../components/Topbar";
 import Breadcrumb from "../../../components/Breadcrumb";
 import {
@@ -281,6 +282,8 @@ export default function SazlamalarPage() {
               </table>
             </div>
           </section>
+
+          <ChangeAdminCode />
 
           <div className="mt-7 grid gap-7 xl:grid-cols-2">
             <Card title="Backup we dikeltmek" icon={<Database />}>
