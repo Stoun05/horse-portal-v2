@@ -36,7 +36,7 @@ export function readAdminSession(token: string | undefined): { version: number }
     const actual = Buffer.from(parts[1]);
     if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) return null;
     const data: unknown = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8"));
-    if (!data || typeof data !== "object") return false;
+    if (!data || typeof data !== "object") return null;
     const session = data as { role?: unknown; exp?: unknown };
     return session.role === "admin" && typeof session.exp === "number" && session.exp > Math.floor(Date.now() / 1000) && typeof (session as { version?: unknown }).version === "number" ? { version: (session as { version: number }).version } : null;
   } catch {
