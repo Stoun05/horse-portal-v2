@@ -42,7 +42,7 @@ The `Admin Panel CI` workflow on `feature/admin-panel` runs `npm ci` and `npm ru
 - When the Redis catalog is empty, the original 24 built-in horses are returned until the first edit persists the record.
 - Existing browser-local custom horses are NOT migrated automatically. Back them up before moving to the shared database.
 - Without Redis, the catalog continues in READ-ONLY local demonstration mode. Admin add/edit/delete buttons are hidden until the shared database is reachable. Existing browser-local records can still be displayed, but are not synchronized.
-- Uploaded images currently use browser data URLs; move photos to object storage before production.
+- Existing static images remain at public/horses and their URLs are unchanged. The admin horse form now deliberately prevents new browser image uploads until durable object storage is connected; existing image references are preserved on edit. Do not attempt to save image data URLs as permanent database photos.
 - User accounts and other editing routes are not migrated yet.
 
 ## Backup and additive migration
@@ -50,3 +50,8 @@ The `Admin Panel CI` workflow on `feature/admin-panel` runs `npm ci` and `npm ru
 Admin > Atlar contains a JSON backup download of the current browser-local horse records, even when Redis is offline. The file includes a format marker and version. The administrator can explicitly select this file for migration only when the central catalog is reachable.
 
 POST /api/admin/horses/import verifies the signed admin session, checks all horse records, detects duplicate IDs and passport codes in the uploaded batch, and adds only records whose IDs and codes are not already stored. Existing records are never overwritten by the importer. The revision compare-and-swap prevents concurrent edits from silently being lost. Export a separate copy of the server catalog before major production migrations; current export is browser-local only. Imported records are NOT rolled back automatically; take database backups before using this on valuable data.
+
+## Minimal compatibility safeguards
+
+- Admin horse upsert checks that the requested passport code is not already assigned to another horse. It responds HTTP 409 on conflict.
+- No original horse record or file in public/horses is changed by these safeguards.
