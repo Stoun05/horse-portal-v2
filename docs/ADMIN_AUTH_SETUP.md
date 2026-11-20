@@ -34,3 +34,13 @@ The bootstrap environment ADMIN_ACCESS_CODE remains configured as a recovery bas
 ## GitHub Actions
 
 The `Admin Panel CI` workflow on `feature/admin-panel` runs `npm ci` and `npm run build` in GitHub Actions. This tests compilation only; it is not hosting and does not test live credentials, Redis connectivity, or browser interaction. GitHub Pages static export cannot execute the server login endpoints.
+
+## Shared horse catalog (incremental rollout)
+
+- GET /api/horses reads the shared horse list from Redis.
+- POST /api/admin/horses requires a signed admin session and supports upsert/delete with revision conflict checking (HTTP 409).
+- When the Redis catalog is empty, the original 24 built-in horses are returned until the first edit persists the record.
+- Existing browser-local custom horses are NOT migrated automatically. Back them up before moving to the shared database.
+- Without Redis, the catalog continues in local demonstration mode. Local writes are not synchronized and are not server-protected.
+- Uploaded images currently use browser data URLs; move photos to object storage before production.
+- User accounts and other editing routes are not migrated yet.
