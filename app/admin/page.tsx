@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AdminLogout from "../../components/AdminLogout";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowUpRight, Database, FileText, HeartPulse, Images, Network, Settings, ShieldAlert, Users, BookOpen } from "lucide-react";
 import { HORSE_STORAGE_KEY, initialHorses, mergeHorseDefaults, type Horse } from "../../lib/horses";
@@ -42,6 +43,7 @@ export default function AdminPage() {
         <Link href="/" className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-emerald-900 hover:underline">
           <ArrowLeft size={18} /> Portala dolan
         </Link>
+        <div className="mb-4 flex justify-end"><AdminLogout /></div>
         <header className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-[#052b1f] via-[#0a503c] to-[#92702e] px-6 py-8 text-white sm:px-9">
           <p className="mb-2 text-xs font-black uppercase tracking-[0.2em] text-amber-200">Atçylyk portal · Dolandyryş prototipi</p>
           <h1 className="text-3xl font-black sm:text-4xl">Admin panel</h1>
