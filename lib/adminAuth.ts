@@ -19,27 +19,30 @@ export function verifyAdminCode(code: string) {
   return timingSafeEqual(expected, actual);
 }
 
-export function createAdminToken() {
+export function createAdminToken(version = 0) {
   if (!configured()) throw new Error("Admin login not configured");
   const exp = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
-  const payload = Buffer.from(JSON.stringify({ role: "admin", exp }), "utf8").toString("base64url");
+  const payload = Buffer.from(JSON.stringify({ role: "admin", exp, version }), "utf8").toString("base64url");
   return { token: `${payload}.${sign(payload, process.env.ADMIN_SESSION_SECRET!)}`, maxAge: SESSION_SECONDS };
 }
 
-export function verifyAdminToken(token: string | undefined) {
+export function readAdminSession(token: string | undefined): { version: number } | null {
   const secret = process.env.ADMIN_SESSION_SECRET;
-  if (!secret || secret.length < 32 || !token) return false;
+  if (!secret || secret.length < 32 || !token) return null;
   const parts = token.split(".");
-  if (parts.length !== 2 || !parts[0] || !parts[1]) return false;
+  if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
   try {
     const expected = Buffer.from(sign(parts[0], secret));
     const actual = Buffer.from(parts[1]);
-    if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) return false;
+    if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) return null;
     const data: unknown = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8"));
     if (!data || typeof data !== "object") return false;
     const session = data as { role?: unknown; exp?: unknown };
-    return session.role === "admin" && typeof session.exp === "number" && session.exp > Math.floor(Date.now() / 1000);
+    return session.role === "admin" && typeof session.exp === "number" && session.exp > Math.floor(Date.now() / 1000) && typeof (session as { version?: unknown }).version === "number" ? { version: (session as { version: number }).version } : null;
   } catch {
-    return false;
+    return null;
   }
+}
+export function verifyAdminToken(token: string | undefined) {
+  return readAdminSession(token) !== null;
 }
