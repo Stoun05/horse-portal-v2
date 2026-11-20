@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Award,
@@ -47,7 +48,9 @@ const emptyForm: HorseForm = {
   sourceNumber: undefined,
 };
 
-export function HorseCatalogPage({ management = false }: { management?: boolean }) {
+export default function AtlarPage() {
+  const pathname = usePathname();
+  const management = pathname.startsWith("/admin/atlar");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [horses, setHorses] = useState<Horse[]>(initialHorses);
   const [hydrated, setHydrated] = useState(false);
@@ -294,10 +297,6 @@ export function HorseCatalogPage({ management = false }: { management?: boolean 
       )}
     </div>
   );
-}
-
-export default function AtlarPage() {
-  return <HorseCatalogPage />;
 }
 
 function HeroStat({ label, value }: { label: string; value: number }) {
