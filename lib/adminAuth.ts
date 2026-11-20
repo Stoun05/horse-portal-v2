@@ -8,19 +8,15 @@ function sign(payload: string, secret: string) {
 }
 
 export function configured() {
-  return Boolean(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD && process.env.ADMIN_SESSION_SECRET && process.env.ADMIN_SESSION_SECRET.length >= 32);
+  return Boolean(process.env.ADMIN_ACCESS_CODE && process.env.ADMIN_ACCESS_CODE.length >= 16 && process.env.ADMIN_SESSION_SECRET && process.env.ADMIN_SESSION_SECRET.length >= 32);
 }
 
-export function verifyAdminCredentials(email: string, password: string) {
+export function verifyAdminCode(code: string) {
   if (!configured()) return false;
-  const expectedEmail = process.env.ADMIN_EMAIL!.trim().toLowerCase();
-  const expectedPassword = process.env.ADMIN_PASSWORD!;
-  const actualEmail = email.trim().toLowerCase();
-  const emailA = createHmac("sha256", process.env.ADMIN_SESSION_SECRET!).update(actualEmail).digest();
-  const emailB = createHmac("sha256", process.env.ADMIN_SESSION_SECRET!).update(expectedEmail).digest();
-  const passA = createHmac("sha256", process.env.ADMIN_SESSION_SECRET!).update(password).digest();
-  const passB = createHmac("sha256", process.env.ADMIN_SESSION_SECRET!).update(expectedPassword).digest();
-  return timingSafeEqual(emailA, emailB) && timingSafeEqual(passA, passB);
+  const secret = process.env.ADMIN_SESSION_SECRET!;
+  const expected = createHmac("sha256", secret).update(process.env.ADMIN_ACCESS_CODE!).digest();
+  const actual = createHmac("sha256", secret).update(code).digest();
+  return timingSafeEqual(expected, actual);
 }
 
 export function createAdminToken() {
