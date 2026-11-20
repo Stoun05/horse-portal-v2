@@ -20,6 +20,7 @@ import Breadcrumb from "../../components/Breadcrumb";
 import { assetPath } from "../../lib/assetPath";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
+import HorseDataTransfer from "../../components/HorseDataTransfer";
 import {
   HORSE_STORAGE_KEY,
   initialHorses,
@@ -219,6 +220,7 @@ export default function AtlarPage() {
           {catalogNotice && <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">{catalogNotice}</p>}
           {central && <p role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-950">Merkezi katalog birikdirildi. At maglumatlary serwerden alynýar.</p>}
           {management && !central && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-900">Admin katalogy diňe görmek üçin açyk. Merkezi maglumat bazasy birikdirilýänçä at goşmak, üýtgetmek we pozmak ýapyk.</p>}
+          {management && <HorseDataTransfer central={central} revision={revision} onImported={data => { setHorses(data.horses); setRevision(data.revision); }} />}
 
           <section className="relative mb-6 overflow-hidden rounded-[30px] border border-emerald-900/20 bg-gradient-to-br from-[#052b1f] via-[#0a503c] to-[#92702e] p-6 text-white shadow-[0_18px_50px_-24px_rgba(2,44,29,0.7)] sm:p-8">
             <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[36px] border-white/5" />
