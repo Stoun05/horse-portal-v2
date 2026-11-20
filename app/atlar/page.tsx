@@ -54,6 +54,10 @@ export default function AtlarPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [horses, setHorses] = useState<Horse[]>(initialHorses);
   const [hydrated, setHydrated] = useState(false);
+  const [central, setCentral] = useState(false);
+  const [revision, setRevision] = useState(0);
+  const [catalogNotice, setCatalogNotice] = useState("");
+  const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<HorseForm>(emptyForm);
@@ -66,19 +70,61 @@ export default function AtlarPage() {
   const [sort, setSort] = useState("name");
 
   useEffect(() => {
+    let active = true;
     try {
       const saved = window.localStorage.getItem(HORSE_STORAGE_KEY);
       if (saved) setHorses(mergeHorseDefaults(JSON.parse(saved) as Horse[]));
     } catch {
       // Nädogry lokal maglumat bolsa başlangyç sanaw ulanylýar.
-    } finally {
-      setHydrated(true);
     }
+    setHydrated(true);
+    async function loadCentral() {
+      try {
+        const response = await fetch("/api/horses", { cache: "no-store" });
+        if (!response.ok) throw new Error("unavailable");
+        const data: { horses: Horse[]; revision: number } = await response.json();
+        if (!Array.isArray(data.horses) || !Number.isSafeInteger(data.revision)) throw new Error("invalid");
+        if (!active) return;
+        setCentral(true);
+        setHorses(data.horses);
+        setRevision(data.revision);
+        setCatalogNotice("");
+      } catch {
+        if (active) setCatalogNotice("Merkezi baza birikdirilmedi. Häzir diňe bu brauzeriň ýerli maglumatlary görkezilýär.");
+      }
+    }
+    void loadCentral();
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
-    if (hydrated) window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(horses));
-  }, [horses, hydrated]);
+    if (hydrated && !central) window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(horses));
+  }, [horses, hydrated, central]);
+
+  async function updateCentral(action: "upsert" | "delete", horse?: Horse, id?: string) {
+    setSaving(true);
+    try {
+      const response = await fetch("/api/admin/horses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, horse, id, revision }),
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        const error: { error?: string } = await response.json();
+        throw new Error(error.error || "Maglumat üýtgedilmedi.");
+      }
+      const data: { horses: Horse[]; revision: number } = await response.json();
+      setHorses(data.horses);
+      setRevision(data.revision);
+      return true;
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Serwer ýalňyşlygy.");
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const visibleHorses = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("tk");
@@ -130,8 +176,14 @@ export default function AtlarPage() {
     setForm(emptyForm);
   }
 
-  function saveHorse(event: FormEvent<HTMLFormElement>) {
+  async function saveHorse(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
+    if (central) {
+      const candidate: Horse = { id: editingId ?? crypto.randomUUID(), ...form };
+      if (await updateCentral("upsert", candidate)) closeModal();
+      return;
+    }
     if (editingId) {
       setHorses((current) =>
         current.map((horse) =>
@@ -147,8 +199,10 @@ export default function AtlarPage() {
     closeModal();
   }
 
-  function deleteHorse(horse: Horse) {
+  async function deleteHorse(horse: Horse) {
+    if (saving) return;
     if (window.confirm(`${horse.name} atly aty sanawdan pozmalymy?`)) {
+      if (central) { await updateCentral("delete", undefined, horse.id); return; }
       setHorses((current) => current.filter((item) => item.id !== horse.id));
     }
   }
@@ -174,6 +228,8 @@ export default function AtlarPage() {
 
         <main className="p-4 sm:p-6 lg:p-8">
           <Breadcrumb />
+          {catalogNotice && <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">{catalogNotice}</p>}
+          {central && <p role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-950">Merkezi katalog birikdirildi. At maglumatlary serwerden alynýar.</p>}
 
           <section className="relative mb-6 overflow-hidden rounded-[30px] border border-emerald-900/20 bg-gradient-to-br from-[#052b1f] via-[#0a503c] to-[#92702e] p-6 text-white shadow-[0_18px_50px_-24px_rgba(2,44,29,0.7)] sm:p-8">
             <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[36px] border-white/5" />
