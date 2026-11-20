@@ -7,12 +7,12 @@ import { HORSE_STORAGE_KEY, initialHorses, mergeHorseDefaults, type Horse } from
 
 const areas = [
   { title: "Atlary dolandyrmak", desc: "Atlary goşmak, üýtgetmek we sanawy tertiplemek", href: "/admin/atlar", icon: BookOpen },
-  { title: "Ulanyjylar", desc: "Rollar we ulanyjy ýazgylary", href: "/ulanyjylar", icon: Users },
+  { title: "Ulanyjylar", desc: "Rollar we ulanyjy ýazgylary", href: "/admin/ulanyjylar", icon: Users },
   { title: "Nesil daragty", desc: "Atlaryň nesil maglumatlary", href: "/nesil", icon: Network },
   { title: "Saglyk taryhy", desc: "Weterinariýa ýazgylary", href: "/saglyk", icon: HeartPulse },
   { title: "Suratlar we wideolar", desc: "Media maglumatlaryny dolandyrmak", href: "/media", icon: Images },
   { title: "Hasabatlar", desc: "Hasabatlary görmek", href: "/hasabatlar", icon: FileText },
-  { title: "Sazlamalar", desc: "Portal sazlamalary we rugsatlaryň prototipi", href: "/sazlamalar", icon: Settings },
+  { title: "Sazlamalar", desc: "Portal sazlamalary we rugsatlaryň prototipi", href: "/admin/sazlamalar", icon: Settings },
 ];
 
 export default function AdminPage() {
