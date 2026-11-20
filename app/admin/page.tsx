@@ -19,6 +19,7 @@ const areas = [
 export default function AdminPage() {
   const [horseCount, setHorseCount] = useState<number | null>(null);
   const [userCount, setUserCount] = useState<number | null>(null);
+  const [centralCatalog, setCentralCatalog] = useState(false);
 
   useEffect(() => {
     try {
@@ -35,6 +36,21 @@ export default function AdminPage() {
     } catch {
       setUserCount(0);
     }
+    let active = true;
+    void (async () => {
+      try {
+        const response = await fetch("/api/horses", { cache: "no-store" });
+        if (!response.ok) return;
+        const data: unknown = await response.json();
+        if (data && typeof data === "object" && Array.isArray((data as { horses?: unknown }).horses) && active) {
+          setHorseCount((data as { horses: Horse[] }).horses.length);
+          setCentralCatalog(true);
+        }
+      } catch {
+        // Server unavailable: keep the local preview count.
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   return (
@@ -45,7 +61,7 @@ export default function AdminPage() {
         </Link>
         <div className="mb-4 flex justify-end"><AdminLogout /></div>
         <header className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-[#052b1f] via-[#0a503c] to-[#92702e] px-6 py-8 text-white sm:px-9">
-          <p className="mb-2 text-xs font-black uppercase tracking-[0.2em] text-amber-200">Atçylyk portal · Dolandyryş prototipi</p>
+          <p className="mb-2 text-xs font-black uppercase tracking-[0.2em] text-amber-200">Atçylyk portal · Dolandyryş paneli</p>
           <h1 className="text-3xl font-black sm:text-4xl">Admin panel</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-white/85">Ulgamyň maglumatlaryny we bölümlerini bir ýerden dolandyrmak üçin başlangyç panel.</p>
         </header>
@@ -53,15 +69,15 @@ export default function AdminPage() {
         <section role="status" className="mb-8 flex gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-950">
           <ShieldAlert className="mt-0.5 shrink-0" size={23} />
           <div>
-            <h2 className="font-black">Üns beriň: häzirki etap diňe interfeýs prototipi</h2>
-            <p className="mt-1 text-sm leading-6">Hakyky login, serwer tarapyndaky rugsat barlagy we merkezi maglumat bazasy entek birleşdirilmedi. Bu sahypa gizlin ýa-da goralan admin bölümi däldir. Aşakdaky baglanyşyklar häzirki ýerli maglumatly sahypalara eltýär.</p>
+            <h2 className="font-black">Serwer birikmesi we dolandyryş hukuklary</h2>
+            <p className="mt-1 text-sm leading-6">Admin girişiniň serwer goragy kodda bar, ýöne ony işjeň ulanmak üçin gizlin giriş sazlamalary we Redis gerek. {centralCatalog ? "Atlar merkezi katalogdan okalýar." : "Merkezi katalog elýeterli däl: atlaryň sany diňe brauzeriň ýerli maglumatlaryndan hasaplandy."} Ulanyjylar we portal sazlamalary häzir doly merkezi dolandyryşa geçirilmedik.</p>
           </div>
         </section>
 
         <section aria-label="Ýerli görkezijiler" className="mb-8 grid gap-4 sm:grid-cols-3">
-          <Stat label="Bu brauzerdäki atlar" value={horseCount === null ? "…" : String(horseCount)} />
+          <Stat label={centralCatalog ? "Merkezi katalogdaky atlar" : "Brauzerdäki atlar"} value={horseCount === null ? "…" : String(horseCount)} />
           <Stat label="Bu brauzerdäki ulanyjylar" value={userCount === null ? "…" : String(userCount)} />
-          <Stat label="Maglumatlaryň çeşmesi" value="Ýerli" />
+          <Stat label="Atlaryň maglumat çeşmesi" value={centralCatalog ? "Merkezi baza" : "Ýerli"} />
         </section>
 
         <div className="mb-4 flex items-center gap-2">
@@ -83,7 +99,7 @@ export default function AdminPage() {
             );
           })}
         </section>
-        <p className="mt-8 text-xs leading-5 text-slate-600">Indiki tapgyr: serwer loginini, Admin/Operator/Weterinar/Gözegçi rollaryny we API rugsat barlaglaryny goşmak. Şondan soň diňe rugsatly adamlara redaktirleme mümkinçilikleri görkeziler.</p>
+        <p className="mt-8 text-xs leading-5 text-slate-600">Goşmaça serwer hukuklary, maglumat bazasy we beýleki bölümleriň merkezi saklaýşy doly synagdan geçirilýänçä, bu ulgam önümçilik üçin taýýarlanan hasaplanmaýar.</p>
       </div>
     </main>
   );
