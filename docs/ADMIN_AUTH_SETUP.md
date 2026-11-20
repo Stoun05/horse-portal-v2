@@ -41,6 +41,6 @@ The `Admin Panel CI` workflow on `feature/admin-panel` runs `npm ci` and `npm ru
 - POST /api/admin/horses requires a signed admin session and supports upsert/delete with revision conflict checking (HTTP 409).
 - When the Redis catalog is empty, the original 24 built-in horses are returned until the first edit persists the record.
 - Existing browser-local custom horses are NOT migrated automatically. Back them up before moving to the shared database.
-- Without Redis, the catalog continues in local demonstration mode. Local writes are not synchronized and are not server-protected.
+- Without Redis, the catalog continues in READ-ONLY local demonstration mode. Admin add/edit/delete buttons are hidden until the shared database is reachable. Existing browser-local records can still be displayed, but are not synchronized.
 - Uploaded images currently use browser data URLs; move photos to object storage before production.
 - User accounts and other editing routes are not migrated yet.
