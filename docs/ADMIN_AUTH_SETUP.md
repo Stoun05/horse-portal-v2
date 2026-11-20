@@ -8,16 +8,16 @@ Required for each Vercel project that deploys this branch:
 
 Do not commit values to GitHub. Configure variables in Vercel Project Settings > Environment Variables and redeploy the branch.
 
-The login endpoint returns 503 if either required variable is missing or too short. The Next.js proxy redirects unauthenticated /admin routes to /admin/login and returns HTTP 401 for protected /api/admin routes.
+The login endpoint returns HTTP 503 if ADMIN_ACCESS_CODE, ADMIN_SESSION_SECRET, or the Redis REST variables are missing or invalid. Redis is REQUIRED for login, so server-side login attempts can be throttled. The Next.js proxy redirects unauthenticated /admin routes to /admin/login and returns HTTP 401 for protected /api/admin routes.
 The session expires after 8 hours. Changing ADMIN_SESSION_SECRET invalidates existing cookies. Changing only ADMIN_ACCESS_CODE does NOT revoke existing cookies; rotate ADMIN_SESSION_SECRET when revoking sessions.
 
-IMPORTANT: This is a first stage for a **single admin**, not a complete multi-user RBAC solution. The rest of the portal still uses localStorage, and pages outside /admin (such as /media or /saglyk) may still contain write controls. Those must be migrated to protected server endpoints. Rate limiting for login attempts should be enabled before public production use. The current implementation has no login-attempt rate limiting, no centralized user store, and does not secure existing non-admin write paths.
+IMPORTANT: This is a first stage for a **single admin**, not a complete multi-user RBAC solution. The rest of the portal still uses localStorage, and pages outside /admin (such as /media or /saglyk) may still contain write controls. Those must be migrated to protected server endpoints. Redis-backed login throttling is implemented, but deployment and integration tests are still required. There is no centralized multi-user store, and existing non-admin write paths remain unprotected.
 
 For the Electron static export, set ATCYLYK_STATIC_EXPORT=1 during next build. In static export mode Next.js route handlers and proxy authentication do not exist. Do not expose sensitive admin operations through the static app.
 
 ## Changing the admin code from Settings
 
-The Admin Panel > Sazlamalar screen now contains a change-code form. This feature is disabled with an explicit HTTP 503 error until a durable Upstash Redis-compatible REST database is configured.
+The Admin Panel > Sazlamalar screen now contains a change-code form. This feature requires a durable Upstash Redis-compatible REST database. Login also requires this database for its server-side attempt limiter.
 
 Required additional **server-only** variables:
 - UPSTASH_REDIS_REST_URL — Redis REST endpoint.
@@ -29,7 +29,7 @@ On the first change, the existing ADMIN_ACCESS_CODE is validated and a salted sc
 
 Each successful change increments the credential version, clears the current cookie and invalidates existing signed sessions via the Next.js proxy. Keep ADMIN_SESSION_SECRET stable during normal changes. Redis outages fail closed while configured.
 
-The bootstrap environment ADMIN_ACCESS_CODE remains configured as a recovery baseline but is *not* accepted after a stored hash exists. Changing or removing the Redis database can revert to bootstrap credentials; restrict administrative access to Redis and project settings. Login attempts are limited to 8 requests per 15 minutes per client IP only when Redis is configured; without Redis this protection is not active. Protect login endpoints at the edge as well and configure trusted proxy IP handling. Production deployment still needs server-protected writes outside /admin.
+The bootstrap environment ADMIN_ACCESS_CODE remains configured as a recovery baseline but is *not* accepted after a stored hash exists. Changing or removing the Redis database can revert to bootstrap credentials; restrict administrative access to Redis and project settings. Login attempts are limited to 8 requests per 15 minutes per client IP using Redis. When Redis is not configured or reachable, login is rejected with HTTP 503 (fail closed). The per-IP limiter uses proxy-provided IP headers; configure trusted proxy IP handling and add edge protection to avoid spoofed-header bypasses. Sensitive admin POST endpoints also check Origin / Fetch Metadata against the site. Production deployment still needs server-protected writes outside /admin.
 
 ## GitHub Actions
 
