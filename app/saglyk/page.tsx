@@ -197,13 +197,13 @@ export default function SaglykPage() {
               >
                 <Printer size={18} /> PDF / Çap et
               </button>
-              <button
+              {false && <button
                 onClick={openCreate}
                 disabled={!horses.length}
                 className="inline-flex items-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white hover:bg-[#08462d] disabled:opacity-50"
               >
                 <Plus size={18} /> Täze ýazgy
-              </button>
+              </button>}
             </div>
           </div>
 
@@ -308,12 +308,12 @@ export default function SaglykPage() {
                             </p>
                           </div>
                           <div className="flex gap-2 print:hidden">
-                            <button onClick={() => openEdit(record)} aria-label="Üýtget" className="rounded-lg border border-slate-300 p-2 text-slate-700 hover:bg-slate-100">
+                            {false && <button onClick={() => openEdit(record)} aria-label="Üýtget" className="rounded-lg border border-slate-300 p-2 text-slate-700 hover:bg-slate-100">
                               <Pencil size={17} />
-                            </button>
-                            <button onClick={() => deleteRecord(record.id)} aria-label="Poz" className="rounded-lg border border-rose-200 p-2 text-rose-700 hover:bg-rose-50">
+                            </button>}
+                            {false && <button onClick={() => deleteRecord(record.id)} aria-label="Poz" className="rounded-lg border border-rose-200 p-2 text-rose-700 hover:bg-rose-50">
                               <Trash2 size={17} />
-                            </button>
+                            </button>}
                           </div>
                         </div>
                         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -348,7 +348,7 @@ export default function SaglykPage() {
         </main>
       </div>
 
-      {modalOpen && (
+      {false && modalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4 print:hidden">
           <div className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
