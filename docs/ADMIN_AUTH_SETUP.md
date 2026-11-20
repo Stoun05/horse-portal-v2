@@ -33,7 +33,7 @@ The bootstrap environment ADMIN_ACCESS_CODE remains configured as a recovery bas
 
 ## GitHub Actions
 
-The `Admin Panel CI` workflow on `feature/admin-panel` runs `npm ci` and `npm run build` in GitHub Actions. This tests compilation only; it is not hosting and does not test live credentials, Redis connectivity, or browser interaction. GitHub Pages static export cannot execute the server login endpoints.
+The `Admin Panel CI` workflow on `feature/admin-panel` runs `npm install --package-lock=false --no-audit --no-fund` and `npm run build` in GitHub Actions. This tests compilation only; it is not hosting and does not test live credentials, Redis connectivity, or browser interaction. GitHub Pages static export cannot execute the server login endpoints.
 
 ## Shared horse catalog (incremental rollout)
 
@@ -55,3 +55,9 @@ POST /api/admin/horses/import verifies the signed admin session, checks all hors
 
 - Admin horse upsert checks that the requested passport code is not already assigned to another horse. It responds HTTP 409 on conflict.
 - No original horse record or file in public/horses is changed by these safeguards.
+
+## Required hosting split before merging into main
+
+The GitHub Pages workflow under `.github/workflows/pages.yml` currently runs `npm run build` and uploads `./out`. The admin/server deployment uses dynamic Next.js API routes and its default build does NOT generate `./out`. Therefore, merging this branch into `main` as-is may cause the GitHub Pages deployment to fail. Keep PR #39 in draft until a verified static-site deployment strategy is in place, or explicitly switch the public portal to a server-hosted deployment with suitable environment variables and tests. GitHub Pages does not run the Admin Panel API or Redis operations.
+
+Do not assume that a successful ordinary Next.js build proves static Pages compatibility. The existing 24 horse images in `public/horses/` and data schema must remain unchanged. No GitHub Pages workflow changes are authorized for `main` by this document.
