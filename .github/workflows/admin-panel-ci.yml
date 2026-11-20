@@ -3,6 +3,7 @@ name: Admin Panel CI
 on:
   push:
     branches:
+      - main
       - feature/admin-panel
     paths:
       - "app/**"
@@ -10,6 +11,7 @@ on:
       - "lib/**"
       - "proxy.ts"
       - "next.config.ts"
+      - "render.yaml"
       - "package*.json"
       - "tsconfig.json"
       - ".github/workflows/admin-panel-ci.yml"
