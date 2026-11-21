@@ -225,10 +225,22 @@ export default function AtlarPage() {
   }
 
   async function deleteHorse(horse: Horse) {
-    if (saving) return;
-    if (window.confirm(`${horse.name} atly aty sanawdan pozmalymy?`)) {
-      if (central) { await updateCentral("delete", undefined, horse.id); return; }
-      window.alert("Merkezi maglumat bazasy birikdirilmedik. At pozmak elýeterli däl.");
+    if (saving || !hydrated) return;
+    if (!window.confirm(`${horse.name} atly aty sanawdan pozmalymy? Bu amaly yzyna gaýtarmak üçin ätiýaçlyk nusga gerek.`)) return;
+
+    if (central) {
+      await updateCentral("delete", undefined, horse.id);
+      return;
+    }
+
+    // Persist before updating the screen so a storage failure cannot silently
+    // remove a horse from the visible catalog while leaving it in localStorage.
+    const nextHorses = horses.filter(item => item.id !== horse.id);
+    try {
+      window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(nextHorses));
+      setHorses(nextHorses);
+    } catch {
+      window.alert("Aty brauzeriň maglumatlaryndan pozmak başartmady.");
     }
   }
 
@@ -346,11 +358,11 @@ export default function AtlarPage() {
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Reňki</p><p className="mt-1 font-black text-slate-950">{horse.color}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Doglan ýyly</p><p className="mt-1 font-black text-slate-950">{horse.year}</p></div></div><p className="mt-3 truncate text-sm font-bold text-slate-600">ID: {horse.code}</p><p className="mt-2 line-clamp-1 text-sm font-bold text-[#0b5e3c]">{horse.lineage || "Nesil ugry barada maglumat ýok"}</p>
 
-                        <div className={`mt-5 grid gap-2 ${management ? (central ? "grid-cols-4" : "grid-cols-3") : "grid-cols-2"}`}>
+                        <div className={`mt-5 grid gap-2 ${management ? "grid-cols-4" : "grid-cols-2"}`}>
                           <ActionLink href={management ? `/atlar/${horse.id}?admin=1` : `/atlar/${horse.id}`} label="Gör" icon={<Eye size={18} />} />
                           <ActionLink href={`/nesil?horse=${encodeURIComponent(horse.id)}`} label={`${horse.name} — nesil daragty`} icon={<Network size={18} />} />
                           {management && <ActionButton label="Redaktirle" onClick={() => openEditModal(horse)} icon={<Pencil size={18} />} />}
-                          {management && central && <ActionButton label="Poz" onClick={() => deleteHorse(horse)} icon={<Trash2 size={18} />} danger />}
+                          {management && <ActionButton label="Poz" onClick={() => deleteHorse(horse)} icon={<Trash2 size={18} />} danger />}
                         </div>
                       </div>
                     </article>
