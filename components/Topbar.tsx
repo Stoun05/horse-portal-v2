@@ -31,10 +31,6 @@ export default function Topbar({ setOpen }: TopbarProps) {
         </div>
       </div>
 
-      <div className="hidden items-center gap-3 sm:flex">
-        <input type="text" placeholder="At gözle..." className="rounded-lg border px-4 py-2 text-sm text-slate-950 placeholder:text-slate-400" />
-        <div style={{ backgroundColor: settings.primaryColor }} className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white">A</div>
-      </div>
     </header>
   );
 }
