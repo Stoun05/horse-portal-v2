@@ -33,6 +33,8 @@ import { useHorseCatalog } from "../lib/useHorseCatalog";
 
 export default function HorsePassportPage({ horseId }: { horseId: string }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [adminSource, setAdminSource] = useState(false);
+  useEffect(() => { setAdminSource(new URLSearchParams(window.location.search).get("admin") === "1"); }, []);
   const { horses, hydrated } = useHorseCatalog();
   const horse = !hydrated ? undefined : horses.find((item) => item.id === horseId) ?? null;
 
@@ -53,6 +55,7 @@ export default function HorsePassportPage({ horseId }: { horseId: string }) {
           ) : (
             <HorseProfile
               horse={horse}
+              adminSource={adminSource}
               onImageChange={() => false}
               onDescriptionChange={() => false}
             />
@@ -65,10 +68,12 @@ export default function HorsePassportPage({ horseId }: { horseId: string }) {
 
 function HorseProfile({
   horse,
+  adminSource,
   onImageChange,
   onDescriptionChange,
 }: {
   horse: Horse;
+  adminSource: boolean;
   onImageChange: (image?: string) => boolean;
   onDescriptionChange: (description: string) => boolean;
 }) {
@@ -167,7 +172,7 @@ function HorseProfile({
           <h1 className="text-2xl font-bold text-[#0b2f24]">At pasporty</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          
+          {adminSource && <Link href={`/admin/atlar?edit=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-5 py-3 font-bold text-amber-950 hover:bg-amber-200 print:hidden"><Pencil size={18}/> Şu aty redaktirle</Link>}
           <Link href={`/nesil?horse=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl border border-[#0b5e3c] bg-white px-5 py-3 font-semibold text-[#0b5e3c] hover:bg-emerald-50">
             <Network size={18} /> Nesil daragty
           </Link>
@@ -188,7 +193,7 @@ function HorseProfile({
               </div>
             </>
           ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-white/90"><Camera size={54} strokeWidth={1.5} aria-hidden="true" /><p className="text-xl font-semibold">Bu atyň esasy suraty goşulmady</p><p className="max-w-sm text-sm text-white/70">Dogry suraty goşmak üçin aşakdaky «Suraty üýtget» düwmesine basyň.</p></div>
+            <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-white/90"><span className="text-8xl font-black" aria-hidden="true">{horse.name.slice(0, 1)}</span><p className="text-xl font-semibold">Surat ýok</p></div>
           )}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#052b1f]/85 via-[#052b1f]/20 to-transparent" />
           <div className="absolute left-0 top-0 z-10 max-w-[85%] p-4 text-white sm:max-w-md sm:p-9">
@@ -206,11 +211,11 @@ function HorseProfile({
         </div>
         <nav aria-label="Pasport bölümleri" className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:grid-cols-3 lg:grid-cols-6 print:hidden">
           <a href="#esasy-maglumatlar" className="rounded-xl bg-[#0b5e3c] px-3 py-3 text-center text-sm font-semibold text-white">Esasy maglumatlar</a>
-          <a href="#nesil-maglumatlary" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Nesil maglumatlary</a>
+          {Boolean(horse.lineage?.trim() || horse.father?.trim() || horse.mother?.trim()) && <a href="#nesil-maglumatlary" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Nesil maglumatlary</a>}
           <Link href="/saglyk" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Saglygy</Link>
           <Link href="/yenijiler" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Netijeler we bäsleşikler</Link>
           <Link href="/media" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Suratlar we wideo</Link>
-          <a href="#bellikler" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Bellikler</a>
+          {Boolean(horse.description?.trim()) && <a href="#bellikler" className="rounded-xl px-3 py-3 text-center text-sm font-semibold text-[#0b2f24] hover:bg-emerald-50">Bellikler</a>}
         </nav>
         <div className="space-y-5">
           <div id="esasy-maglumatlar" className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
@@ -224,26 +229,26 @@ function HorseProfile({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <InfoCard icon={<CalendarDays />} label="Doglan ýyly" value={horse.year ? String(horse.year) : "Näbelli"} />
               <InfoCard icon={<Tag />} label="Reňki" value={horse.color} />
-              <InfoCard icon={<MapPin />} label="Sanawdaky ýeri" value={horse.sourceSide && horse.sourceNumber ? `${horse.sourceSide} tarap — №${horse.sourceNumber}` : "Girizilmedik"} />
-              <InfoCard icon={<ShieldCheck />} label="Beden ölçegleri" value={horse.bodyMeasurements ?? "Girizilmedik"} wide />
-              <InfoCard icon={<Dna />} label="Tohumçylyk gymmaty" value={horse.breedingValue ?? "Girizilmedik"} />
-              <InfoCard icon={<Trophy />} label="Klasy" value={horse.horseClass ?? "Girizilmedik"} />
+              {horse.sourceSide && horse.sourceNumber && <InfoCard icon={<MapPin />} label="Sanawdaky ýeri" value={`${horse.sourceSide} tarap — №${horse.sourceNumber}`} />}
+              {Boolean(horse.bodyMeasurements?.trim()) && <InfoCard icon={<ShieldCheck />} label="Beden ölçegleri" value={horse.bodyMeasurements!} wide />}
+              {Boolean(horse.breedingValue?.trim()) && <InfoCard icon={<Dna />} label="Tohumçylyk gymmaty" value={horse.breedingValue!} />}
+              {Boolean(horse.horseClass?.trim()) && <InfoCard icon={<Trophy />} label="Klasy" value={horse.horseClass!} />}
             </div>
           </div>
 
-            <div id="nesil-maglumatlary" className="rounded-3xl border border-emerald-200 bg-emerald-50/60 p-5 sm:p-7">
+            {Boolean(horse.lineage?.trim() || horse.father?.trim() || horse.mother?.trim()) && <div id="nesil-maglumatlary" className="rounded-3xl border border-emerald-200 bg-emerald-50/60 p-5 sm:p-7">
               <div className="mb-4 flex items-center gap-3">
                 <Network className="text-[#0b5e3c]" />
                 <h3 className="text-xl font-bold text-[#0b2f24]">Nesil maglumatlary</h3>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <PedigreeItem label="Nesil ugry" value={horse.lineage ?? "Girizilmedik"} />
-                <PedigreeItem label="Atasy" value={horse.father ?? "Girizilmedik"} />
-                <PedigreeItem label="Enesi" value={horse.mother ?? "Girizilmedik"} />
+                {Boolean(horse.lineage?.trim()) && <PedigreeItem label="Nesil ugry" value={horse.lineage!} />}
+                {Boolean(horse.father?.trim()) && <PedigreeItem label="Atasy" value={horse.father!} />}
+                {Boolean(horse.mother?.trim()) && <PedigreeItem label="Enesi" value={horse.mother!} />}
               </div>
-            </div>
+            </div>}
 
-            <div id="bellikler" className="rounded-3xl border border-amber-200 bg-amber-50/70 p-5 sm:p-7">
+            {Boolean(horse.description?.trim()) && <div id="bellikler" className="rounded-3xl border border-amber-200 bg-amber-50/70 p-5 sm:p-7">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-xl font-bold text-[#0b2f24]">Goşmaça bellikler</h3>
                 {false && !descriptionEditing && (
@@ -297,7 +302,7 @@ function HorseProfile({
                   {horse.description || "Bu bedew barada maglumat girizilmedik."}
                 </p>
               )}
-            </div>
+            </div>}
           </div>
       </section>
       {false && editorOpen && (
