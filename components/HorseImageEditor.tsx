@@ -118,7 +118,7 @@ export default function HorseImageEditor({ source, onSave, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 p-3 print:hidden" role="presentation">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 p-3 print:hidden" role="presentation" onMouseDown={event => event.stopPropagation()}>
       <div role="dialog" aria-modal="true" aria-label="Atyň suratyny sazla" className="max-h-[95vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-xl font-black text-[#0b2f24]">Atyň suratyny sazla</h2>
