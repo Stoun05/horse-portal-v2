@@ -331,7 +331,7 @@ export default function MediaPage() {
                             <h3 className="truncate text-lg font-black text-slate-950">{item.title}</h3>
                             <p className="mt-1 font-bold text-[#0b5e3c]">{getHorseName(item)}</p>
                             <p className="mt-1 text-xs font-semibold text-slate-500">
-                              {horse?.code || (item.source === "github" ? "GitHub" : "ID ýok")} · {item.source === "github" ? "GitHub faýly" : formatDate(item.createdAt)}
+                              {horse?.code || (item.source === "github" ? "GitHub" : "ID ýok")} · {item.source === "github" ? "GitHub faýly" : item.source === "catalog" ? "Katalog suraty (şu brauzerde)" : formatDate(item.createdAt)}
                             </p>
                           </div>
                           {false && item.source !== "github" && <button onClick={() => deleteItem(item)} className="shrink-0 rounded-lg border border-rose-200 p-2 text-rose-700 hover:bg-rose-50" aria-label="Media poz">
