@@ -74,9 +74,14 @@ export default function NesilPage() {
       namedNode(motherParents[0], "male", "Enesiniň atasy", horses),
       namedNode(motherParents[1], "female", "Enesiniň enesi", horses),
     ];
-    const result: TreeNode[][] = [[father, mother], third];
-    if (generations >= 4) result.push(Array.from({ length: 8 }, (_, index) => emptyNode(index % 2 ? "female" : "male", "4-nji nesil maglumatlary ýok")));
-    if (generations >= 5) result.push(Array.from({ length: 16 }, (_, index) => emptyNode(index % 2 ? "female" : "male", "5-nji nesil maglumatlary ýok")));
+    // A horse appears as the primary card even with no pedigree data.
+    // Relatives are rendered only if their names actually exist in the record.
+    const parents = [father, mother].filter(node => node.name !== "Maglumat ýok");
+    const grandparents = third.filter(node => node.name !== "Maglumat ýok");
+    const result: TreeNode[][] = [];
+    if (parents.length) result.push(parents);
+    if (grandparents.length) result.push(grandparents);
+    // The records do not contain verified fourth/fifth generations: do not invent placeholders.
     return result;
   }, [horse, horses, generations]);
 
@@ -116,8 +121,8 @@ export default function NesilPage() {
 
             <div className="overflow-auto p-5 lg:p-7" style={{ minHeight: generations === 5 ? 1250 * zoom : generations === 4 ? 760 * zoom : 520 * zoom }}>
               <div className="origin-top-left transition-transform duration-200" style={{ transform: `scale(${zoom})`, width: `${100/zoom}%` }}>
-                <div className="mb-5 grid gap-8 text-center text-sm font-black text-[#2a4036]" style={{gridTemplateColumns:`repeat(${generations}, minmax(210px, 1fr))`, minWidth:`${generations*250}px`}}>{Array.from({length:generations},(_,i)=><div key={i}>{i+1}-nji nesil<br/><span className="font-semibold text-gray-500">{i===0?"Saýlanan at":i===1?"Atasy we enesi":i===2?"Baba-mamalary":"Maglumat ýok"}</span></div>)}</div>
-                <div className="grid items-stretch gap-10" style={{gridTemplateColumns:`repeat(${generations}, minmax(210px, 1fr))`, minWidth:`${generations*250}px`}}>
+                <div className="mb-5 grid gap-8 text-center text-sm font-black text-[#2a4036]" style={{gridTemplateColumns:`repeat(${columns.length + 1}, minmax(210px, 1fr))`, minWidth:`${(columns.length + 1)*250}px`}}>{["Saýlanan at", ...(horse.father?.trim() || horse.mother?.trim() ? ["Atasy we enesi"] : []), ...((horse.father?.match(/\([^)]+\)/) || horse.mother?.match(/\([^)]+\)/)) ? ["Baba-mamalary"] : [])].slice(0, columns.length + 1).map((name, i)=><div key={i}>{i+1}-nji nesil<br/><span className="font-semibold text-gray-500">{name}</span></div>)}</div>
+                <div className="grid items-stretch gap-10" style={{gridTemplateColumns:`repeat(${columns.length + 1}, minmax(210px, 1fr))`, minWidth:`${(columns.length + 1)*250}px`}}>
                   <div className="flex items-center"><MainCard horse={horse}/></div>
                   {columns.map((nodes,columnIndex)=><div key={columnIndex} className="relative flex flex-col justify-around gap-3 border-l border-[#b4c6bd] pl-5">{nodes.map((node,index)=><div key={`${columnIndex}-${index}-${node.name}`} className="relative before:absolute before:-left-5 before:top-1/2 before:h-px before:w-5 before:bg-[#b4c6bd]"><RelativeCard node={node} compact={columnIndex>0} onClick={() => chooseNode(node)}/></div>)}</div>)}
                 </div>
