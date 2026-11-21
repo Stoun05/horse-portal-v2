@@ -7,6 +7,8 @@ export type Horse = {
   year: number;
   code: string;
   image?: string;
+  // Original photo retained for non-destructive position / rotate adjustments.
+  imageOriginal?: string;
   champion: boolean;
   lineage?: string;
   father?: string;
