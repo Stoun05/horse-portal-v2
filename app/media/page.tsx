@@ -28,7 +28,7 @@ type StoredMedia = {
   createdAt: string;
 };
 
-type MediaItem = StoredMedia & { url: string; source?: "github" | "local" };
+type MediaItem = StoredMedia & { url: string; source?: "github" | "local" | "catalog" };
 type GitHubMedia = { id: string; slug: string; kind: MediaKind; title: string; fileName: string; url: string };
 
 const DB_NAME = "horse-portal-media";
@@ -131,6 +131,25 @@ export default function MediaPage() {
   const getHorseName = (item: MediaItem) =>
     item.horseId === "media-akhan" ? "Akhan" : horseForItem(item)?.name || item.horseId.replace(/^slug:/, "");
 
+  // Newly uploaded catalog cover photos belong in the gallery as well.
+  // Existing repository photographs are already listed by the GitHub media loader.
+  const galleryItems = useMemo<MediaItem[]>(() => {
+    const catalogPhotos: MediaItem[] = horses
+      .filter(horse => horse.image?.startsWith("data:image/"))
+      .map(horse => ({
+        id: "catalog:" + horse.id,
+        horseId: horse.id,
+        title: horse.name + " — esasy surat",
+        kind: "image",
+        file: new Blob(),
+        fileName: horse.name + ".webp",
+        createdAt: "",
+        url: horse.image!,
+        source: "catalog",
+      }));
+    return [...catalogPhotos, ...items];
+  }, [horses, items]);
+
   const availableFilters = useMemo(() => {
     const extra = items.filter((item) => item.source === "github").map((item) => ({
       id: item.horseId,
@@ -141,7 +160,7 @@ export default function MediaPage() {
 
   const visibleItems = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("tk");
-    return items.filter((item) => {
+    return galleryItems.filter((item) => {
       const horse = horseForItem(item);
       const matchesHorse = horseFilter === "all" ||
         item.horseId === horseFilter ||
@@ -155,7 +174,7 @@ export default function MediaPage() {
           .includes(normalized);
       return matchesHorse && matchesKind && matchesQuery;
     });
-  }, [horseFilter, horses, items, kindFilter, query]);
+  }, [horseFilter, horses, galleryItems, kindFilter, query]);
 
   const openUpload = () => {
     setHorseId(horseFilter !== "all" ? horseFilter : horses[0]?.id || "");
@@ -191,7 +210,7 @@ export default function MediaPage() {
   };
 
   const deleteItem = async (item: MediaItem) => {
-    if (item.source === "github") return;
+    if (item.source !== "local" && item.source !== undefined) return;
     if (!window.confirm("Bu media faýlyny pozmalymy?")) return;
     await removeMedia(item.id);
     URL.revokeObjectURL(item.url);
@@ -199,8 +218,8 @@ export default function MediaPage() {
     if (lightbox?.id === item.id) setLightbox(null);
   };
 
-  const imageCount = items.filter((item) => item.kind === "image").length;
-  const videoCount = items.filter((item) => item.kind === "video").length;
+  const imageCount = galleryItems.filter((item) => item.kind === "image").length;
+  const videoCount = galleryItems.filter((item) => item.kind === "video").length;
 
   return (
     <div className="min-h-screen bg-[#f4f7f5] lg:flex">
@@ -215,7 +234,7 @@ export default function MediaPage() {
             <div>
               <h1 className="text-3xl font-black text-[#082f24] lg:text-4xl">Wideo / Suratlar</h1>
               <p className="mt-2 font-medium text-slate-600">
-                Her at boýunça GitHub suratlaryny we brauzerdäki media faýllaryny görüň.
+                Her at boýunça GitHub suratlaryny, katalog suratlaryny we brauzerdäki media faýllaryny görüň.
               </p>
             </div>
             {false && <button
@@ -230,8 +249,8 @@ export default function MediaPage() {
           <section className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Stat icon={<ImageIcon />} title="Suratlar" value={imageCount} />
             <Stat icon={<FileVideo />} title="Wideolar" value={videoCount} />
-            <Stat icon={<Upload />} title="Jemi media" value={items.length} />
-            <Stat icon={<Search />} title="Media goşulan atlar" value={new Set(items.map((item) => item.horseId)).size} />
+            <Stat icon={<Upload />} title="Jemi media" value={galleryItems.length} />
+            <Stat icon={<Search />} title="Media goşulan atlar" value={new Set(galleryItems.map((item) => item.horseId)).size} />
           </section>
 
           <section className="mb-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
