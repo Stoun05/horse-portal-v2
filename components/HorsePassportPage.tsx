@@ -28,15 +28,32 @@ import Breadcrumb from "./Breadcrumb";
 import { assetPath } from "../lib/assetPath";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
-import type { Horse } from "../lib/horses";
+import HorseImageEditor from "./HorseImageEditor";
+import { HORSE_STORAGE_KEY, type Horse } from "../lib/horses";
 import { useHorseCatalog } from "../lib/useHorseCatalog";
 
-export default function HorsePassportPage({ horseId }: { horseId: string }) {
+export default function HorsePassportPage({ horseId, adminEditable = false }: { horseId: string; adminEditable?: boolean }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminSource, setAdminSource] = useState(false);
   useEffect(() => { setAdminSource(new URLSearchParams(window.location.search).get("admin") === "1"); }, []);
-  const { horses, hydrated } = useHorseCatalog();
+  const { horses, setHorses, hydrated, central } = useHorseCatalog();
+  const [saveError, setSaveError] = useState("");
   const horse = !hydrated ? undefined : horses.find((item) => item.id === horseId) ?? null;
+
+  function updateImage(image?: string, original?: string): boolean {
+    // Only the server-protected admin passport can mutate the browser-local catalog.
+    if (!adminEditable || central || !hydrated) return false;
+    const updated = horses.map(item => item.id === horseId ? { ...item, image: image ?? "", imageOriginal: original ?? "" } : item);
+    try {
+      window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(updated));
+      setHorses(updated);
+      setSaveError("");
+      return true;
+    } catch {
+      setSaveError("Suraty brauzerde saklamak başartmady. Has kiçi surat saýlaň.");
+      return false;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 lg:flex">
@@ -48,6 +65,7 @@ export default function HorsePassportPage({ horseId }: { horseId: string }) {
         <main className="p-4 sm:p-6 lg:p-8">
           <Breadcrumb />
 
+          {saveError && <p role="alert" className="mb-3 rounded-lg bg-red-50 p-3 text-red-800">{saveError}</p>}
           {horse === undefined ? (
             <ProfileSkeleton />
           ) : horse === null ? (
@@ -56,7 +74,8 @@ export default function HorsePassportPage({ horseId }: { horseId: string }) {
             <HorseProfile
               horse={horse}
               adminSource={adminSource}
-              onImageChange={() => false}
+              adminEditable={adminEditable}
+              onImageChange={updateImage}
               onDescriptionChange={() => false}
             />
           )}
@@ -69,12 +88,14 @@ export default function HorsePassportPage({ horseId }: { horseId: string }) {
 function HorseProfile({
   horse,
   adminSource,
+  adminEditable,
   onImageChange,
   onDescriptionChange,
 }: {
   horse: Horse;
   adminSource: boolean;
-  onImageChange: (image?: string) => boolean;
+  adminEditable: boolean;
+  onImageChange: (image?: string, original?: string) => boolean;
   onDescriptionChange: (description: string) => boolean;
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
@@ -172,7 +193,8 @@ function HorseProfile({
           <h1 className="text-2xl font-bold text-[#0b2f24]">At pasporty</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          {adminSource && <Link href={`/admin/atlar?edit=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-5 py-3 font-bold text-amber-950 hover:bg-amber-200 print:hidden"><Pencil size={18}/> Şu aty redaktirle</Link>}
+          {(adminSource || adminEditable) && <Link href={`/admin/atlar?edit=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-5 py-3 font-bold text-amber-950 hover:bg-amber-200 print:hidden"><Pencil size={18}/> Şu aty redaktirle</Link>}
+          {adminEditable && !central && <button type="button" onClick={()=>setEditorOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-5 py-3 font-bold text-amber-950 print:hidden"><Camera size={18}/> Suraty sazla / çalyş</button>}
           <Link href={`/nesil?horse=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl border border-[#0b5e3c] bg-white px-5 py-3 font-semibold text-[#0b5e3c] hover:bg-emerald-50">
             <Network size={18} /> Nesil daragty
           </Link>
@@ -305,120 +327,12 @@ function HorseProfile({
             </div>}
           </div>
       </section>
-      {false && editorOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 print:hidden">
-          <div className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
-            <div className="flex items-start justify-between border-b border-gray-200 p-5 sm:p-6">
-              <div>
-                <h2 className="text-2xl font-bold text-[#0b2f24]">Esasy suraty üýtget</h2>
-                <p className="mt-1 text-sm text-gray-600">
-                  {horse.name} üçin suraty saýlaň, ýerleşişini sazlaň we saklaň.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditorOpen(false)}
-                className="rounded-full p-2 text-gray-600 hover:bg-gray-100"
-                aria-label="Ýap"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
-              <div>
-                <div className="relative aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-[#0b2f24] via-[#0b5e3c] to-[#b58b2a]">
-                  {sourceImage ? (
-                    <img
-                      src={sourceImage}
-                      alt="Suratyň öňünden görnüşi"
-                      className="h-full w-full object-cover transition-transform"
-                      style={{
-                        objectPosition: `${positionX}% ${positionY}%`,
-                        transform: `scale(${zoom})`,
-                      }}
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-center text-white/80">
-                      <div>
-                        <Camera className="mx-auto mb-3" size={42} />
-                        <p className="font-semibold">Surat saýlanmady</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <p className="mt-3 text-sm text-gray-500">
-                  Saklananda surat awtomatik 900 × 900 ölçegine getirilýär we gysylýar.
-                </p>
-              </div>
-
-              <div className="space-y-5">
-                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white hover:bg-[#08462d]">
-                  <Upload size={19} />
-                  Kompýuterden surat saýla
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="sr-only"
-                  />
-                </label>
-
-                {editorError && (
-                  <p className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">
-                    {editorError}
-                  </p>
-                )}
-
-                <PhotoRange
-                  label="Ulaltmak / kiçeltmek"
-                  value={zoom}
-                  min={1}
-                  max={3}
-                  step={0.05}
-                  onChange={setZoom}
-                  icon={<ZoomIn size={18} />}
-                />
-                <PhotoRange
-                  label="Çep / sag ýerleşişi"
-                  value={positionX}
-                  min={0}
-                  max={100}
-                  step={1}
-                  onChange={setPositionX}
-                />
-                <PhotoRange
-                  label="Ýokary / aşak ýerleşişi"
-                  value={positionY}
-                  min={0}
-                  max={100}
-                  step={1}
-                  onChange={setPositionY}
-                />
-
-                <div className="grid gap-3 pt-2 sm:grid-cols-2 lg:grid-cols-1">
-                  <button
-                    type="button"
-                    onClick={saveImage}
-                    disabled={!sourceImage || processing}
-                    className="rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white hover:bg-[#08462d] disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {processing ? "Taýýarlanýar..." : "Suraty sakla"}
-                  </button>
-                  {horse.image && (
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-3 font-bold text-red-700 hover:bg-red-100"
-                    >
-                      <Trash2 size={18} /> Suraty ýok et
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {adminEditable && !central && editorOpen && (
+        <HorseImageEditor
+          source={horse.imageOriginal || horse.image}
+          onClose={()=>setEditorOpen(false)}
+          onSave={(image,original)=>onImageChange(image,original)}
+        />
       )}
     </>
   );
