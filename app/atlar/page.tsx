@@ -460,7 +460,7 @@ function HorseModal({ form, editing, localPhotos, onChange, onClose, onSubmit }:
           </label>
           <div className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end md:col-span-2">
             <button type="button" onClick={onClose} className="rounded-xl border border-gray-300 px-5 py-3 font-semibold text-gray-700 hover:bg-gray-50">Ýatyr</button>
-            <button type="submit" disabled={photoBusy} className="rounded-xl bg-[#0b5e3c] px-6 py-3 font-semibold text-white hover:bg-[#08462d]">{editing ? "Üýtgeşmeleri ýatda sakla" : "Aty goş"}</button>
+            <button type="submit" className="rounded-xl bg-[#0b5e3c] px-6 py-3 font-semibold text-white hover:bg-[#08462d]">{editing ? "Üýtgeşmeleri ýatda sakla" : "Aty goş"}</button>
           </div>
         </form>
       </div>
