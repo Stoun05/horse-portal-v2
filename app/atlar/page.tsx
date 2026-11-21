@@ -21,6 +21,7 @@ import { assetPath } from "../../lib/assetPath";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
 import HorseDataTransfer from "../../components/HorseDataTransfer";
+import HorseImageEditor from "../../components/HorseImageEditor";
 import {
   HORSE_STORAGE_KEY,
   initialHorses,
@@ -37,6 +38,7 @@ const emptyForm: HorseForm = {
   year: new Date().getFullYear(),
   code: "",
   image: "",
+  imageOriginal: "",
   champion: false,
   lineage: "",
   father: "",
@@ -400,44 +402,7 @@ function HeroStat({ label, value }: { label: string; value: number }) {
 }
 
 function HorseModal({ form, editing, localPhotos, onChange, onClose, onSubmit }: { form: HorseForm; editing: boolean; localPhotos: boolean; onChange: (form: HorseForm) => void; onClose: () => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
-  const [photoBusy, setPhotoBusy] = useState(false);
-  const [photoError, setPhotoError] = useState("");
-
-  async function selectPhoto(file?: File) {
-    if (!file) return;
-    if (!file.type.startsWith("image/") || file.size > 12 * 1024 * 1024) {
-      setPhotoError("JPG, PNG ýa-da WebP surat saýlaň (iň köp 12 MB).");
-      return;
-    }
-    setPhotoBusy(true);
-    setPhotoError("");
-    const url = URL.createObjectURL(file);
-    try {
-      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const img = new window.Image();
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = url;
-      });
-      const canvas = document.createElement("canvas");
-      const scale = Math.min(1, 960 / image.naturalWidth, 540 / image.naturalHeight);
-      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("canvas unavailable");
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      // Small WebP/JPEG payload works with the existing local JSON catalog.
-      let result = canvas.toDataURL("image/webp", 0.72);
-      if (!result.startsWith("data:image/webp")) result = canvas.toDataURL("image/jpeg", 0.72);
-      if (result.length > 260_000) throw new Error("image too large");
-      onChange({ ...form, image: result });
-    } catch {
-      setPhotoError("Suraty taýýarlamak başartmady. Has kiçi surat saýlap görüň.");
-    } finally {
-      URL.revokeObjectURL(url);
-      setPhotoBusy(false);
-    }
-  }
+  const [imageEditorOpen, setImageEditorOpen] = useState(false);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" onMouseDown={onClose}>
@@ -460,22 +425,12 @@ function HorseModal({ form, editing, localPhotos, onChange, onClose, onSubmit }:
           <div className="md:col-span-2">
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
               <p className="font-bold text-amber-950">Atyň suraty</p>
-              {localPhotos ? (
-                <>
-                  <p className="mt-1 text-sm text-amber-900">Suraty kompýuterden saýlaň. Şu wagt surat diňe şu brauzerde atyň maglumatlary bilen bile saklanýar; serweriň public/horses bukjasyna ýa-da beýleki ulanyjylara geçmeýär.</p>
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <label className="cursor-pointer rounded-xl bg-[#0b5e3c] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#08462d]">
-                      {photoBusy ? "Taýýarlanýar..." : "Surat saýla"}
-                      <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={photoBusy} className="sr-only" onChange={event => { void selectPhoto(event.target.files?.[0]); event.target.value = ""; }} />
-                    </label>
-                    {form.image && <button type="button" onClick={() => onChange({ ...form, image: "" })} className="rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-bold text-red-700">Suraty aýyr</button>}
-                  </div>
-                  {photoError && <p role="alert" className="mt-2 text-sm font-semibold text-red-700">{photoError}</p>}
-                </>
-              ) : (
-                <p className="mt-1 text-sm text-amber-900">Merkezi baza üçin surat ýüklemek faýl saklaýyş hyzmaty birikdirilýänçä elýeterli däl. Öňki suratlar saklanýar.</p>
-              )}
-              {form.image && <div className="relative mt-3 h-36 w-64 overflow-hidden rounded-xl bg-emerald-950"><Image src={assetPath(form.image)} alt="Atyň saýlanan suraty" fill unoptimized sizes="256px" className="object-cover" /></div>}
+              <p className="mt-1 text-sm text-amber-900">{localPhotos ? "Suraty saýlap, süýşürip, ulaldyp we aýlap bilersiňiz. Häzir diňe şu brauzerde saklanýar." : "Merkezi baza üçin surat ýüklemek hemişelik faýl saklaýyş birikdirilýänçä elýeterli däl."}</p>
+              {form.image && <div className="relative mt-3 h-36 w-64 overflow-hidden rounded-xl bg-emerald-950"><Image src={assetPath(form.image)} alt="Atyň saýlanan suraty" fill unoptimized sizes="256px" className="object-cover"/></div>}
+              {localPhotos && <div className="mt-3 flex gap-3">
+                <button type="button" onClick={()=>setImageEditorOpen(true)} className="rounded-xl bg-[#0b5e3c] px-4 py-2.5 text-sm font-bold text-white">{form.image ? "Suraty sazla / çalyş" : "Surat goş"}</button>
+                {form.image && <button type="button" onClick={()=>onChange({...form,image:"",imageOriginal:""})} className="rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-bold text-red-700">Suraty aýyr</button>}
+              </div>}
             </div>
           </div>
 
@@ -509,6 +464,11 @@ function HorseModal({ form, editing, localPhotos, onChange, onClose, onSubmit }:
           </div>
         </form>
       </div>
+      {localPhotos && imageEditorOpen && <HorseImageEditor
+        source={form.imageOriginal || form.image}
+        onClose={()=>setImageEditorOpen(false)}
+        onSave={(image,original)=>{onChange({...form,image,imageOriginal:original});return true;}}
+      />}
     </div>
   );
 }
