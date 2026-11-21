@@ -35,7 +35,8 @@ export default function HasabatlarPage() {
   const lineageRows = useMemo(() => {
     const grouped = new Map<string, Horse[]>();
     horses.forEach((horse) => {
-      const name = horse.lineage?.trim() || "Maglumat ýok";
+      const name = horse.lineage?.trim();
+      if (!name) return;
       grouped.set(name, [...(grouped.get(name) || []), horse]);
     });
     return [...grouped.entries()]
@@ -44,7 +45,7 @@ export default function HasabatlarPage() {
   }, [horses]);
 
   const filteredHorses = useMemo(() => {
-    const source = active === "champions" ? champions : horses;
+    const source = active === "champions" ? champions : active === "breeding" ? horses.filter(horse => [horse.father, horse.mother, horse.bodyMeasurements, horse.breedingValue].some(value => value?.trim())) : horses;
     const normalized = query.trim().toLocaleLowerCase("tk");
     if (!normalized) return source;
     return source.filter((horse) =>
