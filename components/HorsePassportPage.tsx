@@ -74,7 +74,7 @@ export default function HorsePassportPage({ horseId, adminEditable = false }: { 
             <HorseProfile
               horse={horse}
               adminSource={adminSource}
-              adminEditable={adminEditable}
+              adminEditable={adminEditable && !central}
               onImageChange={updateImage}
               onDescriptionChange={() => false}
             />
@@ -194,7 +194,7 @@ function HorseProfile({
         </div>
         <div className="flex flex-wrap gap-3">
           {(adminSource || adminEditable) && <Link href={`/admin/atlar?edit=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-5 py-3 font-bold text-amber-950 hover:bg-amber-200 print:hidden"><Pencil size={18}/> Şu aty redaktirle</Link>}
-          {adminEditable && !central && <button type="button" onClick={()=>setEditorOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-5 py-3 font-bold text-amber-950 print:hidden"><Camera size={18}/> Suraty sazla / çalyş</button>}
+          {adminEditable && <button type="button" onClick={()=>setEditorOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-5 py-3 font-bold text-amber-950 print:hidden"><Camera size={18}/> Suraty sazla / çalyş</button>}
           <Link href={`/nesil?horse=${encodeURIComponent(horse.id)}`} className="inline-flex items-center gap-2 rounded-xl border border-[#0b5e3c] bg-white px-5 py-3 font-semibold text-[#0b5e3c] hover:bg-emerald-50">
             <Network size={18} /> Nesil daragty
           </Link>
@@ -327,7 +327,7 @@ function HorseProfile({
             </div>}
           </div>
       </section>
-      {adminEditable && !central && editorOpen && (
+      {adminEditable && editorOpen && (
         <HorseImageEditor
           source={horse.imageOriginal || horse.image}
           onClose={()=>setEditorOpen(false)}
