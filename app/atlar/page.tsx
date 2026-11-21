@@ -43,7 +43,7 @@ const emptyForm: HorseForm = {
   mother: "",
   bodyMeasurements: "",
   breedingValue: "",
-  horseClass: "Naýbaşy",
+  horseClass: "",
   description: "",
   sourceSide: undefined,
   sourceNumber: undefined,
@@ -55,6 +55,7 @@ export default function AtlarPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [horses, setHorses] = useState<Horse[]>(initialHorses);
   const [hydrated, setHydrated] = useState(false);
+  const [catalogReady, setCatalogReady] = useState(false);
   const [central, setCentral] = useState(false);
   const [revision, setRevision] = useState(0);
   const [catalogNotice, setCatalogNotice] = useState("");
@@ -92,6 +93,8 @@ export default function AtlarPage() {
         setCatalogNotice("");
       } catch {
         if (active) setCatalogNotice("Merkezi baza birikdirilmedi. Häzir diňe bu brauzeriň ýerli maglumatlary görkezilýär.");
+      } finally {
+        if (active) setCatalogReady(true);
       }
     }
     void loadCentral();
@@ -101,6 +104,21 @@ export default function AtlarPage() {
   useEffect(() => {
     if (hydrated && !central) window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(horses));
   }, [horses, hydrated, central]);
+
+  // Admin passport links open the existing horse record rather than creating a duplicate.
+  useEffect(() => {
+    if (!management || !catalogReady) return;
+    const editId = new URLSearchParams(window.location.search).get("edit");
+    if (!editId) return;
+    const existing = horses.find(horse => horse.id === editId);
+    if (!existing) return;
+    const { id, ...values } = existing;
+    setEditingId(id);
+    setForm(values);
+    setModalOpen(true);
+  // Open once after loading the authoritative catalog. Normal edits remain handled by buttons.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [management, catalogReady]);
 
   async function updateCentral(action: "upsert" | "delete", horse?: Horse, id?: string) {
     setSaving(true);
@@ -172,6 +190,7 @@ export default function AtlarPage() {
   }
 
   function closeModal() {
+    if (management && window.location.search.includes("edit=")) window.history.replaceState(null, "", "/admin/atlar");
     setModalOpen(false);
     setEditingId(null);
     setForm(emptyForm);
@@ -328,7 +347,7 @@ export default function AtlarPage() {
                         <div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Reňki</p><p className="mt-1 font-black text-slate-950">{horse.color}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Doglan ýyly</p><p className="mt-1 font-black text-slate-950">{horse.year}</p></div></div><p className="mt-3 truncate text-sm font-bold text-slate-600">ID: {horse.code}</p><p className="mt-2 line-clamp-1 text-sm font-bold text-[#0b5e3c]">{horse.lineage || "Nesil ugry barada maglumat ýok"}</p>
 
                         <div className={`mt-5 grid gap-2 ${management ? (central ? "grid-cols-4" : "grid-cols-3") : "grid-cols-2"}`}>
-                          <ActionLink href={`/atlar/${horse.id}`} label="Gör" icon={<Eye size={18} />} />
+                          <ActionLink href={management ? `/atlar/${horse.id}?admin=1` : `/atlar/${horse.id}`} label="Gör" icon={<Eye size={18} />} />
                           <ActionLink href={`/nesil?horse=${encodeURIComponent(horse.id)}`} label={`${horse.name} — nesil daragty`} icon={<Network size={18} />} />
                           {management && <ActionButton label="Redaktirle" onClick={() => openEditModal(horse)} icon={<Pencil size={18} />} />}
                           {management && central && <ActionButton label="Poz" onClick={() => deleteHorse(horse)} icon={<Trash2 size={18} />} danger />}
