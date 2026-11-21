@@ -136,9 +136,10 @@ export default function HorseImageEditor({ source, onSave, onClose }: Props) {
           <Control label="Ýokary / aşak süýşür" value={y} min={-100} max={100} step={1} onChange={setY}/>
           <div className="flex flex-col justify-end gap-2">
             <span className="text-sm font-bold text-[#0b2f24]">Suraty aýla ({rotation}°)</span>
+            <Control label="Egriligini düzelt (gradus)" value={rotation} min={-180} max={180} step={1} onChange={setRotation}/>
             <div className="flex gap-2">
-              <button type="button" onClick={()=>setRotation(r=>(r+270)%360)} className="flex flex-1 items-center justify-center gap-2 rounded-lg border p-2 text-slate-800"><RotateCcw size={17}/> -90°</button>
-              <button type="button" onClick={()=>setRotation(r=>(r+90)%360)} className="flex flex-1 items-center justify-center gap-2 rounded-lg border p-2 text-slate-800"><RotateCw size={17}/> +90°</button>
+              <button type="button" onClick={()=>setRotation(r=>r-90 < -180 ? r+270 : r-90)} className="flex flex-1 items-center justify-center gap-2 rounded-lg border p-2 text-slate-800"><RotateCcw size={17}/> -90°</button>
+              <button type="button" onClick={()=>setRotation(r=>r+90 > 180 ? r-270 : r+90)} className="flex flex-1 items-center justify-center gap-2 rounded-lg border p-2 text-slate-800"><RotateCw size={17}/> +90°</button>
             </div>
           </div>
         </div>
