@@ -185,7 +185,24 @@ export default function AtlarPage() {
       if (await updateCentral("upsert", candidate)) closeModal();
       return;
     }
-    window.alert("Merkezi maglumat bazasy birikdirilmedik. At üýtgetmek elýeterli däl.");
+    // Offline admin draft: explicitly browser-local until persistent storage is connected.
+    // Do not claim this updates the catalog for other users.
+    if (!hydrated) return;
+    const candidate: Horse = { id: editingId ?? crypto.randomUUID(), ...form };
+    if (horses.some(h => h.id !== candidate.id && h.code.trim().toLowerCase() === candidate.code.trim().toLowerCase())) {
+      window.alert("Bu pasport kody eýýäm başga ata degişli.");
+      return;
+    }
+    const nextHorses = editingId
+      ? horses.map(h => h.id === editingId ? candidate : h)
+      : [candidate, ...horses];
+    try {
+      window.localStorage.setItem(HORSE_STORAGE_KEY, JSON.stringify(nextHorses));
+      setHorses(nextHorses);
+      closeModal();
+    } catch {
+      window.alert("Brauzerde maglumat saklamak başartmady. At goşulmady.");
+    }
   }
 
   async function deleteHorse(horse: Horse) {
@@ -219,7 +236,7 @@ export default function AtlarPage() {
           <Breadcrumb />
           {catalogNotice && <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">{catalogNotice}</p>}
           {central && <p role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-950">Merkezi katalog birikdirildi. At maglumatlary serwerden alynýar.</p>}
-          {management && !central && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-900">Admin katalogy diňe görmek üçin açyk. Merkezi maglumat bazasy birikdirilýänçä at goşmak, üýtgetmek we pozmak ýapyk.</p>}
+          {management && !central && <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">Ýerli redaktirleme: täze atlar we üýtgeşmeler diňe şu brauzerde saklanýar. Başga adamlara görünmez we brauzer maglumatlary arassalansa ýitip biler. Üýtgeşmeden soň JSON ätiýaçlyk nusgasyny alyň. Merkezi serwer bazasy entek birikdirilmedi.</p>}
           {management && <HorseDataTransfer central={central} revision={revision} onImported={data => { setHorses(data.horses); setRevision(data.revision); }} />}
 
           <section className="relative mb-6 overflow-hidden rounded-[30px] border border-emerald-900/20 bg-gradient-to-br from-[#052b1f] via-[#0a503c] to-[#92702e] p-6 text-white shadow-[0_18px_50px_-24px_rgba(2,44,29,0.7)] sm:p-8">
@@ -241,7 +258,7 @@ export default function AtlarPage() {
             </div>
           </section>
 
-          {management && central && <div className="mb-6 flex justify-end">
+          {management && <div className="mb-6 flex justify-end">
             <button type="button" onClick={openCreateModal} className="inline-flex items-center gap-2 rounded-xl bg-[#0b5e3c] px-5 py-3 font-bold text-white shadow-sm transition hover:bg-[#08462d] focus:outline-none focus:ring-4 focus:ring-emerald-200">
               <Plus size={19} /> Täze at goş
             </button>
@@ -310,10 +327,10 @@ export default function AtlarPage() {
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Reňki</p><p className="mt-1 font-black text-slate-950">{horse.color}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-bold text-slate-500">Doglan ýyly</p><p className="mt-1 font-black text-slate-950">{horse.year}</p></div></div><p className="mt-3 truncate text-sm font-bold text-slate-600">ID: {horse.code}</p><p className="mt-2 line-clamp-1 text-sm font-bold text-[#0b5e3c]">{horse.lineage || "Nesil ugry barada maglumat ýok"}</p>
 
-                        <div className={`mt-5 grid gap-2 ${management && central ? "grid-cols-4" : "grid-cols-2"}`}>
+                        <div className={`mt-5 grid gap-2 ${management ? (central ? "grid-cols-4" : "grid-cols-3") : "grid-cols-2"}`}>
                           <ActionLink href={`/atlar/${horse.id}`} label="Gör" icon={<Eye size={18} />} />
                           <ActionLink href={`/nesil?horse=${encodeURIComponent(horse.id)}`} label={`${horse.name} — nesil daragty`} icon={<Network size={18} />} />
-                          {management && central && <ActionButton label="Redaktirle" onClick={() => openEditModal(horse)} icon={<Pencil size={18} />} />}
+                          {management && <ActionButton label="Redaktirle" onClick={() => openEditModal(horse)} icon={<Pencil size={18} />} />}
                           {management && central && <ActionButton label="Poz" onClick={() => deleteHorse(horse)} icon={<Trash2 size={18} />} danger />}
                         </div>
                       </div>
@@ -333,7 +350,7 @@ export default function AtlarPage() {
         </main>
       </div>
 
-      {management && central && modalOpen && (
+      {management && modalOpen && (
         <HorseModal
           form={form}
           editing={Boolean(editingId)}
