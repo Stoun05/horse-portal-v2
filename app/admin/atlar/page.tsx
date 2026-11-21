@@ -3,12 +3,12 @@
 import Link from "next/link";
 import AtlarPage from "../../atlar/page";
 
-// UI prototype only: server-side authorization must be implemented before production use.
+// Admin routes are protected by the authenticated server proxy.
 export default function AdminHorsesPage() {
   return (
     <div>
       <div className="bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-950">
-        Dolandyryş prototipi: giriş we serwer rugsatlary entek goralan däl.{" "}
+        Admin katalogy: merkezi baza bolmasa goşulan atlar diňe şu brauzerde saklanýar.{" "}
         <Link href="/admin" className="underline">Admin panele dolan</Link>
       </div>
       <AtlarPage />
